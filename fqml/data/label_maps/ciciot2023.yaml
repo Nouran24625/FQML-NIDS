@@ -1,0 +1,47 @@
+# CICIoT2023 native label (34 = benign + 33 attacks) -> 8 families (Plan §6).
+# Family index = readout qubit index. 0 MUST be Benign.
+# Source: Neto et al., 2023 (CICIoT2023 paper), attack categorisation.
+families: [Benign, DDoS, DoS, Recon, Web, BruteForce, Spoofing, Mirai]
+attck:   # draft ATT&CK technique ids per family; finalise in P1 (Phase 1 "ATT&CK label maps")
+  DDoS: T1498
+  DoS: T1499
+  Recon: T1595
+  Web: T1190
+  BruteForce: T1110
+  Spoofing: T1557
+  Mirai: T1498
+map:
+  BenignTraffic: Benign
+  DDoS-RSTFINFlood: DDoS
+  DDoS-PSHACK_Flood: DDoS
+  DDoS-SYN_Flood: DDoS
+  DDoS-UDP_Flood: DDoS
+  DDoS-TCP_Flood: DDoS
+  DDoS-ICMP_Flood: DDoS
+  DDoS-SynonymousIP_Flood: DDoS
+  DDoS-ACK_Fragmentation: DDoS
+  DDoS-UDP_Fragmentation: DDoS
+  DDoS-ICMP_Fragmentation: DDoS
+  DDoS-SlowLoris: DDoS
+  DDoS-HTTP_Flood: DDoS
+  DoS-UDP_Flood: DoS
+  DoS-SYN_Flood: DoS
+  DoS-TCP_Flood: DoS
+  DoS-HTTP_Flood: DoS
+  Recon-PingSweep: Recon
+  Recon-OSScan: Recon
+  Recon-PortScan: Recon
+  Recon-HostDiscovery: Recon
+  VulnerabilityScan: Recon
+  BrowserHijacking: Web
+  Backdoor_Malware: Web
+  XSS: Web
+  Uploading_Attack: Web
+  SqlInjection: Web
+  CommandInjection: Web
+  DictionaryBruteForce: BruteForce
+  DNS_Spoofing: Spoofing
+  MITM-ArpSpoofing: Spoofing
+  Mirai-greeth_flood: Mirai
+  Mirai-greip_flood: Mirai
+  Mirai-udpplain: Mirai
