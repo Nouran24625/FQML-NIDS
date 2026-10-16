@@ -1,0 +1,12 @@
+name: fqml-nids
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: fqml-nids:dev
+    volumes:
+      - ..:/workspace
+    shm_size: "4gb"
+    tty: true
+    stdin_open: true

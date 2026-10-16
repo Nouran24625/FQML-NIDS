@@ -1,0 +1,12 @@
+numpy
+pandas
+pyarrow
+scikit-learn
+pennylane
+flwr[simulation]
+mlflow
+hydra-core
+pyyaml
+cryptography
+pytest
+tqdm
