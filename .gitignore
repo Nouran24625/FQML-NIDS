@@ -1,0 +1,7 @@
+data/raw/
+data/interim/
+data/processed/
+mlruns/
+.env
+__pycache__/
+.DS_Store
