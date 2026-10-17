@@ -1,0 +1,162 @@
+{
+  "machine": "Linux-7.0.14-linuxkit-aarch64-with-glibc2.41",
+  "torch": "2.14.1+cpu",
+  "batch": 64,
+  "rows": [
+    {
+      "model": "vqc",
+      "method": "A_microbatch",
+      "normal_batch_step_s": 0.1043,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.6806,
+      "s_per_dp_round": 34.03,
+      "slowdown_vs_normal": 6.5,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "vqc",
+      "method": "B_retain_graph",
+      "normal_batch_step_s": 0.1043,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.6716,
+      "s_per_dp_round": 33.58,
+      "slowdown_vs_normal": 6.4,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "vqc",
+      "method": "C_vmap",
+      "normal_batch_step_s": 0.1043,
+      "correct": true,
+      "max_abs_diff_vs_A": 2.9802322387695312e-08,
+      "s_per_batch": 2.1216,
+      "s_per_dp_round": 106.08,
+      "slowdown_vs_normal": 20.3,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "vqc_torchsim",
+      "method": "A_microbatch",
+      "normal_batch_step_s": 0.0584,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.2002,
+      "s_per_dp_round": 10.01,
+      "slowdown_vs_normal": 3.4,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "vqc_torchsim",
+      "method": "B_retain_graph",
+      "normal_batch_step_s": 0.0584,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.4083,
+      "s_per_dp_round": 20.42,
+      "slowdown_vs_normal": 7.0,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "vqc_torchsim",
+      "method": "C_vmap",
+      "normal_batch_step_s": 0.0584,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.0226,
+      "s_per_dp_round": 1.13,
+      "slowdown_vs_normal": 0.4,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "vqc_torchsim",
+      "method": "D_expanded",
+      "normal_batch_step_s": 0.0584,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.01,
+      "s_per_dp_round": 0.5,
+      "slowdown_vs_normal": 0.2,
+      "grad_shape": [
+        64,
+        64
+      ]
+    },
+    {
+      "model": "mlp_matched",
+      "method": "A_microbatch",
+      "normal_batch_step_s": 0.0064,
+      "correct": true,
+      "max_abs_diff_vs_A": 0.0,
+      "s_per_batch": 0.0065,
+      "s_per_dp_round": 0.33,
+      "slowdown_vs_normal": 1.0,
+      "grad_shape": [
+        64,
+        59
+      ]
+    },
+    {
+      "model": "mlp_matched",
+      "method": "B_retain_graph",
+      "normal_batch_step_s": 0.0064,
+      "correct": true,
+      "max_abs_diff_vs_A": 1.7881393432617188e-07,
+      "s_per_batch": 0.0033,
+      "s_per_dp_round": 0.16,
+      "slowdown_vs_normal": 0.5,
+      "grad_shape": [
+        64,
+        59
+      ]
+    },
+    {
+      "model": "mlp_matched",
+      "method": "C_vmap",
+      "normal_batch_step_s": 0.0064,
+      "correct": true,
+      "max_abs_diff_vs_A": 2.384185791015625e-07,
+      "s_per_batch": 0.0094,
+      "s_per_dp_round": 0.47,
+      "slowdown_vs_normal": 1.5,
+      "grad_shape": [
+        64,
+        59
+      ]
+    }
+  ],
+  "verdict": {
+    "vqc": {
+      "method": "B_retain_graph",
+      "s_per_batch": 0.6716,
+      "s_per_dp_client_round": 33.58,
+      "slowdown_vs_normal_training": 6.4
+    },
+    "vqc_torchsim": {
+      "method": "D_expanded",
+      "s_per_batch": 0.01,
+      "s_per_dp_client_round": 0.5,
+      "slowdown_vs_normal_training": 0.2
+    },
+    "risk_closed": true
+  }
+}
