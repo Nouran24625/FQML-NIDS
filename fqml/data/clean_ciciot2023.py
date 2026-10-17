@@ -200,8 +200,10 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max-files", type=int, default=None, help="debug: read only N CSVs")
     a = ap.parse_args()
-    files = sorted(Path(a.raw).rglob("*.csv"))[: a.max_files] if a.max_files else \
-        sorted(Path(a.raw).rglob("*.csv"))
+    files = sorted(p for p in Path(a.raw).rglob("*.csv")
+                   if not p.name.startswith("._") and "__MACOSX" not in p.parts)
+    if a.max_files:
+        files = files[: a.max_files]
     if not files:
         raise SystemExit(f"no CSVs under {a.raw}; download CICIoT2023 (CSV files) there first")
     print(f"cleaning {len(files)} CSV files (two passes)...")
