@@ -1,0 +1,36 @@
+{
+  "machine": "Linux-7.0.14-linuxkit-aarch64-with-glibc2.41",
+  "torch": "2.14.1+cpu",
+  "pennylane": "0.45.1",
+  "threads": 8,
+  "batch": 64,
+  "rows": [
+    {
+      "option": "A  VQC default.qubit + backprop (batched)",
+      "params": 64,
+      "s_per_step": 0.0735,
+      "samples_per_s": 870.3,
+      "s_per_client_round": 3.68
+    },
+    {
+      "option": "B  VQC lightning.qubit + adjoint (per sample)",
+      "params": 64,
+      "s_per_step": 0.541,
+      "samples_per_s": 118.3,
+      "s_per_client_round": 27.05
+    },
+    {
+      "option": "MLP-matched (classical reference)",
+      "params": 59,
+      "s_per_step": 0.0003,
+      "samples_per_s": 254261.9,
+      "s_per_client_round": 0.01
+    }
+  ],
+  "verdict": {
+    "chosen": "A  VQC default.qubit + backprop (batched)",
+    "samples_per_s": 870.3,
+    "s_per_client_round": 3.68,
+    "pass_500_samples_per_s": true
+  }
+}
