@@ -1,0 +1,49 @@
+{
+  "machine": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+  "device": "cpu",
+  "torch": "2.14.1+cpu",
+  "args": {
+    "device": "cpu",
+    "rounds": 3,
+    "clients": 50,
+    "per_round": 20,
+    "steps": 50,
+    "batch": 64,
+    "skip_sequential": false
+  },
+  "rows": [
+    {
+      "model": "vqc_torchsim",
+      "mode": "batched",
+      "s_per_round": 16.898,
+      "h_per_100_round_run": 0.469,
+      "train_samples_per_s": 3845
+    },
+    {
+      "model": "vqc_torchsim",
+      "mode": "sequential",
+      "s_per_round": 25.411,
+      "h_per_100_round_run": 0.706,
+      "train_samples_per_s": 2544
+    },
+    {
+      "model": "mlp_matched",
+      "mode": "batched",
+      "s_per_round": 0.061,
+      "h_per_100_round_run": 0.002,
+      "train_samples_per_s": 1098848
+    },
+    {
+      "model": "mlp_matched",
+      "mode": "sequential",
+      "s_per_round": 0.543,
+      "h_per_100_round_run": 0.015,
+      "train_samples_per_s": 118491
+    }
+  ],
+  "verdict": {
+    "vqc_s_per_round": 16.898,
+    "vqc_mode": "batched",
+    "plan_B_quantum_hours_one_run_at_a_time": 187.6
+  }
+}
