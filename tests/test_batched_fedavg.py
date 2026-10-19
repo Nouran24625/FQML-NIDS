@@ -19,43 +19,39 @@ def _data(n=600, classes=8):
 
 @pytest.mark.parametrize("kind", ["vqc", "vqc_binary", "mlp"])
 def test_batched_equals_sequential(kind):
-    torch.manual_seed(0)  # MLP init uses the global RNG: fix it so every run starts the same
+    """Batched FedAvg (D3) must give the same global model as training clients one by one.
+
+    Runs in float64. In float32, rounding noise (~1e-7) is about as large as Adam's eps (1e-8), so for
+    weights whose true gradient is ~0 (e.g. the VQC's last-layer RZ angles, see D6) Adam blows the noise
+    up into full-size steps and the two loops drift apart on those weights. In float64 the noise (~1e-16)
+    is far below eps, so every weight must match to 1e-7, with no exceptions.
+    """
+    torch.manual_seed(0)                       # MatchedMLP initialises from the global RNG
     classes = 2 if kind == "vqc_binary" else 8
     X, y = _data(classes=classes)
+    X = X.double()
     parts = dirichlet_partition(y.numpy(), n_clients=6, alpha=0.5, seed=0, min_size=5)
     if kind.startswith("vqc"):
         model = TorchVQC(8, classes, 3, seed=0)
     else:
         model = MatchedMLP(8, classes, target_params=64)
-    counts = torch.bincount(y, minlength=classes).float()
+    counts = torch.bincount(y, minlength=classes).double()
     w = (1 / counts.sqrt()) / (1 / counts.sqrt()).mean()
-    kw = dict(rounds=2, clients_per_round=3, local_steps=3, batch_size=8, lr=0.05, class_weights=w, seed=1)
+    kw = dict(rounds=2, clients_per_round=3, local_steps=3, batch_size=8, lr=0.05, class_weights=w,
+              seed=1, dtype=torch.float64)
     a = run_fedavg(model, X, y, parts, mode="batched", **kw)
     b = run_fedavg(model, X, y, parts, mode="sequential", **kw)
     assert [h["clients"] for h in a.history] == [h["clients"] for h in b.history]
 
-    # 1) The two final global models must make the same predictions.
+    model = model.double()
     with torch.no_grad():
         la = functional_call(model, a.params, (X,))
         lb = functional_call(model, b.params, (X,))
-    assert torch.allclose(la, lb, atol=1e-4, rtol=1e-4), (la - lb).abs().max()
-
-    # 2) Every weight that affects the output must match too.
-    #    Exception: the last layer's RZ angles of the VQC (theta[-1, :, 1]). After them come only CNOTs and
-    #    a Z measurement, so they never change the output and their true gradient is exactly 0. Float32
-    #    round-off leaves ~1e-7 noise there, and Adam rescales any gradient to a step of size ~lr, so the
-    #    two loops drift on these 8 angles by different noise. That is harmless (check 1 proves it).
-    for n in a.params:
-        pa, pb = a.params[n], b.params[n]
-        if kind.startswith("vqc") and n == "theta":
-            pa, pb = pa[:-1], pb[:-1]                                          # all layers but the last
-            assert torch.allclose(a.params[n][-1, :, 0], b.params[n][-1, :, 0], atol=1e-4, rtol=1e-4)  # last-layer RY
-        assert torch.allclose(pa, pb, atol=1e-4, rtol=1e-4), n
-
-    # and training actually moved the weights
-    start = dict(model.named_parameters())
-    assert any(not torch.allclose(a.params[n], start[n]) for n in a.params)
-
+    assert torch.allclose(la, lb, atol=1e-7), (la - lb).abs().max()          # same predictions
+    for n in a.params:                                                       # same weights, all of them
+        assert torch.allclose(a.params[n], b.params[n], atol=1e-7), (n, (a.params[n] - b.params[n]).abs().max())
+    start = {n: p.detach() for n, p in model.named_parameters()}
+    assert any(not torch.allclose(a.params[n], start[n]) for n in a.params)  # training actually moved them
 
 def test_dirichlet_partition_reproducible_and_complete():
     y = np.random.default_rng(0).integers(0, 8, 5000)
