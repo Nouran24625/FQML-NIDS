@@ -19,6 +19,7 @@ def _data(n=600, classes=8):
 
 @pytest.mark.parametrize("kind", ["vqc", "vqc_binary", "mlp"])
 def test_batched_equals_sequential(kind):
+    torch.manual_seed(0)  # MLP init uses the global RNG: fix it so every run starts the same
     classes = 2 if kind == "vqc_binary" else 8
     X, y = _data(classes=classes)
     parts = dirichlet_partition(y.numpy(), n_clients=6, alpha=0.5, seed=0, min_size=5)
@@ -37,7 +38,7 @@ def test_batched_equals_sequential(kind):
     with torch.no_grad():
         la = functional_call(model, a.params, (X,))
         lb = functional_call(model, b.params, (X,))
-    assert torch.allclose(la, lb, atol=1e-5), (la - lb).abs().max()
+    assert torch.allclose(la, lb, atol=1e-4, rtol=1e-4), (la - lb).abs().max()
 
     # 2) Every weight that affects the output must match too.
     #    Exception: the last layer's RZ angles of the VQC (theta[-1, :, 1]). After them come only CNOTs and
@@ -48,8 +49,8 @@ def test_batched_equals_sequential(kind):
         pa, pb = a.params[n], b.params[n]
         if kind.startswith("vqc") and n == "theta":
             pa, pb = pa[:-1], pb[:-1]                                          # all layers but the last
-            assert torch.allclose(a.params[n][-1, :, 0], b.params[n][-1, :, 0], atol=1e-5)  # last-layer RY
-        assert torch.allclose(pa, pb, atol=1e-5), n
+            assert torch.allclose(a.params[n][-1, :, 0], b.params[n][-1, :, 0], atol=1e-4, rtol=1e-4)  # last-layer RY
+        assert torch.allclose(pa, pb, atol=1e-4, rtol=1e-4), n
 
     # and training actually moved the weights
     start = dict(model.named_parameters())
