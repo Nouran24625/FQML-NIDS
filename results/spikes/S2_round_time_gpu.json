@@ -1,0 +1,35 @@
+{
+  "machine": "Linux-6.18.48+-x86_64-with-glibc2.39",
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "args": {
+    "device": "cuda",
+    "rounds": 3,
+    "clients": 50,
+    "per_round": 20,
+    "steps": 50,
+    "batch": 64,
+    "skip_sequential": false
+  },
+  "rows": [
+    {
+      "model": "vqc_torchsim",
+      "mode": "batched",
+      "s_per_round": 1.802,
+      "h_per_100_round_run": 0.05,
+      "train_samples_per_s": 35936
+    },
+    {
+      "model": "mlp_matched",
+      "mode": "batched",
+      "s_per_round": 0.118,
+      "h_per_100_round_run": 0.003,
+      "train_samples_per_s": 566198
+    }
+  ],
+  "verdict": {
+    "vqc_s_per_round": 1.802,
+    "vqc_mode": "batched",
+    "plan_B_quantum_hours_one_run_at_a_time": 20.0
+  }
+}
