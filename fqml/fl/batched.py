@@ -105,16 +105,17 @@ def evaluate(model, params, X, y, batch_size: int = 8192) -> dict:
 def run_fedavg(model: nn.Module, X, y, parts: list[np.ndarray], *, rounds: int, clients_per_round: int,
                local_steps: int = 50, batch_size: int = 64, lr: float = 0.01,
                class_weights: torch.Tensor | None = None, seed: int = 0, device: str = "cpu",
-               mode: str = "batched", X_val=None, y_val=None, on_round=None) -> FedResult:
+               mode: str = "batched", X_val=None, y_val=None, on_round=None,
+               dtype: torch.dtype = torch.float32) -> FedResult:
     """Simulate FedAvg. mode = "batched" (D3) or "sequential" (reference, one client at a time)."""
     local = {"batched": _local_batched, "sequential": _local_sequential}[mode]
-    model = copy.deepcopy(model).to(device)
-    X = torch.as_tensor(X, dtype=torch.float32, device=device)
+    model = copy.deepcopy(model).to(device=device, dtype=dtype)
+    X = torch.as_tensor(X, dtype=dtype, device=device)
     y = torch.as_tensor(y, dtype=torch.long, device=device)
     if X_val is not None:
-        X_val = torch.as_tensor(X_val, dtype=torch.float32, device=device)
+        X_val = torch.as_tensor(X_val, dtype=dtype, device=device)
         y_val = torch.as_tensor(y_val, dtype=torch.long, device=device)
-    w = None if class_weights is None else class_weights.to(device=device, dtype=torch.float32)
+    w = None if class_weights is None else class_weights.to(device=device, dtype=dtype)
     sizes = np.array([len(p) for p in parts])
     rng = np.random.default_rng(seed)
     gparams = {n: p.detach().clone() for n, p in model.named_parameters()}
@@ -124,7 +125,7 @@ def run_fedavg(model: nn.Module, X, y, parts: list[np.ndarray], *, rounds: int, 
         chosen = np.sort(rng.choice(len(parts), clients_per_round, replace=False))
         batches = np.stack([client_batches(parts[k], local_steps, batch_size, rng) for k in chosen])
         stacked = local(model, gparams, X, y, torch.as_tensor(batches, device=device), lr, w)
-        gparams = fedavg(stacked, torch.as_tensor(sizes[chosen], dtype=torch.float32, device=device))
+        gparams = fedavg(stacked, torch.as_tensor(sizes[chosen], dtype=dtype, device=device))
         if device == "cuda":
             torch.cuda.synchronize()
         entry = {"round": r, "train_seconds": time.perf_counter() - t0, "clients": chosen.tolist()}
