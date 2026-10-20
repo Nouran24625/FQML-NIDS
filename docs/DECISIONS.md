@@ -167,7 +167,13 @@ transpile with Qiskit **optimization level 3** and prefer IBM Heron backends (Ma
 | Est. success, Eagle (Brisbane / Sherbrooke), opt 3 | 0.55 / 0.57 | **0.78 / 0.79** |
 
 IBM heavy-hex chips have no 8-qubit loop, so the ring's closing CNOT needs SWAPs; the chain maps
-directly. Optimization levels 0–1 are worse (Sherbrooke levels 0–1 picked a qubit marked broken in the
+directly.
+
+**Tuna-17 (Quantum Inspire, QuTech; wiring read from the SDK on 20 Oct 2026: 17 qubits, 24 couplers,
+native CZ + RX/RY/RZ; saved in `results/spikes/tuna17_target.json`):** both layouts fit with **0 extra
+2-qubit gates** at optimization level 1-3 (Tuna-17's wiring contains 8-qubit loops, unlike IBM's).
+Chain: 21 CZ, depth 30-35. Ring: 24 CZ, depth 56-62. No calibration data is published, so no success
+estimate. The chain is therefore the better choice on both providers. Optimization levels 0–1 are worse (Sherbrooke levels 0–1 picked a qubit marked broken in the
 calibration: est. success 0.000), levels 2 and 3 give the same result.
 
 **Evidence (Spike S5, accuracy, centralised CICIoT2023, 100k train / 20k test, 8 MI-selected features,
@@ -181,8 +187,10 @@ calibration: est. success 0.000), levels 2 and 3 give the same result.
 The new circuit is not worse on either task (8-class: +3.6 points). The chain must read the last qubit:
 with qubit 0 as readout, 37 of 48 angles would be dead (qubit 0 is only ever a CNOT control).
 
-**Revisit if:** Tuna-17's wiring favours another layout (S4 re-run with `--tuna-json`), or Phase 1
-tuning shows a clear accuracy gap at full scale.
+**Accounts (Gate 0):** IBM Open plan active with backends ibm_fez, ibm_kingston, ibm_marrakesh (all
+Heron); Quantum Inspire account active with Tuna-17. Details in `docs/ACCOUNTS.md`.
+
+**Revisit if:** Phase 1 tuning shows a clear accuracy gap at full scale, or IBM's available backends change.
 
 ---
 

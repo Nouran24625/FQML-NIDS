@@ -25,9 +25,9 @@
       "backend": "fake_fez",
       "entangler": "ring",
       "opt_level": 1,
-      "depth": 173,
+      "depth": 175,
       "two_qubit_gates": 60,
-      "total_gates": 321,
+      "total_gates": 324,
       "extra_two_qubit_vs_logical": 36,
       "est_success": 0.7494517709397577
     },
@@ -37,9 +37,9 @@
       "opt_level": 2,
       "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 287,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.7565789793983977
+      "est_success": 0.7566004551871197
     },
     {
       "backend": "fake_fez",
@@ -47,9 +47,9 @@
       "opt_level": 3,
       "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 287,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.7666104670927378
+      "est_success": 0.7665400761089896
     },
     {
       "backend": "fake_marrakesh",
@@ -65,9 +65,9 @@
       "backend": "fake_marrakesh",
       "entangler": "ring",
       "opt_level": 1,
-      "depth": 173,
+      "depth": 175,
       "two_qubit_gates": 60,
-      "total_gates": 321,
+      "total_gates": 324,
       "extra_two_qubit_vs_logical": 36,
       "est_success": 0.7927585211217779
     },
@@ -77,9 +77,9 @@
       "opt_level": 2,
       "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 287,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.7978183486504923
+      "est_success": 0.7978315309223513
     },
     {
       "backend": "fake_marrakesh",
@@ -87,9 +87,9 @@
       "opt_level": 3,
       "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 287,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.8223460593220631
+      "est_success": 0.8223107375325968
     },
     {
       "backend": "fake_torino",
@@ -105,9 +105,9 @@
       "backend": "fake_torino",
       "entangler": "ring",
       "opt_level": 1,
-      "depth": 173,
+      "depth": 175,
       "two_qubit_gates": 60,
-      "total_gates": 321,
+      "total_gates": 324,
       "extra_two_qubit_vs_logical": 36,
       "est_success": 0.6293365177993785
     },
@@ -115,21 +115,21 @@
       "backend": "fake_torino",
       "entangler": "ring",
       "opt_level": 2,
-      "depth": 153,
+      "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 285,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.6289839527394996
+      "est_success": 0.6293365177993785
     },
     {
       "backend": "fake_torino",
       "entangler": "ring",
       "opt_level": 3,
-      "depth": 153,
+      "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 285,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.6457335859328458
+      "est_success": 0.6460588397336093
     },
     {
       "backend": "fake_kingston",
@@ -145,9 +145,9 @@
       "backend": "fake_kingston",
       "entangler": "ring",
       "opt_level": 1,
-      "depth": 173,
+      "depth": 175,
       "two_qubit_gates": 60,
-      "total_gates": 321,
+      "total_gates": 324,
       "extra_two_qubit_vs_logical": 36,
       "est_success": 0.8067284875829502
     },
@@ -157,9 +157,9 @@
       "opt_level": 2,
       "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 287,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.7896513975242777
+      "est_success": 0.7893969867457422
     },
     {
       "backend": "fake_kingston",
@@ -167,9 +167,9 @@
       "opt_level": 3,
       "depth": 151,
       "two_qubit_gates": 60,
-      "total_gates": 286,
+      "total_gates": 287,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.8190240025157713
+      "est_success": 0.819010089684394
     },
     {
       "backend": "fake_brisbane",
@@ -195,21 +195,21 @@
       "backend": "fake_brisbane",
       "entangler": "ring",
       "opt_level": 2,
-      "depth": 226,
+      "depth": 227,
       "two_qubit_gates": 60,
-      "total_gates": 433,
+      "total_gates": 434,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.5524367172298649
+      "est_success": 0.5521821952873148
     },
     {
       "backend": "fake_brisbane",
       "entangler": "ring",
       "opt_level": 3,
-      "depth": 226,
+      "depth": 227,
       "two_qubit_gates": 60,
-      "total_gates": 433,
+      "total_gates": 434,
       "extra_two_qubit_vs_logical": 36,
-      "est_success": 0.5524367172298649
+      "est_success": 0.5521821952873148
     },
     {
       "backend": "fake_sherbrooke",
@@ -252,6 +252,46 @@
       "est_success": 0.566831198476235
     },
     {
+      "backend": "tuna-17",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 138,
+      "two_qubit_gates": 81,
+      "total_gates": 315,
+      "extra_two_qubit_vs_logical": 57,
+      "est_success": null
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 56,
+      "two_qubit_gates": 24,
+      "total_gates": 121,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": null
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 62,
+      "two_qubit_gates": 24,
+      "total_gates": 121,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": null
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 62,
+      "two_qubit_gates": 24,
+      "total_gates": 121,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": null
+    },
+    {
       "backend": "logical (no chip)",
       "entangler": "chain",
       "opt_level": null,
@@ -276,7 +316,7 @@
       "opt_level": 1,
       "depth": 54,
       "two_qubit_gates": 21,
-      "total_gates": 195,
+      "total_gates": 198,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.7933676371563763
     },
@@ -286,7 +326,7 @@
       "opt_level": 2,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.8845754210940333
     },
@@ -296,7 +336,7 @@
       "opt_level": 3,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.8845754210940333
     },
@@ -316,7 +356,7 @@
       "opt_level": 1,
       "depth": 54,
       "two_qubit_gates": 21,
-      "total_gates": 195,
+      "total_gates": 198,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.8814619466179703
     },
@@ -326,7 +366,7 @@
       "opt_level": 2,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.9193202842626468
     },
@@ -336,7 +376,7 @@
       "opt_level": 3,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.9193202842626468
     },
@@ -356,7 +396,7 @@
       "opt_level": 1,
       "depth": 54,
       "two_qubit_gates": 21,
-      "total_gates": 195,
+      "total_gates": 198,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.6174059296509484
     },
@@ -366,7 +406,7 @@
       "opt_level": 2,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.7709530224894303
     },
@@ -376,7 +416,7 @@
       "opt_level": 3,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.7763784955732383
     },
@@ -396,7 +436,7 @@
       "opt_level": 1,
       "depth": 54,
       "two_qubit_gates": 21,
-      "total_gates": 195,
+      "total_gates": 198,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.7125175453393342
     },
@@ -406,7 +446,7 @@
       "opt_level": 2,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.8753999351750998
     },
@@ -416,7 +456,7 @@
       "opt_level": 3,
       "depth": 43,
       "two_qubit_gates": 21,
-      "total_gates": 162,
+      "total_gates": 163,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.8825459404755245
     },
@@ -444,21 +484,21 @@
       "backend": "fake_brisbane",
       "entangler": "chain",
       "opt_level": 2,
-      "depth": 52,
+      "depth": 53,
       "two_qubit_gates": 21,
       "total_gates": 197,
       "extra_two_qubit_vs_logical": 0,
-      "est_success": 0.7783010622195331
+      "est_success": 0.7783144419216862
     },
     {
       "backend": "fake_brisbane",
       "entangler": "chain",
       "opt_level": 3,
-      "depth": 52,
+      "depth": 53,
       "two_qubit_gates": 21,
       "total_gates": 197,
       "extra_two_qubit_vs_logical": 0,
-      "est_success": 0.7783010622195331
+      "est_success": 0.7783144419216862
     },
     {
       "backend": "fake_sherbrooke",
@@ -486,7 +526,7 @@
       "opt_level": 2,
       "depth": 62,
       "two_qubit_gates": 21,
-      "total_gates": 209,
+      "total_gates": 211,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.7937914012895586
     },
@@ -496,9 +536,49 @@
       "opt_level": 3,
       "depth": 62,
       "two_qubit_gates": 21,
-      "total_gates": 209,
+      "total_gates": 211,
       "extra_two_qubit_vs_logical": 0,
       "est_success": 0.7937914012895586
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 95,
+      "two_qubit_gates": 54,
+      "total_gates": 234,
+      "extra_two_qubit_vs_logical": 33,
+      "est_success": null
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 30,
+      "two_qubit_gates": 21,
+      "total_gates": 112,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": null
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 35,
+      "two_qubit_gates": 21,
+      "total_gates": 110,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": null
+    },
+    {
+      "backend": "tuna-17",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 35,
+      "two_qubit_gates": 21,
+      "total_gates": 110,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": null
     }
   ]
 }
