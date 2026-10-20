@@ -325,5 +325,16 @@
     "recorded": "2026-10-17",
     "source": "CIC CSV.zip (per-capture CSVs)",
     "total_gb": 8.944
+  },
+  "raw/unsw_nb15": {
+    "files": {
+      "raw/unsw_nb15/NUSW-NB15_features.csv": "c55f19cceebb6360dc50f44f8a5f246ccefbcf8a6c604ac1ad46e643869cafce",
+      "raw/unsw_nb15/UNSW_NB15_testing-set.csv": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559",
+      "raw/unsw_nb15/UNSW_NB15_training-set.csv": "bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa"
+    },
+    "n_files": 3,
+    "recorded": "2026-10-20",
+    "source": "UNSW-NB15 train/test split + features, UNSW Canberra (research.unsw.edu.au/projects/unsw-nb15-dataset); academic use, cite listed papers",
+    "total_gb": 0.048
   }
 }
