@@ -1,0 +1,163 @@
+{
+  "machine": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+  "torch": "2.14.1+cpu",
+  "args": {
+    "data": "data/interim/ciciot2023_pcapcsv_clean.parquet",
+    "train": 100000,
+    "test": 20000,
+    "steps": 1000,
+    "batch": 64,
+    "lr": 0.02,
+    "seeds": 3
+  },
+  "classes": [
+    "Benign",
+    "BruteForce",
+    "DDoS",
+    "DoS",
+    "Mirai",
+    "Recon",
+    "Spoofing",
+    "Web"
+  ],
+  "rows": [
+    {
+      "task": "8-class",
+      "entangler": "ring",
+      "version": 1,
+      "features": [
+        "Tot sum",
+        "AVG",
+        "Tot size",
+        "Max",
+        "Header_Length",
+        "Number",
+        "ack_flag_number",
+        "IAT"
+      ],
+      "macro_f1_mean": 0.42924999289301574,
+      "macro_f1_std": 0.004947394006651686,
+      "macro_f1_per_seed": [
+        0.4355622452451756,
+        0.4234801215366306,
+        0.42870761189724094
+      ],
+      "samples_per_s": 2314.3078747178783
+    },
+    {
+      "task": "8-class",
+      "entangler": "ring",
+      "version": 2,
+      "features": [
+        "Tot sum",
+        "AVG",
+        "Tot size",
+        "Max",
+        "Header_Length",
+        "Number",
+        "ack_flag_number",
+        "IAT"
+      ],
+      "macro_f1_mean": 0.4426767145106904,
+      "macro_f1_std": 0.009977194089078361,
+      "macro_f1_per_seed": [
+        0.4365660239710828,
+        0.4347179234692089,
+        0.45674619609177947
+      ],
+      "samples_per_s": 2743.840710075585
+    },
+    {
+      "task": "8-class",
+      "entangler": "chain",
+      "version": 2,
+      "features": [
+        "Tot sum",
+        "AVG",
+        "Tot size",
+        "Max",
+        "Header_Length",
+        "Number",
+        "ack_flag_number",
+        "IAT"
+      ],
+      "macro_f1_mean": 0.465032652419368,
+      "macro_f1_std": 0.013555459074711772,
+      "macro_f1_per_seed": [
+        0.48121861293205404,
+        0.46583555423287076,
+        0.44804379009317913
+      ],
+      "samples_per_s": 2722.3760009212797
+    },
+    {
+      "task": "binary",
+      "entangler": "ring",
+      "version": 1,
+      "features": [
+        "Max",
+        "Tot sum",
+        "AVG",
+        "Tot size",
+        "Header_Length",
+        "HTTPS",
+        "ack_flag_number",
+        "ack_count"
+      ],
+      "macro_f1_mean": 0.7578879440001287,
+      "macro_f1_std": 0.011943640499803199,
+      "macro_f1_per_seed": [
+        0.7433019356760432,
+        0.7725574035073959,
+        0.757804492816947
+      ],
+      "samples_per_s": 2304.151260923387
+    },
+    {
+      "task": "binary",
+      "entangler": "ring",
+      "version": 2,
+      "features": [
+        "Max",
+        "Tot sum",
+        "AVG",
+        "Tot size",
+        "Header_Length",
+        "HTTPS",
+        "ack_flag_number",
+        "ack_count"
+      ],
+      "macro_f1_mean": 0.7592168315699068,
+      "macro_f1_std": 0.005916796958764665,
+      "macro_f1_per_seed": [
+        0.7669985678718717,
+        0.757989826116565,
+        0.7526621007212837
+      ],
+      "samples_per_s": 2728.018069647579
+    },
+    {
+      "task": "binary",
+      "entangler": "chain",
+      "version": 2,
+      "features": [
+        "Max",
+        "Tot sum",
+        "AVG",
+        "Tot size",
+        "Header_Length",
+        "HTTPS",
+        "ack_flag_number",
+        "ack_count"
+      ],
+      "macro_f1_mean": 0.7619293175646985,
+      "macro_f1_std": 0.017263447049483547,
+      "macro_f1_per_seed": [
+        0.769508102257419,
+        0.7380411336382078,
+        0.7782387167984687
+      ],
+      "samples_per_s": 2735.1386461636703
+    }
+  ]
+}

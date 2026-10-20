@@ -1,9 +1,11 @@
 """The VQC as a Qiskit circuit, for hardware work (Spike S4, experiment E6). Owner: Sheghaf.
 
 Same gates and order as fqml/models/vqc.py and fqml/quantum/torch_sim.py:
-  per layer: RY(x_q) on every qubit, then RY(theta[l,q,0]) RZ(theta[l,q,1]) on every qubit, then CNOTs.
-entangler = "ring"  -> CNOT q -> (q+1) % n   (what we train today)
-entangler = "chain" -> CNOT q -> q+1 for q < n-1 (no wrap-around; fits real chips with fewer SWAPs)
+  per layer: RY(x_q) on every qubit, then the trainable rotations, then CNOTs.
+  version 1: RY(theta[l,q,0]) RZ(theta[l,q,1])      version 2 (D6): RZ(theta[l,q,1]) RY(theta[l,q,0])
+entangler = "ring"  -> CNOT q -> (q+1) % n
+entangler = "chain" -> CNOT q -> q+1 for q < n-1 (no wrap-around; fits IBM chips with no SWAPs, S4)
+Readout qubits: fqml.models.vqc.readout_qubits (version 1 = first n_out, version 2 = last n_out).
 
 Qiskit numbers qubits little-endian (qubit 0 = rightmost bit) while PennyLane / TorchVQC treat qubit 0
 as the leftmost. Gates act on the same qubit indices either way, so per-qubit <Z_q> values agree;
@@ -15,8 +17,10 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
 
+from fqml.quantum.layout import entangler_pairs
 
-def build_vqc(n_qubits: int = 8, n_layers: int = 3, entangler: str = "ring"):
+
+def build_vqc(n_qubits: int = 8, n_layers: int = 3, entangler: str = "chain", version: int = 2):
     """Returns (circuit, x_params, theta_params). theta is flat, ordered [layer, qubit, {RY, RZ}]."""
     x = ParameterVector("x", n_qubits)
     th = ParameterVector("theta", n_layers * n_qubits * 2)
@@ -26,11 +30,13 @@ def build_vqc(n_qubits: int = 8, n_layers: int = 3, entangler: str = "ring"):
             qc.ry(x[q], q)
         for q in range(n_qubits):
             base = (layer * n_qubits + q) * 2
-            qc.ry(th[base], q)
-            qc.rz(th[base + 1], q)
-        pairs = [(q, (q + 1) % n_qubits) for q in range(n_qubits)] if entangler == "ring" \
-            else [(q, q + 1) for q in range(n_qubits - 1)]
-        for c, t in pairs:
+            if version == 1:
+                qc.ry(th[base], q)
+                qc.rz(th[base + 1], q)
+            else:
+                qc.rz(th[base + 1], q)
+                qc.ry(th[base], q)
+        for c, t in entangler_pairs(n_qubits, entangler):
             qc.cx(c, t)
     return qc, x, th
 
@@ -43,10 +49,11 @@ def bind(qc, x_params, theta_params, x_values, theta_values):
     return qc.assign_parameters(values)
 
 
-def expz_statevector(bound_circuit, n_out: int) -> np.ndarray:
-    """Exact <Z_q> for q < n_out (no noise, no shots)."""
+def expz_statevector(bound_circuit, n_out: int | None = None, qubits: list[int] | None = None) -> np.ndarray:
+    """Exact <Z_q> (no noise, no shots) for the given qubits, or for q < n_out."""
     from qiskit.quantum_info import SparsePauliOp, Statevector
+    qubits = list(range(n_out)) if qubits is None else qubits
     sv = Statevector.from_instruction(bound_circuit)
     n = bound_circuit.num_qubits
     return np.array([sv.expectation_value(SparsePauliOp.from_sparse_list([("Z", [q], 1.0)], num_qubits=n)).real
-                     for q in range(n_out)])
+                     for q in qubits])

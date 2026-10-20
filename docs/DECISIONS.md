@@ -128,12 +128,66 @@ builds on the Mac and the Windows laptop.
 
 ---
 
+## D6 — VQC circuit version 2: no dead parameters
+
+**Date:** 20 Oct 2026 · **Owners:** Sheghaf (quantum) + Kareem · **Status:** accepted when Sheghaf approves the PR
+
+**Problem.** In the original circuit (version 1: RY(x), RY(θ0), RZ(θ1), then CNOTs) the last layer's RZ
+angles are followed only by CNOTs and the Z readout, so they can never change the output. Measured
+(gradient = 0 for all inputs): 8 of 48 angles dead for 8 classes; 9 for binary (also the last RY on the
+readout qubit). So the "parameter-matched" MLP was matched against parameters that never train.
+
+**Decision.** Circuit version 2: per layer RY(x), **RZ(θ1), RY(θ0)** (RZ between the two RYs), then
+CNOTs; the readout uses the **last** n_out qubits (binary: qubit 7). Same parameter count (50 binary,
+64 for 8 classes), so the matched MLP and every interface stay the same. Implemented in `vqc.py`,
+`torch_sim.py`, `qiskit_circuit.py` (shared layout in `fqml/quantum/layout.py`); version 1 kept only to
+reproduce old runs.
+
+**Evidence.** `tests/test_torch_sim.py::test_dead_parameters`: version 1 = 8 (8-class) / 9 (binary)
+dead angles; version 2 = **0** for ring and chain. PennyLane = PyTorch simulator = Qiskit for every
+variant (tests). Accuracy: see D7 (version 2 is equal or better). Speed: ~2,730 vs ~2,310 samples/s
+on 1 CPU thread (Spike S5).
+
+---
+
+## D7 — Entangler: CNOT chain instead of ring; transpile at optimization level 3
+
+**Date:** 20 Oct 2026 · **Owners:** Sheghaf + Kareem · **Status:** accepted when Sheghaf approves the PR
+
+**Decision.** Use a CNOT **chain** (q → q+1, no 7 → 0 link) instead of the ring. For hardware (E6),
+transpile with Qiskit **optimization level 3** and prefer IBM Heron backends (Marrakesh, Kingston, Fez).
+
+**Evidence (Spike S4, IBM fake backends, 3 layers, best of 3 transpiler seeds):**
+
+| | Ring | Chain |
+|---|---|---|
+| 2-qubit gates on chip (opt 1–3) | 60 (24 + 36 added for routing) | **21 (0 added)** |
+| Depth (opt 2–3) | ~151 | **~43** |
+| Est. success, Heron (Fez / Marrakesh / Kingston), opt 3 | 0.77 / 0.82 / 0.82 | **0.89 / 0.92 / 0.88** |
+| Est. success, Eagle (Brisbane / Sherbrooke), opt 3 | 0.55 / 0.57 | **0.78 / 0.79** |
+
+IBM heavy-hex chips have no 8-qubit loop, so the ring's closing CNOT needs SWAPs; the chain maps
+directly. Optimization levels 0–1 are worse (Sherbrooke levels 0–1 picked a qubit marked broken in the
+calibration: est. success 0.000), levels 2 and 3 give the same result.
+
+**Evidence (Spike S5, accuracy, centralised CICIoT2023, 100k train / 20k test, 8 MI-selected features,
+1,000 steps × 64, 3 seeds, macro-F1):**
+
+| Task | Ring v1 (old) | Ring v2 | **Chain v2 (new)** |
+|---|---|---|---|
+| 8-class | 0.429 ± 0.005 | 0.443 ± 0.010 | **0.465 ± 0.013** |
+| Binary | 0.758 ± 0.012 | 0.759 ± 0.006 | **0.762 ± 0.018** |
+
+The new circuit is not worse on either task (8-class: +3.6 points). The chain must read the last qubit:
+with qubit 0 as readout, 37 of 48 angles would be dead (qubit 0 is only ever a CNOT control).
+
+**Revisit if:** Tuna-17's wiring favours another layout (S4 re-run with `--tuna-json`), or Phase 1
+tuning shows a clear accuracy gap at full scale.
+
+---
+
 ## Pending decisions
 
-- **D6, dead VQC parameters (proposed):** the last layer's 8 RZ angles cannot change the output (only
-  CNOTs and the Z readout follow), so 8 parameters never train (binary: 42 of 50 learn). Proposed fix:
-  drop that RZ, giving 42 parameters (binary) and 56 (8 classes); change `vqc.py`, `torch_sim.py`,
-  `qiskit_circuit.py` and the matched MLP together. Owners: Sheghaf + Kareem. Must land before S4.
 - **E5 shot training:** train with shots (parameter-shift, very expensive) vs. shots only at
   evaluation plus a small shot-trained subset vs. simulated shot sampling in the PyTorch simulator.
   Owners: Nouran + Sheghaf; to agree with Prof. Samir at Gate 0.
