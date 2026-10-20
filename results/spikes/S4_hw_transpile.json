@@ -1,0 +1,504 @@
+{
+  "machine": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+  "layers": 3,
+  "rows": [
+    {
+      "backend": "logical (no chip)",
+      "entangler": "ring",
+      "opt_level": null,
+      "depth": 34,
+      "two_qubit_gates": 24,
+      "total_gates": 96,
+      "est_success": null
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 245,
+      "two_qubit_gates": 102,
+      "total_gates": 666,
+      "extra_two_qubit_vs_logical": 78,
+      "est_success": 0.43769386684613265
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 173,
+      "two_qubit_gates": 60,
+      "total_gates": 321,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.7494517709397577
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 151,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.7565789793983977
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 151,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.7666104670927378
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 245,
+      "two_qubit_gates": 102,
+      "total_gates": 666,
+      "extra_two_qubit_vs_logical": 78,
+      "est_success": 0.7049984055713441
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 173,
+      "two_qubit_gates": 60,
+      "total_gates": 321,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.7927585211217779
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 151,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.7978183486504923
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 151,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.8223460593220631
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 245,
+      "two_qubit_gates": 102,
+      "total_gates": 666,
+      "extra_two_qubit_vs_logical": 78,
+      "est_success": 0.4112633375605522
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 173,
+      "two_qubit_gates": 60,
+      "total_gates": 321,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.6293365177993785
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 153,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.6289839527394996
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 153,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.6457335859328458
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 245,
+      "two_qubit_gates": 102,
+      "total_gates": 666,
+      "extra_two_qubit_vs_logical": 78,
+      "est_success": 0.5503768303243207
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 173,
+      "two_qubit_gates": 60,
+      "total_gates": 321,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.8067284875829502
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 151,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.7896513975242777
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 151,
+      "two_qubit_gates": 60,
+      "total_gates": 286,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.8190240025157713
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 384,
+      "two_qubit_gates": 102,
+      "total_gates": 1182,
+      "extra_two_qubit_vs_logical": 78,
+      "est_success": 0.17782452297996837
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 202,
+      "two_qubit_gates": 60,
+      "total_gates": 407,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.5530941204392509
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 226,
+      "two_qubit_gates": 60,
+      "total_gates": 433,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.5524367172298649
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 226,
+      "two_qubit_gates": 60,
+      "total_gates": 433,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.5524367172298649
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "ring",
+      "opt_level": 0,
+      "depth": 464,
+      "two_qubit_gates": 102,
+      "total_gates": 1362,
+      "extra_two_qubit_vs_logical": 78,
+      "est_success": 2.60229836281914e-163
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "ring",
+      "opt_level": 1,
+      "depth": 204,
+      "two_qubit_gates": 60,
+      "total_gates": 404,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.5691965622266114
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "ring",
+      "opt_level": 2,
+      "depth": 246,
+      "two_qubit_gates": 60,
+      "total_gates": 458,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.566831198476235
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "ring",
+      "opt_level": 3,
+      "depth": 246,
+      "two_qubit_gates": 60,
+      "total_gates": 458,
+      "extra_two_qubit_vs_logical": 36,
+      "est_success": 0.566831198476235
+    },
+    {
+      "backend": "logical (no chip)",
+      "entangler": "chain",
+      "opt_level": null,
+      "depth": 21,
+      "two_qubit_gates": 21,
+      "total_gates": 93,
+      "est_success": null
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 81,
+      "two_qubit_gates": 21,
+      "total_gates": 411,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7775794230027004
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 54,
+      "two_qubit_gates": 21,
+      "total_gates": 195,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7933676371563763
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.8845754210940333
+    },
+    {
+      "backend": "fake_fez",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.8845754210940333
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 81,
+      "two_qubit_gates": 21,
+      "total_gates": 411,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.8711771985547861
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 54,
+      "two_qubit_gates": 21,
+      "total_gates": 195,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.8814619466179703
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.9193202842626468
+    },
+    {
+      "backend": "fake_marrakesh",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.9193202842626468
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 81,
+      "two_qubit_gates": 21,
+      "total_gates": 411,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.6019237617382905
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 54,
+      "two_qubit_gates": 21,
+      "total_gates": 195,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.6174059296509484
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7709530224894303
+    },
+    {
+      "backend": "fake_torino",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7763784955732383
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 81,
+      "two_qubit_gates": 21,
+      "total_gates": 411,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.6988914490854984
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 54,
+      "two_qubit_gates": 21,
+      "total_gates": 195,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7125175453393342
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.8753999351750998
+    },
+    {
+      "backend": "fake_kingston",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 43,
+      "two_qubit_gates": 21,
+      "total_gates": 162,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.8825459404755245
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 125,
+      "two_qubit_gates": 21,
+      "total_gates": 612,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.4964193867210422
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 44,
+      "two_qubit_gates": 21,
+      "total_gates": 194,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.5134866321592588
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 52,
+      "two_qubit_gates": 21,
+      "total_gates": 197,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7783010622195331
+    },
+    {
+      "backend": "fake_brisbane",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 52,
+      "two_qubit_gates": 21,
+      "total_gates": 197,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7783010622195331
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "chain",
+      "opt_level": 0,
+      "depth": 131,
+      "two_qubit_gates": 21,
+      "total_gates": 648,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 4.8234651621234765e-37
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "chain",
+      "opt_level": 1,
+      "depth": 46,
+      "two_qubit_gates": 21,
+      "total_gates": 199,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 5.152914180069229e-37
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "chain",
+      "opt_level": 2,
+      "depth": 62,
+      "two_qubit_gates": 21,
+      "total_gates": 209,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7937914012895586
+    },
+    {
+      "backend": "fake_sherbrooke",
+      "entangler": "chain",
+      "opt_level": 3,
+      "depth": 62,
+      "two_qubit_gates": 21,
+      "total_gates": 209,
+      "extra_two_qubit_vs_logical": 0,
+      "est_success": 0.7937914012895586
+    }
+  ]
+}
