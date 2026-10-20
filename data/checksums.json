@@ -8,6 +8,19 @@
     "source": "",
     "total_gb": 0.037
   },
+  "raw/cicids2017": {
+    "files": {
+      "raw/cicids2017/friday.csv": "ebd499e6f23bd59f9cb81bec28178491b02b925fa5640a24215c9437d79482d0",
+      "raw/cicids2017/monday.csv": "51fe5dc962626efb4ae70dce0303072fb780da0932822b651202ee9c2fbc1aff",
+      "raw/cicids2017/thursday.csv": "78a4d11eaf473d099e30e71ddb01e0f38218e844c0a9cdd36602145d674af482",
+      "raw/cicids2017/tuesday.csv": "e2a0a5b631dfc6b455cc9f9a88b944110637d70a7f74171473925f76f38b6b0c",
+      "raw/cicids2017/wednesday.csv": "bf46c5f3c792e8817381f724511229569606918eaf07ac986d7a2592b6341bc2"
+    },
+    "n_files": 5,
+    "recorded": "2026-10-20",
+    "source": "CIC-IDS-2017 improved (Liu, Engelen et al., IEEE CNS 2022), intrusion-detection.distrinet-research.be/CNS2022/Datasets/CICIDS2017_improved.zip",
+    "total_gb": 1.152
+  },
   "raw/ciciot2023": {
     "files": {
       "raw/ciciot2023/CSV/Backdoor_Malware/Backdoor_Malware.pcap.csv": "b076424c816ecf99f40d466f95a8ea4336c5077d4afdc05220fa26d528f4a06f",
