@@ -152,7 +152,7 @@ on 1 CPU thread (Spike S5).
 
 ## D7 — Entangler: CNOT chain instead of ring; transpile at optimization level 3
 
-**Date:** 20 Oct 2026 · **Owners:** Sheghaf + Kareem · **Status:** accepted when Sheghaf approves the PR
+**Date:** 20 Oct 2026 · **Owners:** Sheghaf + Kareem · **Status:** accepted 2 Nov 2026 (Sheghaf approved the PR)
 
 **Decision.** Use a CNOT **chain** (q → q+1, no 7 → 0 link) instead of the ring. For hardware (E6),
 transpile with Qiskit **optimization level 3** and prefer IBM Heron backends (Marrakesh, Kingston, Fez).
