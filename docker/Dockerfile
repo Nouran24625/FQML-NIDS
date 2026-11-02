@@ -23,4 +23,5 @@ RUN pip install --index-url https://download.pytorch.org/whl/cpu "torch==$(cat r
  && pip install -r requirements/lock.txt \
  && pip install "git+https://github.com/open-quantum-safe/liboqs-python@${LIBOQS_PYTHON_VERSION}" \
  && pip check
+ENV GLIBC_TUNABLES=glibc.rtld.optional_static_tls=16384
 CMD ["bash"]

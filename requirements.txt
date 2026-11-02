@@ -10,3 +10,5 @@ pyyaml
 cryptography
 pytest
 tqdm
+qiskit
+qiskit-ibm-runtime
