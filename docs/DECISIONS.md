@@ -54,9 +54,9 @@ than computing.
 
 ---
 
-## D3 — Federated simulation for experiment sweeps: batched FedAvg loop (PROPOSED)
+## D3 — Federated simulation for experiment sweeps: batched FedAvg loop (ACCEPTED)
 
-**Date:** 17 Oct 2026 · **Owner:** Kareem (federation) · **Status:** proposed — needs team agreement
+**Date:** 17 Oct 2026 · **Owner:** Kareem (federation) · **Status:** accepted 2 Nov 2026 (all four members). Flower stays for E7 and the demo.
 
 **Proposal.** For E1–E5 and E8, simulate federated rounds with our own loop that trains all sampled
 clients of a round together in one GPU batch (each client keeps its own weights). Keep Flower for
@@ -130,7 +130,7 @@ builds on the Mac and the Windows laptop.
 
 ## D6 — VQC circuit version 2: no dead parameters
 
-**Date:** 20 Oct 2026 · **Owners:** Sheghaf (quantum) + Kareem · **Status:** accepted when Sheghaf approves the PR
+**Date:** 20 Oct 2026 · **Owners:** Sheghaf (quantum) + Kareem · **Status:** accepted 2 Nov 2026 (Sheghaf approved the PR)
 
 **Problem.** In the original circuit (version 1: RY(x), RY(θ0), RZ(θ1), then CNOTs) the last layer's RZ
 angles are followed only by CNOTs and the Z readout, so they can never change the output. Measured
