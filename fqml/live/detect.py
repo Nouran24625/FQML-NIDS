@@ -183,6 +183,9 @@ def main(argv=None):
         pass
     finally:
         det.close()
+    if a.stdin:                          # live: exit cleanly while the reader thread holds stdin
+        sys.stdout.flush()
+        os._exit(0)
 
 
 if __name__ == "__main__":

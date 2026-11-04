@@ -12,6 +12,7 @@ new connections | Modbus requests / writes | KB sent
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 
@@ -60,6 +61,9 @@ def main(argv=None):
             run(sys.stdin.buffer, w, live=True)
     except (KeyboardInterrupt, BrokenPipeError):
         pass
+    if not a.pcap:                       # live: the reader thread may still hold stdin, so skip
+        sys.stdout.flush()               # Python's shutdown (which would abort) and exit cleanly
+        os._exit(0)
 
 
 if __name__ == "__main__":
