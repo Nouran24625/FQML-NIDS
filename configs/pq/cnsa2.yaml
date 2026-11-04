@@ -1,0 +1,5 @@
+mode: pq
+kem: ML-KEM-1024
+signature: ML-DSA-87
+hybrid_x25519: false
+kdf_hash: SHA-384
