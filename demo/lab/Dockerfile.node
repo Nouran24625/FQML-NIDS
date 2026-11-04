@@ -1,0 +1,19 @@
+# One small image for the PLC, camera, sensor and HMI nodes (lab only).
+# Python standard library covers Modbus and the camera web server; mosquitto clients give real MQTT;
+# openssh-server lets the camera offer an SSH login for the brute-force demo.
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      mosquitto-clients openssh-server \
+ && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /run/sshd
+
+# Camera's SSH login account (lab only; password is set at build from an arg)
+ARG CAM_USER=admin
+ARG CAM_PASSWORD=admin2025
+RUN useradd -m -s /bin/bash ${CAM_USER} && echo "${CAM_USER}:${CAM_PASSWORD}" | chpasswd
+
+COPY nodes/ /app/
+WORKDIR /app
+# Each service sets its own command in compose.yml (python plc.py, python camera.py, ...).
+CMD ["python", "plc.py"]

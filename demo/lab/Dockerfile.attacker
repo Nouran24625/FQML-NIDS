@@ -1,0 +1,13 @@
+# Attacker node (lab only): a compromised host inside the plant network.
+# It holds standard, off-the-shelf tools so the IDS has realistic attack traffic to learn and detect,
+# the same categories labelled in CICIoT2023. At runtime the attacker is attached ONLY to the internal
+# lab network (compose.yml), so it can reach the lab hosts and nothing else.
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      hping3 nmap hydra python3 iproute2 ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY attacker/ /app/
+WORKDIR /app
+CMD ["sleep", "infinity"]

@@ -1,0 +1,80 @@
+# FQML-Guard demo lab (lab only). One isolated network, no route to the internet.
+#   plc .20   camera .11   sensor .12   broker .40   hmi .30   attacker .66
+# Bring up:   docker compose -f demo/lab/compose.yml up --build -d
+# Watch HMI:  docker compose -f demo/lab/compose.yml logs -f hmi
+# Tear down:  docker compose -f demo/lab/compose.yml down
+name: fqml-lab
+
+x-node: &node
+  build:
+    context: .
+    dockerfile: Dockerfile.node
+  restart: unless-stopped
+
+networks:
+  lab:
+    name: fqml-lab
+    driver: bridge
+    internal: true          # <-- no gateway to the host or internet; attacks cannot leave
+    ipam:
+      config:
+        - subnet: 10.10.0.0/24
+
+services:
+  broker:
+    image: eclipse-mosquitto:2
+    container_name: lab-broker
+    restart: unless-stopped
+    command: ["mosquitto", "-c", "/mosquitto.conf"]
+    volumes:
+      - ./broker/mosquitto.conf:/mosquitto.conf:ro
+    networks:
+      lab: {ipv4_address: 10.10.0.40}
+
+  plc:
+    <<: *node
+    container_name: lab-plc
+    command: ["python", "plc.py"]
+    networks:
+      lab: {ipv4_address: 10.10.0.20}
+
+  camera:
+    <<: *node
+    container_name: lab-camera
+    # start sshd (for the login brute-force demo) and the camera web server together
+    command: ["sh", "-c", "/usr/sbin/sshd && exec python camera.py"]
+    networks:
+      lab: {ipv4_address: 10.10.0.11}
+
+  sensor:
+    <<: *node
+    container_name: lab-sensor
+    command: ["python", "sensor.py"]
+    environment:
+      BROKER: 10.10.0.40
+    depends_on: [broker]
+    networks:
+      lab: {ipv4_address: 10.10.0.12}
+
+  hmi:
+    <<: *node
+    container_name: lab-hmi
+    command: ["python", "hmi.py"]
+    environment:
+      PLC: 10.10.0.20
+      CAMERA: 10.10.0.11
+      BROKER: 10.10.0.40
+    depends_on: [plc, camera, broker]
+    networks:
+      lab: {ipv4_address: 10.10.0.30}
+
+  attacker:
+    build:
+      context: .
+      dockerfile: Dockerfile.attacker
+    image: fqml-lab-attacker
+    container_name: lab-attacker
+    restart: unless-stopped
+    command: ["sleep", "infinity"]
+    networks:
+      lab: {ipv4_address: 10.10.0.66}
