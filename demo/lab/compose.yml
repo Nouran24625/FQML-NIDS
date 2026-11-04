@@ -3,6 +3,7 @@
 # Bring up:   docker compose -f demo/lab/compose.yml up --build -d
 # Watch HMI:  docker compose -f demo/lab/compose.yml logs -f hmi
 # Tear down:  docker compose -f demo/lab/compose.yml down
+# Capture:    docker compose -f demo/lab/compose.yml run --rm ids sh demo/lab/tap/watch.sh
 name: fqml-lab
 
 x-node: &node
@@ -16,6 +17,8 @@ networks:
     name: fqml-lab
     driver: bridge
     internal: true          # <-- no gateway to the host or internet; attacks cannot leave
+    driver_opts:
+      com.docker.network.bridge.name: br-fqml   # fixed name, so the IDS knows where to capture
     ipam:
       config:
         - subnet: 10.10.0.0/24
@@ -78,3 +81,17 @@ services:
     command: ["sleep", "infinity"]
     networks:
       lab: {ipv4_address: 10.10.0.66}
+
+  # IDS / capture node. Not a lab machine: it shares Docker's host network namespace, where the lab
+  # bridge lives, and listens to every packet passing through it. Started on demand with `run`.
+  ids:
+    build:
+      context: .
+      dockerfile: Dockerfile.ids
+    image: fqml-lab-ids
+    profiles: ["ids"]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ../..:/workspace
+    working_dir: /workspace

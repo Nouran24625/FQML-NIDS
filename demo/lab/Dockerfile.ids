@@ -1,0 +1,8 @@
+# IDS / capture node (lab only). Reuses the project image (torch, our code's dependencies) and adds
+# tcpdump. Runs in Docker's host network namespace, where the lab's bridge "br-fqml" lives, so it sees
+# every packet between the lab machines without being one of them.
+FROM fqml-nids:dev
+RUN apt-get update && apt-get install -y --no-install-recommends tcpdump \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /workspace
+CMD ["sleep", "infinity"]
