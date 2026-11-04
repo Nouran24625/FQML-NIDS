@@ -5,3 +5,4 @@ mlruns/
 .env
 __pycache__/
 .DS_Store
+runs/
