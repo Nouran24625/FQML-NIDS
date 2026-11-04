@@ -85,3 +85,19 @@ def test_log_entries_feed_the_labeller(tmp_path):
     assert out.iloc[0]["label"] == "DoS"                     # attacker during the DoS run
     assert out.iloc[1]["label"] == "Benign"                  # attacker between runs
     assert out.iloc[2]["label"] == "Benign"                  # the HMI is never the attacker
+
+
+def test_full_recording_gives_a_trainable_split(tmp_path):
+    """A multi-run recording must yield several sessions per attack, so whole runs can be held out."""
+    from fqml.live import synth, labels
+    from fqml.live.train import session_split
+    pcap, log = synth.generate(tmp_path, minutes=8, seed=5, sessions_per_attack=4, attack_seconds=(35, 45))
+    df = labels.build(str(pcap), str(log))
+    use = df[~df["ambiguous"]]
+    counts = use["label"].value_counts()
+    assert counts.get("Benign", 0) > 500
+    for lab in ("DoS", "Recon", "BruteForce", "ModbusWrite"):
+        assert counts.get(lab, 0) >= 40, f"{lab} too thin: {counts.get(lab, 0)}"
+    keep, held, untested = session_split(use.reset_index(drop=True), 0.34, seed=0)
+    assert not untested, f"some attacks have too few runs to test on: {untested}"
+    assert held.sum() > 0 and keep.sum() > 0
