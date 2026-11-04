@@ -30,6 +30,13 @@ def test_commands_target_only_lab_hosts():
     assert attacks.recon_cmd(20, rng)[-1] == "10.10.0.0/24"
 
 
+def test_recon_rate_is_capped():
+    """The scan is paced so it does not out-flood the DoS or overrun the capture."""
+    cmd = attacks.recon_cmd(20, random.Random(0))
+    assert "--max-rate" in cmd
+    assert int(cmd[cmd.index("--max-rate") + 1]) <= 2500      # packets/s, well below a flood
+
+
 def test_dos_is_rate_limited_not_flood():
     rng = random.Random(1)
     cmd = attacks.dos_cmd(20, rng)

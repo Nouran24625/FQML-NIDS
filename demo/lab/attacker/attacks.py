@@ -52,10 +52,14 @@ def dos_cmd(seconds: float, rng: random.Random) -> list[str]:
 
 
 def recon_cmd(seconds: float, rng: random.Random) -> list[str]:
-    """TCP SYN scan of the lab. The lab has few live hosts, so a single pass is very fast; run_logged
-    repeats it to fill the requested time, giving several windows of scan traffic to learn from."""
-    top = rng.choice([4000, 8000])                     # more ports -> a single pass lasts longer
-    return ["nmap", "-sS", "-n", "-T4", "--max-retries", "1", "-p", f"1-{top}", SUBNET]
+    """TCP SYN scan of the lab. A scan's signature is MANY destination ports, not high volume, so the
+    packet rate is capped with --max-rate: the scan stays spread across thousands of ports but at a
+    steady, moderate speed (well under the DoS flood, and light enough that the capture keeps up during
+    a long recording). --max-rate also makes one pass last ~the requested time on this small lab."""
+    rate = rng.choice([1200, 1800])                    # packets/s cap -> ~2400-3600 per 2 s window
+    top = rng.choice([4000, 8000])
+    return ["nmap", "-sS", "-n", "-T4", "--max-rate", str(rate), "--max-retries", "1",
+            "-p", f"1-{top}", SUBNET]
 
 
 def brute_cmd(seconds: float, rng: random.Random, wordlist: str) -> list[str]:
