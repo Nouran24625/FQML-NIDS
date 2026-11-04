@@ -52,14 +52,17 @@ def dos_cmd(seconds: float, rng: random.Random) -> list[str]:
 
 
 def recon_cmd(seconds: float, rng: random.Random) -> list[str]:
-    """TCP SYN scan of the lab. -T4 is brisk but not the fastest; a port range keeps it ~scan-length."""
-    top = rng.choice([1000, 2000])
+    """TCP SYN scan of the lab. The lab has few live hosts, so a single pass is very fast; run_logged
+    repeats it to fill the requested time, giving several windows of scan traffic to learn from."""
+    top = rng.choice([4000, 8000])                     # more ports -> a single pass lasts longer
     return ["nmap", "-sS", "-n", "-T4", "--max-retries", "1", "-p", f"1-{top}", SUBNET]
 
 
 def brute_cmd(seconds: float, rng: random.Random, wordlist: str) -> list[str]:
-    """SSH password guessing against the camera login (hydra), small wordlist, few threads."""
-    return ["hydra", "-l", "admin", "-P", wordlist, "-t", "4", "-f", "-I", f"ssh://{CAMERA}"]
+    """SSH password guessing against the camera login (hydra), small wordlist, few threads.
+    No -f: it tries the whole list instead of stopping at the first hit, so the attack lasts and
+    produces steady connection traffic. run_logged repeats it to fill the requested time."""
+    return ["hydra", "-l", "admin", "-P", wordlist, "-t", "4", "-I", f"ssh://{CAMERA}"]
 
 
 def modbus_write_burst(seconds: float, rng: random.Random, log, label_runner) -> dict:
@@ -89,20 +92,28 @@ def modbus_write_burst(seconds: float, rng: random.Random, log, label_runner) ->
 
 
 def run_logged(label: str, cmd: list[str], seconds: float, log, label_runner, timeout_pad: float = 20) -> dict:
-    """Run a tool, record start/end, append one log line."""
+    """Run a tool, repeating it until `seconds` have passed, and append ONE log line spanning the whole
+    run. Repeating matters for scans and brute force: a single pass finishes in a second or two on this
+    small lab, which is too few windows to learn from; repeating gives steady, multi-window attack
+    traffic for the requested duration. One pass per run for a tool that already runs long enough."""
     start = time.time()
-    try:
-        proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                              timeout=seconds + timeout_pad)
-        rc = proc.returncode
-    except subprocess.TimeoutExpired:
-        rc = "timeout"
-    except FileNotFoundError:
-        print(f"  {label}: tool '{cmd[0]}' not found in this image", file=sys.stderr)
-        return {}
+    passes = 0
+    while True:
+        try:
+            left = seconds - (time.time() - start)
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           timeout=max(left, 0) + timeout_pad)
+            passes += 1
+        except subprocess.TimeoutExpired:
+            passes += 1
+        except FileNotFoundError:
+            print(f"  {label}: tool '{cmd[0]}' not found in this image", file=sys.stderr)
+            return {}
+        if time.time() - start >= seconds:
+            break
     end = time.time()
     entry = {"label": label, "attacker": ATTACKER, "target": cmd[-1], "start": start, "end": end,
-             "command": " ".join(cmd), "exit_code": rc}
+             "command": " ".join(cmd) + (f" x{passes}" if passes > 1 else ""), "exit_code": 0}
     label_runner(log, entry)
     return entry
 

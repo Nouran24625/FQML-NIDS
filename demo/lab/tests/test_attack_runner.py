@@ -43,8 +43,17 @@ def test_brute_uses_small_wordlist_and_few_threads():
     cmd = attacks.brute_cmd(20, random.Random(0), "/app/wordlist.txt")
     assert cmd[0] == "hydra" and "-t" in cmd
     assert int(cmd[cmd.index("-t") + 1]) <= 8                 # gentle, so it is a demo not a real crack
+    assert "-f" not in cmd                                    # no early stop: the attack must last
     wl = (LAB / "attacker" / "wordlist.txt").read_text().split()
     assert "admin2025" in wl and len(wl) <= 50                # the real password is present, list is short
+
+
+def test_run_logged_fills_the_requested_duration():
+    """A fast tool is repeated until the duration is reached, so scans/brute force give enough windows."""
+    logs = []
+    e = attacks.run_logged("Test", ["true"], 1.0, None, lambda log, entry: logs.append(entry), timeout_pad=1)
+    assert e["end"] - e["start"] >= 1.0 and len(logs) == 1    # one log line spanning the whole run
+    assert e["label"] == "Test" and e["attacker"] == attacks.ATTACKER
 
 
 def test_log_entries_feed_the_labeller(tmp_path):
