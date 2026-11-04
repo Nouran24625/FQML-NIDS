@@ -79,6 +79,9 @@ services:
     container_name: lab-attacker
     restart: unless-stopped
     command: ["sleep", "infinity"]
+    volumes:
+      - ../..:/workspace          # repo mounted so attack logs land in runs/lab/ on the host
+    working_dir: /workspace
     networks:
       lab: {ipv4_address: 10.10.0.66}
 
