@@ -1,0 +1,12 @@
+admin
+password
+123456
+root
+toor
+admin123
+camera
+12345
+letmein
+qwerty
+admin2025
+default

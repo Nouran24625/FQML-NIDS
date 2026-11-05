@@ -6,3 +6,4 @@ mlruns/
 __pycache__/
 .DS_Store
 runs/
+models/
