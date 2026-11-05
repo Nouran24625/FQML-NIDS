@@ -1,6 +1,6 @@
 # FQML-NIDS — Frozen interfaces (Gate 0)
 
-**Version:** 1.0.0 · **Frozen on:** 2 Nov 2026 · **Applies to:** `main` after merging `track-a/a3-d6-d7-circuit`
+**Version:** 1.1.0 (see change log) · **Frozen on:** 2 Nov 2026 · **Applies to:** `main` after merging `track-a/a3-d6-d7-circuit`
 and `track-b/datasets-doc`.
 
 Every track codes against what is written here. **After the freeze, any change to an item in this file
@@ -137,8 +137,24 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
   `TorchVQC.logits(x, theta[B, …], …)`, one backward pass gives all per-sample gradients, then
   clip → sum per client → add noise. It runs inside the client's local step of the batched loop.
 - Privacy accounting reports (ε, δ) per run; Nouran sets δ before the first DP run.
-- Post-quantum channel (`fqml/pq`): ML-KEM-768 key exchange and ML-DSA-65 model signing (liboqs 0.16.0).
-  Used in E7 with Flower. `python -m fqml.pq.smoke` must pass on every machine.
+- Post-quantum channel (`fqml/pq`, D15): ML-KEM-768 key exchange and ML-DSA-65 model signing (liboqs 0.16.0),
+  hybrid with X25519 by default. Used in E7. `python -m fqml.pq.smoke` must pass on every machine.
+  Guide: `docs/PQ_CHANNEL.md`.
+  - **Settings:** `configs/pq/<name>.yaml`, loaded with `fqml.pq.config.load_config(name)`: `default` (above),
+    `cnsa2` (ML-KEM-1024 + ML-DSA-87, SHA-384), and the E7 baselines `classical` (X25519 + Ed25519) and `none`.
+    Server and sites must load the same file; the handshake refuses different settings.
+  - **Keys:** `python -m fqml.pq.keys gen server site-01 ... --config <name>` writes `keys/<name>/<party>.key`
+    (secret; `keys/` and `*.key` are git-ignored) and `<party>.pub` (pinned by the other side).
+    Each settings file has its own key folder (an ML-DSA-65 key cannot sign for `cnsa2`).
+  - **API for E7:** server `Listener(cfg, me, trust, host, port).accept() -> Link`; site
+    `connect(cfg, me, server_pub, host, port) -> Link`; `load_server(cfg, dir)` / `load_site(cfg, dir, name)`
+    read the key folder. `Link.send_model(weights, round=r, purpose="global" | "update" | "final", meta={...})`
+    and `Link.recv_model(round=r, purpose=...) -> ModelMessage(weights, round, purpose, signer, meta)`.
+    `weights` is a dict of named tensors or arrays (like `FedResult.params`) or a list of arrays (Flower);
+    numpy arrays come back (`fqml.pq.serialize.to_torch` converts). `Link.stats`: handshake time and bytes
+    on the wire, for E7.
+  - **Errors:** every failed check raises a `fqml.pq.primitives.SecurityError` (`HandshakeError`,
+    `IntegrityError`, `SignatureError`) and closes the link. Never catch one to carry on with the data.
 
 ---
 
@@ -163,3 +179,4 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
 | Version | Date | Change | Approved by |
 |---|---|---|---|
 | 1.0.0 | 2 Nov 2026 | First freeze: circuit v2 + chain (D6, D7), batched FedAvg (D3), capture column and capture-disjoint split announced for Phase 1 | Kareem, Sheghaf, Nouran, Ganna |
+| 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15 proposed): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | pending: Nouran + one member |

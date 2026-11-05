@@ -194,6 +194,73 @@ Heron); Quantum Inspire account active with Tuna-17. Details in `docs/ACCOUNTS.m
 
 ---
 
+## D15 — Post-quantum channel for E7: hybrid ML-KEM-768 + X25519, ML-DSA-65 signatures, pinned keys
+
+**Date:** 5 Nov 2026 · **Owner:** Sheghaf (post-quantum channel) · **Status:** proposed — an interface change
+(INTERFACES 1.1.0, section 4), so it needs Nouran (owner of section 4) plus one other member
+
+**Proposal.** `fqml/pq` carries the federated messages of E7 (server ↔ sites) over a channel built from the
+NIST post-quantum standards, with the classical and no-protection baselines chosen by one settings file
+(`configs/pq/*.yaml`, read by `fqml/pq/config.py`):
+
+| Settings | Session keys | Signatures | Hash |
+|---|---|---|---|
+| `default` | ML-KEM-768 + X25519 (hybrid) | ML-DSA-65 | SHA-256 |
+| `cnsa2` | ML-KEM-1024 | ML-DSA-87 | SHA-384 |
+| `classical` (E7 baseline) | X25519 | Ed25519 | SHA-256 |
+| `none` (E7 baseline) | — | — | — |
+
+- **Handshake** (`channel.py`): 3 messages; server and site each sign the transcript with a pinned identity
+  key (`keys.py`, like SSH known_hosts, no certificate authority); fresh ML-KEM and X25519 keys for every
+  connection (forward secrecy); session keys = HKDF(ML-KEM secret ‖ X25519 secret, salt = transcript hash);
+  key confirmation both ways. Both sides compare a fingerprint of the settings, so nobody can talk a site
+  down to a weaker mode.
+- **Messages:** AES-256-GCM with one key per direction and the sequence number inside the authenticated
+  data: tampered, replayed, reordered or dropped messages are rejected.
+- **Models:** each model travels as a signed envelope (weights + round + purpose + signer + meta such as
+  `n_rows`), so an old round's model cannot be replayed and a stored model can be checked later.
+- **Transport:** `link.py` (TCP, clear refusal reasons on both sides, byte and time counters for E7).
+  Received bytes are never unpickled (`serialize.py`).
+
+**Why hybrid by default:** ML-KEM is young; if a flaw is ever found, X25519 still protects the session
+keys, and a recorded session ("harvest now, decrypt later") stays safe unless ML-KEM is broken too. It costs
+94 bytes and under 0.5 ms per handshake (S6). `cnsa2` is the all-post-quantum, higher-security option.
+
+**Evidence.**
+- `tests/test_pq_channel.py` (42 tests, real liboqs 0.16.0): every mode end to end, in memory and over TCP.
+  Rejected: tampered, replayed, reordered or relabelled messages; unknown sites; impostor server and site
+  keys; every downgrade pair; a man in the middle editing any handshake field; stale or re-signed models;
+  malformed input. liboqs keys, ciphertexts and signatures interoperate with OpenSSL's independent FIPS
+  203/204 implementation in both directions. Mutation check: 12 deliberate bugs (e.g. skipping a signature
+  check, leaving the sequence number out of the authenticated data) each turned the suite red.
+- Spike S6, **preliminary**: cloud Linux VM, 1 thread, Python 3.13. Byte counts are exact on every machine;
+  the times must be re-run on the Mac in Docker (`results/spikes/S6_pq_overhead.json`).
+
+| Settings | Handshake CPU (both sides) | Handshake bytes | VQC model message on the wire | 1M-parameter model, send / receive |
+|---|---|---|---|---|
+| none | 0.05 ms | 308 | 407 B | 4.4 / 1.1 ms |
+| classical | 0.7 ms | 638 | 524 B | 15.9 / 9.4 ms |
+| pq-768, no hybrid | 0.5 ms | 9,330 | 3,771 B | 11.0 / 10.4 ms |
+| **default** | **0.8 ms** | **9,424** | **3,771 B** | **10.9 / 10.9 ms** |
+| cnsa2 | 0.7 ms | 12,862 | 5,089 B | 11.0 / 10.7 ms |
+
+**Effect.** Time is not the cost: post-quantum handshakes and model messages take under a millisecond, like
+the classical ones. **Bytes are:** +8.8 KB per connection, and every signed model carries the 3,309-byte
+ML-DSA-65 signature. For the 64-parameter VQC (256 B of weights) a model message grows from 524 B
+(classical) to 3,771 B; for a 1M-parameter model the overhead is under 0.1%. E7 should report bytes per
+round, not only time.
+
+**Open questions (E7 design, with Nouran):** (1) sign the sites' updates as well, or only the server's
+global and final models? The channel already authenticates every message; signatures add provenance, and
+dropping them for updates halves the signature bytes. (2) How Flower carries the channel: `Link` payloads
+inside Flower messages, or our own server loop over `link.py`. (3) One connection per run, or a reconnect
+every round (+9.4 KB each time).
+
+**Revisit if:** NIST or liboqs change ML-KEM / ML-DSA, a flaw is published in either, or E7 shows the bytes
+matter (then ML-DSA-44, or signing global models only).
+
+---
+
 ## Pending decisions
 
 - **E5 shot training:** train with shots (parameter-shift, very expensive) vs. shots only at
