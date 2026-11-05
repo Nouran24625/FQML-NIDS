@@ -1,4 +1,4 @@
-"""Feature windows + attack log -> labelled training table. Owner: Nouran.
+"""Feature windows + attack log -> labelled training table.
 
 Rules (written down so they can go in the video's honest note and the thesis):
   * A row of the ATTACKER host is labelled with the attack if at least `min_overlap` (default 50 %)

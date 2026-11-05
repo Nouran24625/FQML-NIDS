@@ -1,4 +1,4 @@
-# ITIDA prototype video: Nouran's parts (detection, dashboard, A8)
+# ITIDA prototype video: detection, dashboard and A8
 
 Plan: `FQML-Guard_ITIDA_Video_Plan.pdf` (Version 2). Deadline: video link in the proposal, Sun 8 Nov 2026.
 
@@ -27,7 +27,7 @@ On screen it says **random row split**: the capture-disjoint split (DATA-3) isn'
 
 ---
 
-## What I need from the lab (Sheghaf: network; Kareem: attacks)
+## What the detection side needs from the lab
 
 1. **A pcap stream of the lab segment**, readable from the laptop running the detector:
    - EVE-NG: capture on the lab bridge on the EVE host (that's what EVE's own capture does), e.g.

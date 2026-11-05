@@ -1,4 +1,4 @@
-"""Live detection for the ITIDA prototype video (Version B). Owner: Nouran.
+"""Live detection for the ITIDA prototype video (Version B).
 
 Pipeline (works on any lab network: EVE-NG, Docker, or a recorded pcap):
 

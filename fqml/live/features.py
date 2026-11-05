@@ -1,4 +1,4 @@
-"""Per-host, per-window traffic features. Owner: Nouran.
+"""Per-host, per-window traffic features.
 
 Time is cut into fixed windows (default 2 s). For every IPv4 host that SENT at least one packet in a
 window we compute one feature row from the packets it sent ("out") and received ("in").

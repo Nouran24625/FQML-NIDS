@@ -1,4 +1,4 @@
-"""Live detector: packets -> 2-second windows -> model -> detections for the dashboard. Owner: Nouran.
+"""Live detector: packets -> 2-second windows -> model -> detections for the dashboard.
 
 Live (any lab; the command before | must write a pcap stream to stdout):
     tcpdump -i <lab-iface> -n -U -s 128 -w - 'not port 22 and not port 8050' \

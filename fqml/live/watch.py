@@ -1,4 +1,4 @@
-"""Watch live traffic as the model will see it: one line per active host every window. Owner: Nouran.
+"""Watch live traffic as the model will see it: one line per active host every window.
 
 No model needed. Used to check the capture (lab Step 4) and that each attack looks different from
 normal traffic before any training data is recorded.

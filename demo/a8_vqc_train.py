@@ -1,5 +1,5 @@
 """Video shot A8: the 8-qubit VQC training on a GPU, next to its parameter-matched classical twin.
-Owner: Nouran. Run in Google Colab (GPU runtime) with demo/A8_vqc_gpu_colab.ipynb, or anywhere:
+Run in Google Colab (GPU runtime) with demo/A8_vqc_gpu_colab.ipynb, or anywhere:
 
     python -m demo.a8_vqc_train --data /content/drive/MyDrive/fqml/ciciot2023_pcapcsv_clean.parquet
 

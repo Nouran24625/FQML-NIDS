@@ -1,4 +1,4 @@
-"""Preprocessing + saved demo model ("bundle") used by train.py and detect.py. Owner: Nouran.
+"""Preprocessing + saved demo model ("bundle") used by train.py and detect.py.
 
 Bundle directory:
     bundle.json   classes, chosen features, preprocessing settings, window, model type, test report

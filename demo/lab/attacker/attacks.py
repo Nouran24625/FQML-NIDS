@@ -1,4 +1,4 @@
-"""Attack runner for the FQML-Guard demo lab (lab only). Owner: Kareem.
+"""Attack runner for the FQML-Guard demo lab (lab only).
 
 Runs standard, off-the-shelf tools from the attacker container, each wrapped by fqml.live.attack_log
 so its start/end time is recorded -- that is how the captured traffic gets its labels, the same way

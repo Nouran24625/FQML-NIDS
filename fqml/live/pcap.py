@@ -1,4 +1,4 @@
-"""Minimal, dependency-free pcap reader. Owner: Nouran.
+"""Minimal, dependency-free pcap reader.
 
 Reads classic libpcap files or a live stream (what `tcpdump -U -w -` writes to stdout).
 Supported link types: Ethernet (1, incl. 802.1Q), Linux cooked SLL (113) and SLL2 (276), raw IP (101),

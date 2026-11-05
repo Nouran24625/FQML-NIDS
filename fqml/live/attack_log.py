@@ -1,4 +1,4 @@
-"""Run an attack command and record exactly when it ran (the ground truth for labels). Owner: Nouran.
+"""Run an attack command and record exactly when it ran (the ground truth for labels).
 
 Every attack used for TRAINING data must be started through this wrapper (or write the same JSONL line),
 so labels come from what actually happened, not from guessing:

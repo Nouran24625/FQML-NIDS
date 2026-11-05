@@ -1,4 +1,4 @@
-"""SYNTHETIC lab traffic, for unit tests and dry runs of the pipeline ONLY. Owner: Nouran.
+"""SYNTHETIC lab traffic, for unit tests and dry runs of the pipeline ONLY.
 
 Never use this for the ITIDA video or any reported result: the video model is trained and shown on
 REAL captures from the lab network. Everything written here is marked SYNTHETIC in its file name.

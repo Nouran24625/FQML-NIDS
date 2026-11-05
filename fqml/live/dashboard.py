@@ -1,4 +1,4 @@
-"""Dashboard server (standard library only, works offline in the lab). Owner: Nouran.
+"""Dashboard server (standard library only, works offline in the lab).
 
     python -m fqml.live.dashboard --state runs/live [--port 8050]
     then open http://localhost:8050

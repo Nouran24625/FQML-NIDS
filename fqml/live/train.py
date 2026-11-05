@@ -1,4 +1,4 @@
-"""Train the live-demo model on labelled LAB windows and report it honestly. Owner: Nouran.
+"""Train the live-demo model on labelled LAB windows and report it honestly.
 
     python -m fqml.live.train --windows runs/lab/windows.parquet --out models/lab_demo [--deploy vqc]
 
