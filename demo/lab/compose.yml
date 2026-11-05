@@ -85,6 +85,19 @@ services:
     networks:
       lab: {ipv4_address: 10.10.0.66}
 
+  # Dashboard web server. Separate from the ids node so it can publish a port to the host:
+  # open http://localhost:8050 in the browser on the computer running Docker. Reads runs/live/
+  # (what the detector in the ids node writes). Standard-library server; no lab network needed.
+  dashboard:
+    image: fqml-nids:dev
+    profiles: ["dash"]
+    command: ["python", "-m", "fqml.live.dashboard", "--state", "runs/live", "--host", "0.0.0.0", "--port", "8050"]
+    volumes:
+      - ../..:/workspace
+    working_dir: /workspace
+    ports:
+      - "8050:8050"
+
   # IDS / capture node. Not a lab machine: it shares Docker's host network namespace, where the lab
   # bridge lives, and listens to every packet passing through it. Started on demand with `run`.
   ids:

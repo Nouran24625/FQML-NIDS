@@ -41,3 +41,10 @@ def test_watch_view_shows_lab_hosts(tmp_path):
         run(f, w)
     text = out.getvalue()
     assert w.windows >= 25 and "hmi 10.10.0.30" in text and "plc 10.10.0.20" in text
+
+
+def test_dashboard_publishes_a_port_and_reads_live_state():
+    dash = CFG["services"]["dashboard"]
+    assert dash["ports"] == ["8050:8050"]                    # reachable from the host browser
+    assert dash["profiles"] == ["dash"]                      # on-demand
+    assert "fqml.live.dashboard" in " ".join(dash["command"])
