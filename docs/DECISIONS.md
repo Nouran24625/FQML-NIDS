@@ -196,8 +196,8 @@ Heron); Quantum Inspire account active with Tuna-17. Details in `docs/ACCOUNTS.m
 
 ## D15 — Post-quantum channel for E7: hybrid ML-KEM-768 + X25519, ML-DSA-65 signatures, pinned keys
 
-**Date:** 5 Nov 2026 · **Owner:** Sheghaf (post-quantum channel) · **Status:** proposed — an interface change
-(INTERFACES 1.1.0, section 4), so it needs Nouran (owner of section 4) plus one other member
+**Date:** 5 Nov 2026 · **Owner:** Sheghaf (post-quantum channel) · **Status:** accepted 5 Nov 2026 (Nouran,
+owner of INTERFACES section 4, merged PR #12; Sheghaf approved it in PR #12). Interface change: INTERFACES 1.1.0
 
 **Proposal.** `fqml/pq` carries the federated messages of E7 (server ↔ sites) over a channel built from the
 NIST post-quantum standards, with the classical and no-protection baselines chosen by one settings file

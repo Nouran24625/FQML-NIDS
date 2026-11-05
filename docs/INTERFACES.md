@@ -179,4 +179,4 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
 | Version | Date | Change | Approved by |
 |---|---|---|---|
 | 1.0.0 | 2 Nov 2026 | First freeze: circuit v2 + chain (D6, D7), batched FedAvg (D3), capture column and capture-disjoint split announced for Phase 1 | Kareem, Sheghaf, Nouran, Ganna |
-| 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15 proposed): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | pending: Nouran + one member |
+| 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | Nouran, Sheghaf (PR #12) |
