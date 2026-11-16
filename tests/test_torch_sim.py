@@ -7,7 +7,7 @@ from torch import nn
 from fqml.models.vqc import VQC, n_params
 from fqml.quantum.torch_sim import TorchVQC
 
-VARIANTS = [("ring", 1), ("ring", 2), ("chain", 2)]
+VARIANTS = [("ring", 1), ("ring", 2), ("chain", 2), ("none", 2)]
 
 
 @pytest.mark.parametrize("n_classes", [2, 8])
@@ -87,9 +87,27 @@ def _dead_angles(n_classes, entangler, version):
     (8, "ring", 2, 0),
     (2, "chain", 2, 0),    # ... for the chain too (reading the last qubit)
     (8, "chain", 2, 0),
+    (7, "chain", 2, 0),    # 7 classes (DDoS and DoS merged, label-map variant c7m)
+    (8, "none", 2, 0),     # no CNOTs, every qubit read: each output uses its own qubit's 6 angles
+    (2, "none", 2, 42),    # no CNOTs, only the last qubit read: the other 7 qubits never reach the output
+    (7, "none", 2, 6),     # qubit 0 is not read
 ])
 def test_dead_parameters(n_classes, entangler, version, dead):
     assert _dead_angles(n_classes, entangler, version) == dead
+
+
+def test_no_entangler_outputs_use_one_feature_each():
+    """entangler="none": <Z_q> depends only on feature q, so changing another feature changes nothing."""
+    m = TorchVQC(8, 8, 3, seed=8, entangler="none").double()
+    x = torch.rand(4, 8, dtype=torch.float64) * torch.pi
+    x2 = x.clone()
+    x2[:, 3] = torch.rand(4, dtype=torch.float64) * torch.pi
+    z, z2 = m.expz(x), m.expz(x2)
+    keep = [q for q in range(8) if q != 3]
+    assert torch.allclose(z[:, keep], z2[:, keep], atol=1e-12) and not torch.allclose(z[:, 3], z2[:, 3])
+    assert n_params(m) == n_params(TorchVQC(8, 8, 3))        # same parameter count as the chain circuit
+    with pytest.raises(ValueError):
+        TorchVQC(8, 8, 3, entangler="star")
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="no GPU on this machine")

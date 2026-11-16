@@ -3,8 +3,18 @@ No heavy imports here, so every implementation can use it. Decisions D6 (version
 """
 
 
+ENTANGLERS = ("chain", "ring", "none")
+
+
 def entangler_pairs(n_qubits, entangler="ring"):
-    """CNOT (control, target) pairs, applied in this order at the end of every layer."""
+    """CNOT (control, target) pairs, applied in this order at the end of every layer.
+
+    "none" (INTERFACES 2.0.0) returns no pairs: the entanglement-free control. Without CNOTs every
+    qubit evolves alone, so <Z_q> depends only on feature q and qubit q's own 6 angles. An output can
+    then only use the qubits that are read: with the binary readout (last qubit only) 42 of the 48
+    angles cannot affect the output (tests/test_torch_sim.py::test_dead_parameters)."""
+    if entangler == "none":
+        return []
     if entangler == "ring":
         return [(q, (q + 1) % n_qubits) for q in range(n_qubits)]
     if entangler == "chain":

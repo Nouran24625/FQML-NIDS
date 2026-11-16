@@ -10,7 +10,7 @@ from fqml.quantum.qiskit_circuit import bind, build_vqc, expz_statevector  # noq
 from fqml.quantum.torch_sim import TorchVQC  # noqa: E402
 
 
-@pytest.mark.parametrize("entangler,version", [("ring", 1), ("ring", 2), ("chain", 2)])
+@pytest.mark.parametrize("entangler,version", [("ring", 1), ("ring", 2), ("chain", 2), ("none", 2)])
 @pytest.mark.parametrize("n_classes", [2, 8])
 @pytest.mark.parametrize("seed", [0, 1])
 def test_qiskit_matches_torch_sim(seed, n_classes, entangler, version):
@@ -27,3 +27,5 @@ def test_chain_has_fewer_cnots():
     ring, _, _ = build_vqc(8, 3, "ring")
     chain, _, _ = build_vqc(8, 3, "chain")
     assert ring.count_ops()["cx"] == 24 and chain.count_ops()["cx"] == 21
+    none, _, _ = build_vqc(8, 3, "none")
+    assert none.count_ops().get("cx", 0) == 0 and none.count_ops()["ry"] == 48
