@@ -3,6 +3,10 @@
 One entry per decision that changes how the project is built or run.
 Format: what was decided, why (with the measurement), who decided, and what would make us revisit it.
 
+Numbering: D1–D7 are Phase 0. D8–D14 are reserved for the Phase 1 decisions listed under "Pending
+decisions". D15 is the post-quantum channel (5 Nov). D16 and D17 are Phase 1 decisions added on 16 Nov.
+A number is never reused.
+
 ---
 
 ## D1 — Quantum simulator for training: our PyTorch state-vector simulator
@@ -67,6 +71,9 @@ E7 (post-quantum channel, real messages) and the defense demo.
 
 **Effect on compute (plan version B: full rounds and clients, E5 shots only at evaluation):**
 ~950 h (Mac, old way) → ~87 h (Mac, D2) → ~12–17 h (one Kaggle T4 with D1 + D3).
+*Note, 16 Nov 2026:* these hours were computed for the old run matrix (`results/run_matrix.csv`, never
+committed), which is replaced by the E0 version 2 matrix (Phase 0 amendments, item 2). The speed
+measurements below stand; the totals are to be recomputed for the new matrix.
 
 **Evidence (Spike S2, 20 clients x 50 steps x batch 64 per round):** equivalence test batched =
 sequential passes (6 of 6, PR #1). Laptop CPU, 1 thread: VQC 16.9 s per round batched vs 25.4 s
@@ -74,6 +81,11 @@ sequential; MLP 0.06 s. Kaggle T4 GPU: VQC 1.8 s per round.
 
 **Open questions:** how Byzantine attacks, robust aggregators and DP-SGD plug into the batched loop;
 check results match a Flower run on a small case.
+
+*Amendment, 16 Nov 2026 (item 8):* the equivalence test used random numbers only. It now also runs on
+traffic-like data in CI and on real CICIoT2023 rows wherever the cleaned file exists
+(`fqml/fl/equivalence.py`, `tests/test_fedavg_real_data.py`); the federated trial run (FED-4) calls
+`compare_modes` on its own data before round 1.
 
 ---
 
@@ -187,6 +199,17 @@ calibration: est. success 0.000), levels 2 and 3 give the same result.
 The new circuit is not worse on either task (8-class: +3.6 points). The chain must read the last qubit:
 with qubit 0 as readout, 37 of 48 angles would be dead (qubit 0 is only ever a CNOT control).
 
+> **S5 scores are NOT VALID as model performance (16 Nov 2026, Phase 0 amendments, item 2).** They may not
+> be quoted in the thesis, the paper or any comparison. What S5 still supports is only the *relative*
+> statement above (same data and split for all three circuits), and Phase 1 re-measures it under
+> protocol A. Reasons, all visible in this repository: (1) train and test were a random row sample of
+> one file (`spikes/s5_circuit_variants.py`, `df.sample`), so neighbouring packet windows of the same
+> attack run sit on both sides; (2) that file (cleaned v0) was capped to 1,000,000 rows and de-duplicated
+> **before** the split, so the class mix is not the real one; (3) the 8-class runs used `IAT` as one of
+> the 8 features (`results/spikes/S5_circuit_variants.json`), a column a public audit ties to the capture
+> setup rather than the traffic; (4) 3 seeds on one split measure training noise, not data noise.
+> D6 (dead parameters) and the S4 hardware evidence do not depend on S5 and stand.
+
 **Accounts (Gate 0):** IBM Open plan active with backends ibm_fez, ibm_kingston, ibm_marrakesh (all
 Heron); Quantum Inspire account active with Tuna-17. Details in `docs/ACCOUNTS.md`.
 
@@ -261,8 +284,67 @@ matter (then ML-DSA-44, or signing global models only).
 
 ---
 
+## Phase 0 amendments — 16 Nov 2026
+
+**Owners:** all four · **Status:** proposed in the pull request "Interface change: Phase 0 amendments
+(INTERFACES 2.0.0)"; accepted when Ganna, Kareem, Sheghaf and Nouran have approved it.
+
+**What stands.** Nothing in the Phase 0 engineering core is redone: the environment and lock file (D5),
+CI, the simulator (D1), threads (D2), batched FedAvg (D3), per-sample gradients (D4), circuit version 2
+(D6), the CNOT chain (D7) and the post-quantum channel (D15).
+
+**Why anything changes.** Three facts about CICIoT2023 that Phase 0 did not use:
+- The dataset paper (Neto et al., Sensors 2023, https://www.mdpi.com/1424-8220/23/13/5941): each attack
+  was run as one experiment and all traffic captured during it carries that attack's label; benign
+  traffic is one 16-hour capture; features are averages over windows of 10 packets (100 for DDoS, DoS
+  and Mirai). So the numbered files of one attack are pieces of **one** run, and a split by file still
+  trains and tests on the same run.
+- A public audit of the dataset
+  (https://github.com/Mohammed-Baqir/Deep-Network-Intrusion-Detection-through-Data-Engineering) reports
+  that `IAT` takes values tied to a per-campaign constant and alone separates DDoS from DoS (AUC 0.998),
+  and that 5-class macro-F1 falls from about 0.93 to about 0.33 on an independent capture campaign
+  (CICIoMT2024). Task DATA-1 replicates the `IAT` finding on our files before D9.
+- Our own Phase 0 cleaning (v0) capped, de-duplicated and shuffled the rows before any split and kept
+  neither file name nor row order, so no leakage-free split could be built from it.
+
+| # | Phase 0 item | Amendment | In this repository |
+|---|---|---|---|
+| 1 | Cleaned file v0 (`ciciot2023_pcapcsv_clean.parquet`) | **Retired.** Replaced by cleaner v1: row order kept, `file` / `row_index` / `row_id`, duplicates marked (`dup_group`) not deleted, conflicting labels marked, even sampling with a stored `sample_rate` | `fqml/data/clean_ciciot2023_v1.py`, `tests/test_clean_v1.py`; `interim` fingerprint marked retired in `data/checksums.json` |
+| 2 | Spike S5 scores (0.465 / 0.762) and the old run matrix | **Not valid** as results (note under D7); the run matrix is replaced by the E0 version 2 matrix (protocols A / B / C, 5 folds × 3 seeds) | Notes under D3 and D7; `results/spikes/README.md` |
+| 3 | `INTERFACES.md` 1.1.0 | **2.0.0:** new data columns, fold manifests, run ID with protocol and fold, model size setting, `entangler="none"`, sites split and local-only mode (signatures) | `docs/INTERFACES.md`, `fqml/data/folds.py`, `fqml/quantum/layout.py`, tests |
+| 4 | "Seeds 0, 1, 2 on one split" | **5 folds × 3 seeds**, the fold is the unit of comparison; run ID `E{n}-{dataset}-{model}-{variant}-{protocol}-f{fold}-s{seed}` | `fqml/utils/run_id.py`, `tests/test_run_id.py` |
+| 5 | Label map (8 families) | Stays primary. A 7-class variant with DDoS and DoS merged (`c7m`) is available; whether it is reported is D17 | `fqml/data/label_maps/` |
+| 6 | MatchedMLP at the VQC's parameter count only | **MLP size ladder:** the VQC's count, then 128, 256, 512, 1,000, 3,000 parameters; result reported as the VQC's classical-equivalent size | `fqml/models/sizes.py`, `fqml/models/mlp.py` |
+| 7 | Dataset list | CICIoMT2024 added as the independent test set; order CICIoT2023 → CICIoMT2024 → CICIDS2017; Edge-IIoTset and UNSW-NB15 stay fingerprinted and unused | `docs/DATASETS.md` |
+| 8 | FedAvg equivalence test on random numbers only | Also on traffic-like data (CI) and on real rows (when the cleaned file is present) | `fqml/fl/equivalence.py`, `tests/test_fedavg_real_data.py` |
+
+**Found while making the amendments.**
+- `entangler="none"` with the binary readout leaves 42 of the 48 angles without any effect on the output
+  (without CNOTs only the last qubit, and so only one feature, reaches it). The entanglement-free control
+  is sound for 8 classes as it is; for the binary task its readout must be fixed in task Q-2 before any run.
+- The number D15 was planned for the merged DDoS + DoS decision but was already taken by the post-quantum
+  channel. That decision is **D17**.
+- `experiments/run_matrix.py`, named in the plan as the home of the old run matrix, was never committed;
+  only `spikes/s2_round_time.py` refers to its output.
+
+**Revisit if:** the file inventory (task DATA-1) shows the numbered files of an attack are separate
+recordings and not pieces of one run. Protocol A still holds then, and a split by file becomes a fourth
+check.
+
+---
+
 ## Pending decisions
 
-- **E5 shot training:** train with shots (parameter-shift, very expensive) vs. shots only at
-  evaluation plus a small shot-trained subset vs. simulated shot sampling in the PyTorch simulator.
-  Owners: Nouran + Sheghaf; to agree with Prof. Samir at Gate 0.
+| # | Decision | Owner | Due |
+|---|---|---|---|
+| D8a | Evaluation protocols A, B and C: folds, gap, the benign capture, single-type families | Ganna + Nouran; all four approve | Wed 18 Nov |
+| D8 | Data source (per-file CSVs), conflicting-label policy (`--conflicts`), duplicates marked and not deleted, sampling cap (`--per-label-cap`, `sample_rate`) | Ganna | Thu 19 Nov |
+| D9 | `IAT` dropped, by the rule written in advance (task EXP-1) | Ganna + Nouran | Mon 23 Nov |
+| D17 | Whether the 7-class task with DDoS and DoS merged (`c7m`) is reported beside the 8-class task | Ganna + Nouran | Mon 23 Nov |
+| D11 | Tuning per fold, fixed VQC depth, MLP size ladder | Nouran | Mon 23 Nov |
+| D14 | Where runs happen; result files; environment tags | Sheghaf | Mon 23 Nov |
+| E5 | Shot training: shots during training (parameter-shift, very expensive), or shots only at evaluation plus a small shot-trained subset, or simulated shot sampling in the PyTorch simulator | Nouran + Sheghaf | Wed 25 Nov |
+| D13 | δ, the batch sampling method for DP-SGD, and the privacy unit | Nouran | Fri 27 Nov |
+| D16 | Second dataset: whether CICIoMT2024's feature columns match CICIoT2023's, and the shared classes | Ganna | Fri 27 Nov |
+| D12 | Whether and how tree models are trained federated | Kareem | Fri 11 Dec |
+| D10 | CICIDS2017 labels and split | Ganna | Fri 18 Dec |
