@@ -23,6 +23,17 @@ def test_qiskit_matches_torch_sim(seed, n_classes, entangler, version):
     assert np.allclose(z_qiskit, z_torch, atol=1e-8)
 
 
+@pytest.mark.parametrize("entangler", ["chain", "none"])
+def test_qiskit_matches_torch_sim_on_every_qubit(entangler):
+    """The linear readout reads all 8 qubits: every <Z_q> must match, not only the last ones."""
+    model = TorchVQC(8, 8, 3, seed=3, entangler=entangler, readout="linear").double()
+    x = torch.rand(8, dtype=torch.float64, generator=torch.Generator().manual_seed(3)) * torch.pi
+    qc, xp, tp = build_vqc(8, 3, entangler, 2)
+    z_qiskit = expz_statevector(bind(qc, xp, tp, x.numpy(), model.theta.detach().numpy()), qubits=list(range(8)))
+    z_torch = model.expz(x.unsqueeze(0))[0].detach().numpy()
+    assert z_torch.shape == (8,) and np.allclose(z_qiskit, z_torch, atol=1e-8)
+
+
 def test_chain_has_fewer_cnots():
     ring, _, _ = build_vqc(8, 3, "ring")
     chain, _, _ = build_vqc(8, 3, "chain")

@@ -10,6 +10,9 @@ def test_vqc_param_counts_match_plan():
     # Plan section 7: 2*n*L rotation angles + 2 per output
     assert n_params(VQC(n_qubits=8, n_classes=2, n_layers=3)) == 48 + 2   # binary
     assert n_params(VQC(n_qubits=8, n_classes=8, n_layers=3)) == 48 + 16  # 8 families
+    # linear readout (Phase 0 amendments): (n + 1) weights per output
+    assert n_params(VQC(n_qubits=8, n_classes=2, n_layers=3, readout="linear")) == 48 + 9
+    assert n_params(VQC(n_qubits=8, n_classes=8, n_layers=3, entangler="none", readout="linear")) == 48 + 72
 
 
 def test_vqc_output_shape_and_gradients():

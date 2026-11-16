@@ -311,7 +311,7 @@ CI, the simulator (D1), threads (D2), batched FedAvg (D3), per-sample gradients 
 |---|---|---|---|
 | 1 | Cleaned file v0 (`ciciot2023_pcapcsv_clean.parquet`) | **Retired.** Replaced by cleaner v1: row order kept, `file` / `row_index` / `row_id`, duplicates marked (`dup_group`) not deleted, conflicting labels marked, even sampling with a stored `sample_rate` | `fqml/data/clean_ciciot2023_v1.py`, `tests/test_clean_v1.py`; `interim` fingerprint marked retired in `data/checksums.json` |
 | 2 | Spike S5 scores (0.465 / 0.762) and the old run matrix | **Not valid** as results (note under D7); the run matrix is replaced by the E0 version 2 matrix (protocols A / B / C, 5 folds × 3 seeds) | Notes under D3 and D7; `results/spikes/README.md` |
-| 3 | `INTERFACES.md` 1.1.0 | **2.0.0:** new data columns, fold manifests, run ID with protocol and fold, model size setting, `entangler="none"`, sites split and local-only mode (signatures) | `docs/INTERFACES.md`, `fqml/data/folds.py`, `fqml/quantum/layout.py`, tests |
+| 3 | `INTERFACES.md` 1.1.0 | **2.0.0:** new data columns, fold manifests, run ID with protocol and fold, model size setting, `entangler="none"` with `readout="linear"`, sites split and local-only mode (signatures) | `docs/INTERFACES.md`, `fqml/data/folds.py`, `fqml/quantum/layout.py`, tests |
 | 4 | "Seeds 0, 1, 2 on one split" | **5 folds × 3 seeds**, the fold is the unit of comparison; run ID `E{n}-{dataset}-{model}-{variant}-{protocol}-f{fold}-s{seed}` | `fqml/utils/run_id.py`, `tests/test_run_id.py` |
 | 5 | Label map (8 families) | Stays primary. A 7-class variant with DDoS and DoS merged (`c7m`) is available; whether it is reported is D17 | `fqml/data/label_maps/` |
 | 6 | MatchedMLP at the VQC's parameter count only | **MLP size ladder:** the VQC's count, then 128, 256, 512, 1,000, 3,000 parameters; result reported as the VQC's classical-equivalent size | `fqml/models/sizes.py`, `fqml/models/mlp.py` |
@@ -319,9 +319,15 @@ CI, the simulator (D1), threads (D2), batched FedAvg (D3), per-sample gradients 
 | 8 | FedAvg equivalence test on random numbers only | Also on traffic-like data (CI) and on real rows (when the cleaned file is present) | `fqml/fl/equivalence.py`, `tests/test_fedavg_real_data.py` |
 
 **Found while making the amendments.**
-- `entangler="none"` with the binary readout leaves 42 of the 48 angles without any effect on the output
-  (without CNOTs only the last qubit, and so only one feature, reaches it). The entanglement-free control
-  is sound for 8 classes as it is; for the binary task its readout must be fixed in task Q-2 before any run.
+- **The entanglement-free control needed its own readout.** With the D6 readout (output k reads one
+  qubit) and no CNOTs, every output sees exactly one feature: for 8 classes, class k sees only feature k;
+  for the binary task 42 of the 48 angles and 7 of the 8 features never reach the output. Such a control
+  would lose for lack of inputs, not for lack of entanglement, so "the VQC beats it" would prove nothing.
+  Fix: `readout="linear"` (every output a trained weighted sum over all 8 qubits). The control is
+  `entangler="none", readout="linear"` (`vqc_noent`), compared with `entangler="chain", readout="linear"`
+  (`vqc_lin`, 57 / 120 parameters): only the CNOTs differ. Checked: with the linear readout both have
+  0 dead angles and all 8 features reach every output (`tests/test_torch_sim.py`). The main model `vqc`
+  keeps the D6 readout (50 / 64 parameters). E0 core comparison grows from four models to five.
 - The number D15 was planned for the merged DDoS + DoS decision but was already taken by the post-quantum
   channel. That decision is **D17**.
 - `experiments/run_matrix.py`, named in the plan as the home of the old run matrix, was never committed;

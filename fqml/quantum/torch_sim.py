@@ -21,7 +21,7 @@ Qubit 0 is the most significant bit, as in PennyLane.
 import torch
 from torch import nn
 
-from fqml.quantum.layout import entangler_pairs, readout_qubits
+from fqml.quantum.layout import entangler_pairs, initial_scale, readout_wires
 
 
 def _cnot_permutation(n: int, entangler: str = "ring") -> torch.Tensor:
@@ -41,25 +41,28 @@ def _cnot_ring_permutation(n: int) -> torch.Tensor:   # kept for older scripts
 class TorchVQC(nn.Module):
     """Drop-in replacement for fqml.models.vqc.VQC (same constructor, parameters and outputs)."""
 
-    def __init__(self, n_qubits=8, n_classes=2, n_layers=3, seed=0, entangler="chain", version=2):
+    def __init__(self, n_qubits=8, n_classes=2, n_layers=3, seed=0, entangler="chain", version=2,
+                 readout="local"):
         super().__init__()
         self.n_qubits, self.n_layers, self.n_classes = n_qubits, n_layers, n_classes
-        self.entangler, self.version = entangler, version
+        self.entangler, self.version, self.readout = entangler, version, readout
         self.n_out = 1 if n_classes == 2 else n_classes
         assert self.n_out <= n_qubits, "more classes than qubits"
         assert version in (1, 2), "circuit version must be 1 or 2"
+        wires = readout_wires(n_qubits, self.n_out, version, readout)     # raises on an unknown readout
         g = torch.Generator().manual_seed(seed)              # same order as VQC -> same weights
         self.theta = nn.Parameter(torch.rand(n_layers, n_qubits, 2, generator=g) * 2 * torch.pi)
-        self.scale = nn.Parameter(torch.full((self.n_out,), 2.0))
+        self.scale = nn.Parameter(torch.tensor(initial_scale(n_qubits, self.n_out, version, readout)))
         self.bias = nn.Parameter(torch.zeros(self.n_out))
         idx = torch.arange(2 ** n_qubits)
-        ro = torch.tensor(readout_qubits(n_qubits, self.n_out, version))
+        ro = torch.tensor(wires)
         bits = (idx[:, None] >> (n_qubits - 1 - ro)) & 1
         self.register_buffer("perm", _cnot_permutation(n_qubits, entangler), persistent=False)
-        self.register_buffer("zsign", (1 - 2 * bits).float(), persistent=False)   # [256, n_out]
+        self.register_buffer("zsign", (1 - 2 * bits).float(), persistent=False)   # [256, n_read]
 
     def expz(self, x, theta=None):
-        """<Z_i> for the readout qubits. x: [B, n]. theta: [L, n, 2] (shared) or [B, L, n, 2]."""
+        """<Z_i> for the readout qubits (all n for readout="linear"). x: [B, n].
+        theta: [L, n, 2] (shared) or [B, L, n, 2]."""
         theta = self.theta if theta is None else theta
         B, n = x.shape[0], self.n_qubits
         cdt = torch.complex128 if x.dtype == torch.float64 else torch.complex64
@@ -104,10 +107,15 @@ class TorchVQC(nn.Module):
         return probs @ self.zsign.to(probs.dtype)
 
     def logits(self, x, theta=None, scale=None, bias=None):
-        """Same output as VQC.forward; scale/bias may also be per-sample ([B, n_out])."""
+        """Same output as VQC.forward. scale/bias may also be per-sample: local readout scale [B, n_out],
+        linear readout scale [B, n_out, n]; bias [B, n_out]."""
         scale = self.scale if scale is None else scale
         bias = self.bias if bias is None else bias
-        out = scale * self.expz(x, theta) + bias
+        z = self.expz(x, theta)
+        if self.readout == "linear":                           # [B, n] x [n_out, n] or [B, n_out, n]
+            out = (scale * z.unsqueeze(-2).to(scale.dtype)).sum(-1) + bias
+        else:
+            out = scale * z + bias
         if self.n_out == 1:   # binary: two logits, as in VQC
             return torch.cat([torch.zeros_like(out), out], dim=1)
         return out

@@ -2,7 +2,8 @@
 
 No torch import here, so run planning and tests can use it anywhere.
 
-The VQC has 50 trainable parameters (binary) or 64 (8 families). One MLP "of the same size" is a weak
+The VQC has 50 trainable parameters (binary) or 64 (8 families); with the linear readout (vqc_lin,
+vqc_noent) 57 or 120. One MLP "of the same size" is a weak
 comparison: a reader can say a 50-parameter MLP is simply too small. So the MLP is trained at a LADDER
 of sizes, the first rung matched to the VQC:
 

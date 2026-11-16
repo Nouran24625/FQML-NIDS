@@ -110,22 +110,34 @@ Every model is a `torch.nn.Module` with `forward(x) -> logits`:
   D1) and `fqml.quantum.qiskit_circuit.build_vqc` (hardware, E6). **All three build the same circuit;**
   tests check PennyLane = TorchVQC and Qiskit = TorchVQC on every CI run.
 - Constructor (same for `VQC` and `TorchVQC`):
-  `(n_qubits=8, n_classes=2, n_layers=3, seed=0, entangler="chain", version=2)`.
+  `(n_qubits=8, n_classes=2, n_layers=3, seed=0, entangler="chain", version=2, readout="local")`.
 - Each layer: `RY(x_q)` on every qubit, then `RZ(θ[l,q,1])`, `RY(θ[l,q,0])`, then CNOT chain
   `q → q+1` (no wrap-around). Layout lives in `fqml/quantum/layout.py`.
-- Readout: `<Z>` of the **last** `n_out` qubits; `logits = scale · z + bias`.
-  `n_out = 1` for binary (output `[0, logit]`), else `n_classes`. Requires `n_out ≤ n_qubits`.
-- Weights: `theta [L, n, 2]` (index 0 = RY angle, 1 = RZ angle), `scale [n_out]`, `bias [n_out]`;
+- `n_out = 1` for binary (output `[0, logit]`), else `n_classes`. Requires `n_out ≤ n_qubits`.
+- **Readout** (`readout`):
+  - `"local"` (default, D6): output k reads ONE qubit, the k-th of the **last** `n_out` qubits;
+    `logits = scale · z + bias`, `scale [n_out]`.
+  - `"linear"`: every output is a trained weighted sum over **all** n qubits;
+    `logits = z · scaleᵀ + bias`, `scale [n_out, n]`. It starts as the local circuit (weight 2.0 on the
+    qubit the local readout would read, 0 elsewhere), so with the same seed both begin as the same model.
+- Weights: `theta [L, n, 2]` (index 0 = RY angle, 1 = RZ angle), `scale` as above, `bias [n_out]`;
   same values for the same seed in every implementation.
-- Parameter counts (n = 8, L = 3): **binary 50, 8 classes 64, 7 classes (variant `c7m`) 62. Every parameter
-  can affect the output** (0 dead parameters, D6).
+- Parameter counts (n = 8, L = 3). **Every parameter can affect the output** (0 dead parameters, D6):
+
+| | binary | 8 classes | 7 classes (`c7m`) |
+|---|---|---|---|
+| local readout | 50 | 64 | 62 |
+| linear readout | 57 | 120 | 111 |
+
 - `entangler` values: `"chain"` (default), `"ring"`, `"none"`.
   - `version=1` and `entangler="ring"` stay available **only** to reproduce results from before 20 Oct.
-  - **`entangler="none"`** removes every CNOT: the entanglement-free control. The parameter count is
-    unchanged. Each qubit then evolves alone, so `<Z_q>` depends only on feature q and that qubit's own 6
-    angles. With 8 classes every qubit is read and no parameter is dead; **with the binary readout (last
-    qubit only) 42 of the 48 angles cannot reach the output and the model sees one feature.** The binary
-    control therefore needs its own readout, fixed in task Q-2 before any run **(Phase 1: Q-2)**.
+  - **`entangler="none"`** removes every CNOT: the entanglement-free control. Each qubit then evolves
+    alone, so `<Z_q>` depends only on feature q. **With the local readout this control is invalid:** each
+    output sees one feature (binary: 42 of the 48 angles never reach the output). The control is therefore
+    always `entangler="none", readout="linear"` (model name `vqc_noent`), and it is compared with
+    `entangler="chain", readout="linear"` (model name `vqc_lin`): the two differ only by the CNOT gates.
+- Per-sample weights: `TorchVQC.logits(x, theta, scale, bias)` accepts `theta [B, L, n, 2]`, `bias [B, n_out]`,
+  and `scale [B, n_out]` (local) or `[B, n_out, n]` (linear). This is what DP-SGD per-sample gradients use (D4).
 - Per-sample weights: `TorchVQC.logits(x, theta, scale, bias)` accepts `theta [B, L, n, 2]`,
   `scale [B, n_out]` and `bias [B, n_out]`. This is what DP-SGD per-sample gradients use (D4).
 
@@ -136,8 +148,9 @@ Every model is a `torch.nn.Module` with `forward(x) -> logits`:
   (50 / 64), then 128, 256, 512, 1,000 and 3,000 parameters. Same model family at every rung; only the width
   changes. With 8 inputs the sizes reached are 46, 123, 255, 508, 1,003, 3,005 (binary) and 59, 127, 263,
   518, 994, 3,000 (8 classes).
-- Model names in run IDs: `vqc`, `vqc_noent`, `mlp_p<target>` (e.g. `mlp_p50`, `mlp_p128`), `rff`, `lr`,
-  `xgb`, `rf`, `mlp_large`.
+- Model names in run IDs: `vqc` (chain, local readout: the main model), `vqc_lin` (chain, linear readout),
+  `vqc_noent` (no CNOTs, linear readout: the entanglement-free control), `mlp_p<target>` (e.g. `mlp_p50`,
+  `mlp_p128`), `rff`, `lr`, `xgb`, `rf`, `mlp_large`.
 - **(Phase 1: CLS-1, Q-3)** logistic regression, MLP-large (2 × 256), XGBoost, random forest and the
   random-Fourier-feature model. PyTorch models follow 2.1; scikit-learn / XGBoost models use the same
   data, folds and seeds.
@@ -254,4 +267,4 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
 |---|---|---|---|
 | 1.0.0 | 2 Nov 2026 | First freeze: circuit v2 + chain (D6, D7), batched FedAvg (D3), capture column and capture-disjoint split announced for Phase 1 | Kareem, Sheghaf, Nouran, Ganna |
 | 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | Nouran, Sheghaf (PR #12) |
-| 2.0.0 | 16 Nov 2026 | Phase 0 amendments. Section owners follow the new areas. **1:** cleaner v1 file (`row_id`, `file`, `file_seq`, `row_index`, `dup_group`, `conflict`, `sample_rate`, optional `ts`; fixed row order; duplicates marked, not deleted), v0 file retired, label-map variants (`c7m`), protocols A / B / C and fold manifests (`fqml-folds/1`) replace the capture-disjoint split, preprocessing fitted per fold. **2:** `entangler="none"`, model size setting and MLP size ladder. **3:** sites split, one-type-per-client split and local-only mode (signatures), partition path carries protocol and fold, real-data FedAvg equivalence check. **5:** run ID carries protocol and fold; 5 folds × 3 seeds replaces "seeds 0, 1, 2 on one split" | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |
+| 2.0.0 | 16 Nov 2026 | Phase 0 amendments. Section owners follow the new areas. **1:** cleaner v1 file (`row_id`, `file`, `file_seq`, `row_index`, `dup_group`, `conflict`, `sample_rate`, optional `ts`; fixed row order; duplicates marked, not deleted), v0 file retired, label-map variants (`c7m`), protocols A / B / C and fold manifests (`fqml-folds/1`) replace the capture-disjoint split, preprocessing fitted per fold. **2:** `entangler="none"`, `readout="linear"` (the control is always `none` + `linear`, compared with `chain` + `linear`), model size setting and MLP size ladder. **3:** sites split, one-type-per-client split and local-only mode (signatures), partition path carries protocol and fold, real-data FedAvg equivalence check. **5:** run ID carries protocol and fold; 5 folds × 3 seeds replaces "seeds 0, 1, 2 on one split" | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |

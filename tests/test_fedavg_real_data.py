@@ -45,16 +45,18 @@ def _skewed_parts(y, seed=0):
     return parts
 
 
-@pytest.mark.parametrize("kind", ["vqc", "vqc_binary", "vqc_noent", "mlp", "mlp_p512"])
+@pytest.mark.parametrize("kind", ["vqc", "vqc_binary", "vqc_lin", "vqc_noent", "vqc_noent_binary", "mlp", "mlp_p512"])
 def test_batched_equals_sequential_on_traffic_like_data(kind):
     X, y = _traffic_like()
-    classes = 2 if kind == "vqc_binary" else 8
+    classes = 2 if kind.endswith("binary") else 8
     if classes == 2:
         y = (y != 0).astype(np.int64)
     parts = _skewed_parts(y)
     model = {"vqc": lambda: TorchVQC(8, 8, 3, seed=0),
              "vqc_binary": lambda: TorchVQC(8, 2, 3, seed=0),
-             "vqc_noent": lambda: TorchVQC(8, 8, 3, seed=0, entangler="none"),
+             "vqc_lin": lambda: TorchVQC(8, 8, 3, seed=0, readout="linear"),
+             "vqc_noent": lambda: TorchVQC(8, 8, 3, seed=0, entangler="none", readout="linear"),
+             "vqc_noent_binary": lambda: TorchVQC(8, 2, 3, seed=0, entangler="none", readout="linear"),
              "mlp": lambda: MatchedMLP(8, 8, target_params=64, seed=0),
              "mlp_p512": lambda: MatchedMLP(8, 8, target_params=512, seed=0)}[kind]()
     res = compare_modes(model, X, y, parts, class_weights=sqrt_class_weights(y, classes),

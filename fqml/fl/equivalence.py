@@ -106,7 +106,8 @@ def to_model_inputs(F: np.ndarray, y: np.ndarray, n_features: int = 8, seed: int
 
 
 def real_data_cases(X: np.ndarray, y: np.ndarray, n_classes: int, seed: int = 0) -> list[dict]:
-    """The cases the check runs: VQC (all classes), VQC (binary) and MLP, each on an IID split and on a
+    """The cases the check runs: VQC (all classes), VQC (binary), the entanglement-free control and MLP,
+    each on an IID split and on a
     strongly skewed split (Dirichlet 0.1, with clients small enough that rows repeat inside a round)."""
     from fqml.models.mlp import MatchedMLP
     from fqml.quantum.torch_sim import TorchVQC
@@ -119,6 +120,8 @@ def real_data_cases(X: np.ndarray, y: np.ndarray, n_classes: int, seed: int = 0)
         for name, model, labels, k in (
                 (f"vqc_c{n_classes}", TorchVQC(8, n_classes, 3, seed=0), y, n_classes),
                 ("vqc_c2", TorchVQC(8, 2, 3, seed=0), yb, 2),
+                (f"vqc_noent_c{n_classes}", TorchVQC(8, n_classes, 3, seed=0, entangler="none", readout="linear"),
+                 y, n_classes),
                 (f"mlp_c{n_classes}", MatchedMLP(8, n_classes, target_params=64, seed=0), y, n_classes)):
             res = compare_modes(model, X, labels, parts, class_weights=sqrt_class_weights(labels, k),
                                 rounds=2, clients_per_round=5, local_steps=5, batch_size=16)
@@ -153,7 +156,7 @@ def main():
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(out, indent=2))
     for c in cases:
-        print(f"{'PASS' if c['passed'] else 'FAIL'}  {c['model']:8s} {c['split']:7s} "
+        print(f"{'PASS' if c['passed'] else 'FAIL'}  {c['model']:14s} {c['split']:7s} "
               f"max weight diff {c['max_weight_diff']:.2e}  max logit diff {c['max_logit_diff']:.2e}")
     print(f"wrote {a.out}")
     raise SystemExit(0 if out["passed"] else 1)
