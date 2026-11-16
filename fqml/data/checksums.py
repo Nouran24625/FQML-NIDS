@@ -4,6 +4,9 @@
     python -m fqml.data.checksums record interim           # after cleaning
     python -m fqml.data.checksums verify                   # check every recorded folder
     python -m fqml.data.checksums verify interim           # check only some folders
+    python -m fqml.data.checksums retire interim "why"     # keep the fingerprint, stop verifying it
+An entry with a "retired" note is kept as a record of what older results used; `verify` skips it unless
+it is named explicitly. `record` of the same name starts a fresh entry (not retired).
 Folder names are relative to data/. Only data/checksums.json goes to git, never the data.
 """
 import datetime
@@ -46,12 +49,26 @@ def record(name, source=""):
     print(f"Recorded {len(files)} files ({entry['total_gb']} GB) for '{name}'")
 
 
+def retire(name, reason):
+    db = load()
+    if name not in db:
+        sys.exit(f"'{name}' is not recorded in data/checksums.json")
+    if not reason:
+        sys.exit("give a reason: python -m fqml.data.checksums retire <folder> \"why\"")
+    db[name]["retired"] = f"{datetime.date.today().isoformat()}: {reason}"
+    DB.write_text(json.dumps(db, indent=2, sort_keys=True))
+    print(f"Retired '{name}': {db[name]['retired']}")
+
+
 def verify(names=None):
     db, all_ok = load(), True
     if not db:
         sys.exit("data/checksums.json is empty")
     for name, entry in db.items():
         if names and name not in names:
+            continue
+        if entry.get("retired") and not names:
+            print(f"--- {name}: retired ({entry['retired']}), not checked")
             continue
         bad = [f for f, h in entry["files"].items()
                if not (DATA / f).exists() or sha256(DATA / f) != h]
@@ -67,6 +84,8 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) >= 2 and args[0] == "record":
         record(args[1], source=" ".join(args[2:]))
+    elif len(args) >= 2 and args[0] == "retire":
+        retire(args[1], " ".join(args[2:]))
     elif args and args[0] == "verify":
         verify(args[1:] or None)
     else:

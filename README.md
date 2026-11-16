@@ -8,7 +8,10 @@ runs on real quantum hardware, and a post-quantum channel between the server and
 
 Gate 0 passed on 2 Nov 2026: the interfaces between the parts of the project are frozen in
 [`docs/INTERFACES.md`](docs/INTERFACES.md), and every decision so far is recorded, with its
-measurements, in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+measurements, in [`docs/DECISIONS.md`](docs/DECISIONS.md). On 16 Nov 2026 eight Phase 0 items were
+amended (interfaces version 2.0.0): models are now tested on time-blocked folds, on attack types never
+seen in training and on an independent dataset, and the Phase 0 accuracy numbers (spike S5) are not
+valid results.
 
 ## Quick start
 
@@ -31,9 +34,9 @@ http://localhost:5001.
 
 | Folder | Contents |
 |---|---|
-| `fqml/data` | dataset cleaning, label maps, feature schema, checksums |
-| `fqml/models`, `fqml/quantum` | the VQC (PennyLane reference, PyTorch simulator for training, Qiskit for hardware) and the parameter-matched MLP |
-| `fqml/fl` | client partitions and the batched FedAvg loop (D3) |
+| `fqml/data` | dataset cleaning (cleaner v1), fold manifests, label maps, feature schema, checksums |
+| `fqml/models`, `fqml/quantum` | the VQC (PennyLane reference, PyTorch simulator for training, Qiskit for hardware) and the MLP size ladder |
+| `fqml/fl` | client partitions, the batched FedAvg loop (D3) and its equivalence check |
 | `fqml/train` | centralised training loop |
 | `fqml/pq` | post-quantum channel between the server and the sites (D15) |
 | `fqml/live` | live detection pipeline and dashboard used by the demo |
@@ -44,7 +47,8 @@ http://localhost:5001.
 | `tests` | unit tests |
 | `demo` | ITIDA prototype video: the A8 notebook and the demo lab (`demo/lab`) |
 | `docker`, `requirements` | the shared image and the frozen library versions |
-| `data` | fingerprints of the datasets only |
+| `fqml/utils` | run IDs |
+| `data` | fingerprints of the datasets and the fold manifests (`data/folds`) only |
 
 ## Documentation
 

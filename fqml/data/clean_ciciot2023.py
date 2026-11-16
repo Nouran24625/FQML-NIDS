@@ -1,5 +1,9 @@
 """CICIoT2023 cleaning v0 (Phase 0). Owner: Ganna.
 
+RETIRED on 16 Nov 2026 (docs/DECISIONS.md, Phase 0 amendments, item 1). This cleaner reads the merged
+benchmark CSV, which has no file name and no row order, and it caps, de-duplicates and shuffles before
+any split. Its output may not be used for any result. Use fqml.data.clean_ciciot2023_v1.
+
 Steps (Plan §6), with per-class counts logged after every step -> results/data_reports/:
   1. read the CSVs (full release ~46M rows -> streamed file by file, see clean_streaming)
   2. coerce numeric, drop NaN / +-inf rows

@@ -6,7 +6,7 @@ mlruns/
 __pycache__/
 .DS_Store
 runs/
-models/
+/models/
 # post-quantum identity keys (fqml.pq.keys): secret keys must never be committed
 keys/
 *.key

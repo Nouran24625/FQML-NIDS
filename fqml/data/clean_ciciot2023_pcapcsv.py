@@ -1,5 +1,10 @@
 """CICIoT2023 cleaning, per-capture CSV variant (CIC "CSV.zip"). Owner: Ganna.
 
+RETIRED on 16 Nov 2026 (docs/DECISIONS.md, Phase 0 amendments, item 1): this "v0" cleaner caps the data
+before any split, deletes duplicates, shuffles the rows and keeps neither file name nor row order. Its
+output may not be used for any result. Use fqml.data.clean_ciciot2023_v1. The file stays because spike
+S5 was run on its output and v1 reuses its file-name-to-label matching.
+
 Why a second cleaner: the CIC download has two CSV variants.
   - MERGED_CSV.zip : 46 features + 'label' column (the standard benchmark)  -> clean_ciciot2023.py
   - CSV.zip        : one CSV per capture file (e.g. 'DDoS-ICMP_Flood3.pcap.csv'),

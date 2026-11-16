@@ -10,6 +10,16 @@ attck:   # draft ATT&CK technique ids per family; finalise in P1 (Phase 1 "ATT&C
   BruteForce: T1110
   Spoofing: T1557
   Mirai: T1498
+# Variants of the family list. The 8 families above stay the PRIMARY task; a variant is only reported
+# beside it. The cleaned file always stores the primary `family` / `y`; a variant's labels are derived
+# from `native_label` when the data is loaded (fqml.data.label_maps.family_index).
+variants:
+  # Decision D17 (pending, 23 Nov 2026, after Checkpoint 1): DDoS and DoS as ONE family, 7 classes.
+  # Why it may be needed: in CICIoT2023 the DDoS / DoS boundary may be a capture artifact (IAT alone
+  # separates the two at AUC 0.998 in a public audit), not a traffic property.
+  c7m:
+    families: [Benign, DDoS_DoS, Recon, Web, BruteForce, Spoofing, Mirai]
+    merge: {DDoS: DDoS_DoS, DoS: DDoS_DoS}
 map:
   BenignTraffic: Benign
   DDoS-RSTFINFlood: DDoS
