@@ -11,6 +11,10 @@ CICIOT2023_FEATURES = [
     "Std", "Tot size", "IAT", "Number", "Magnitue", "Radius", "Covariance", "Variance", "Weight",
 ]
 CICIOT2023_LABEL = "label"
+# Columns of the per-capture CSVs that are kept as ORDER KEYS when every file has them (cleaner v1).
+# Never model features. 'ts' (packet-window timestamp) is written by CIC's extraction script; whether
+# the released per-capture CSVs still carry it is checked by the cleaner and reported.
+CICIOT2023_KEY_COLUMNS = ["ts"]
 
 # Identifier / shortcut columns dropped from features in every dataset (kept only as partition keys).
 SHORTCUT_COLUMNS = {

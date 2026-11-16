@@ -5,6 +5,7 @@
     },
     "n_files": 1,
     "recorded": "2026-10-17",
+    "retired": "2026-11-16: cleaned file v0 (1,000,000 rows, capped and shuffled before splitting, exact duplicates deleted, no file name or row order). Replaced by cleaner v1 (fqml.data.clean_ciciot2023_v1). Kept only as the record of what spike S5 used.",
     "source": "",
     "total_gb": 0.037
   },
