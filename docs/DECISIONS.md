@@ -339,14 +339,63 @@ check.
 
 ---
 
+## D8 — CICIoT2023 cleaned with cleaner v1: every row kept, duplicates and conflicts marked
+
+**Date:** 17 Nov 2026 · **Owner:** Ganna (data) · **Status:** run by Nouran on 17 Nov with the settings below;
+Ganna confirms or changes them (re-running costs about 25 minutes).
+
+**Decision.** `python -m fqml.data.clean_ciciot2023_v1 --per-label-cap 0 --conflicts keep` on the 309
+per-capture CSV files (`raw/ciciot2023` fingerprint checked: 310/310 files match).
+- `--per-label-cap 0`: no attack type is thinned. Thinning before the split would thin the test blocks too;
+  sub-sampling is done per fold, on the training side only (INTERFACES 1.2). Every `sample_rate` is 1.0.
+- `--conflicts keep`: identical feature rows with different labels stay, marked in `conflict`. Every test
+  score is also reported on rows with `conflict == 0` (see below).
+
+**Result** (`results/data_reports/ciciot2023_clean_v1.json`; output fingerprinted as `interim/ciciot2023_v1`):
+
+| | Rows |
+|---|---|
+| Raw | 46,776,700 |
+| Removed (NaN or ±inf) | 1,040 |
+| Written | 46,775,660 |
+| Distinct feature rows | 20,358,149 (**56.5% of rows have an exact copy**) |
+| In cross-family conflicts (`conflict == 2`) | 14,217,879 (30.4%) |
+| … of which benign vs attack | 30,988 (0.07%) |
+| In same-family conflicts (`conflict == 1`) | 557,569 (1.2%) |
+
+- 37 of the 46 standard features are present in every file. The per-capture CSVs have **no timestamp
+  column**, so protocol A assumes the row order inside a file is the recorded order (the dataset paper
+  extracts features window by window from each capture). `IGMP` and `Time_To_Live` are present but not
+  used; `Time_To_Live` is very likely the merged CSV's `Duration` (TTL). Whether it is added goes with D9.
+- **The cross-family conflicts are almost entirely DDoS against DoS.** Rows in such conflicts: DDoS
+  10.2 M of 34.0 M (30%), DoS 3.95 M of 7.8 M (**50%**); every other family under 1%, except Spoofing
+  (5%, MITM-ArpSpoofing 7%). The affected types are the matching floods: DDoS-SYN/UDP/TCP/SynonymousIP
+  (54–65%) and DoS-SYN/UDP/TCP (40–63%). In these 37 features half of all DoS rows are byte-identical to
+  DDoS rows, so no model can separate them. This is the evidence for D17 (7-class variant `c7m`).
+- **Benign against attack is clean:** only 30,988 rows (0.5% of benign) share their values with an attack
+  row, so the binary task is not affected.
+- **Duplicates sit in the big floods** (DDoS 56–74%, DoS 42–57%); benign, the small attack types and
+  Mirai have 0–11%.
+
+**Consequences.**
+- Every test score is reported three ways: all test rows; rows without an exact twin in training
+  (INTERFACES 1.2); rows with `conflict == 0`. For the 8-class task the data quality report (DATA-4) adds
+  the **best score any model could reach** given the conflicts (each conflict group predicted as its most
+  common label).
+- D17 is taken on 23 Nov with this evidence and Checkpoint 1.
+
+**Revisit if:** a timestamp source for the rows is found (then protocol A checks the order instead of
+assuming it), or D9 adds `Time_To_Live` (then the cleaner is re-run with it and this table is redone).
+
+---
+
 ## Pending decisions
 
 | # | Decision | Owner | Due |
 |---|---|---|---|
 | D8a | Evaluation protocols A, B and C: folds, gap, the benign capture, single-type families | Ganna + Nouran; all four approve | Wed 18 Nov |
-| D8 | Data source (per-file CSVs), conflicting-label policy (`--conflicts`), duplicates marked and not deleted, sampling cap (`--per-label-cap`, `sample_rate`) | Ganna | Thu 19 Nov |
 | D9 | `IAT` dropped, by the rule written in advance (task EXP-1) | Ganna + Nouran | Mon 23 Nov |
-| D17 | Whether the 7-class task with DDoS and DoS merged (`c7m`) is reported beside the 8-class task | Ganna + Nouran | Mon 23 Nov |
+| D17 | Whether the 7-class task with DDoS and DoS merged (`c7m`) is reported beside the 8-class task. Evidence in D8: 50% of DoS rows are identical to DDoS rows | Ganna + Nouran | Mon 23 Nov |
 | D11 | Tuning per fold, fixed VQC depth, MLP size ladder | Nouran | Mon 23 Nov |
 | D14 | Where runs happen; result files; environment tags | Sheghaf | Mon 23 Nov |
 | E5 | Shot training: shots during training (parameter-shift, very expensive), or shots only at evaluation plus a small shot-trained subset, or simulated shot sampling in the PyTorch simulator | Nouran + Sheghaf | Wed 25 Nov |
