@@ -8,7 +8,7 @@ amendments, item 7).
 
 | # | Dataset | Role | Version / source | Size | Status |
 |---|---|---|---|---|---|
-| 1 | CICIoT2023 | Main dataset: every experiment; protocols A and B | CIC, per-capture `CSV.zip` (309 CSV files; the merged CSV cannot be used, see notes) | 310 files, 8.94 GB | Downloaded, fingerprinted. Cleaned file v0 **retired**; cleaner v1 ready (`fqml.data.clean_ciciot2023_v1`), to be run after decision D8 |
+| 1 | CICIoT2023 | Main dataset: every experiment; protocols A and B | CIC, per-capture `CSV.zip` (309 CSV files; the merged CSV cannot be used, see notes) | 310 files, 8.94 GB | Downloaded, fingerprinted. Cleaned file v0 **retired**. **Cleaned with v1 on 17 Nov** (D8): 46,775,660 rows, fingerprint `interim/ciciot2023_v1`, report `results/data_reports/ciciot2023_clean_v1.json` |
 | 2 | CICIoMT2024 | Independent test set (protocol C: train on CICIoT2023, test here) and second site of the two-lab federation | CIC, Wi-Fi / MQTT CSV files, https://www.unb.ca/cic/datasets/iomt-dataset-2024.html | — | **To do (task DATA-8a):** download, fingerprint, feature and label table against CICIoT2023, decision D16 |
 | 3 | CIC-IDS-2017 (improved) | Comparison with earlier QML-IDS papers (E0 only), after the first two | Liu, Engelen, Lynar, Essam, Joosen, IEEE CNS 2022 — `CICIDS2017_improved.zip` from intrusion-detection.distrinet-research.be/CNS2022/Datasets/ | 5 CSV files, 1.15 GB, 2,099,976 rows, 91 columns | Downloaded, fingerprinted (PR #5). Cleaner: task DATA-7, best effort |
 | — | Edge-IIoTset | **Not used.** Fingerprint kept | Kaggle release | 52 files, 11.25 GB | Downloaded, fingerprinted |
