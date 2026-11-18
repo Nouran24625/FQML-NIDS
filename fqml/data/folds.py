@@ -12,10 +12,18 @@ rows are dropped from the side with the lower priority (test > validation > trai
 packet windows never sit on both sides. Test blocks are never trimmed: over the folds every row is a
 test row exactly once.
 
-Protocols B (unseen attack type) and C (independent dataset) use the same file format; their
-builders belong to task DATA-3 / DATA-8b. Every manifest must pass `check_manifest`.
+Protocol B, unseen attack type (built here): inside every family with two or more attack types, the types
+are dealt into `n_folds` groups (largest first, round-robin). Fold k TESTS on the types of group k and
+VALIDATES on the types of group k+1, so both are attack types the model never saw in training; it trains on
+all other types. Benign and the single-type families (BruteForce in CICIoT2023) cannot be held out: they are
+split in time exactly as in protocol A, so every fold still has benign rows to measure false alarms on. A
+family may have no unseen type in a fold (Spoofing has 2 types, so only folds 0 and 1 test one).
+
+Protocol C (independent dataset) uses the same file format; its builder belongs to task DATA-8b. Every
+manifest must pass `check_manifest`.
 
     python -m fqml.data.folds build-a --report results/data_reports/ciciot2023_clean_v1.json --gap 100
+    python -m fqml.data.folds build-b --report results/data_reports/ciciot2023_clean_v1.json --gap 100
     python -m fqml.data.folds check data/folds/ciciot2023_A.json
 """
 from __future__ import annotations
@@ -107,6 +115,56 @@ def build_time_blocked(label_ranges: dict[str, tuple[int, int]], *, dataset: str
     return manifest
 
 
+# ---- protocol B -----------------------------------------------------------------------------------
+def unseen_type_groups(label_family: dict[str, str], label_rows: dict[str, int], n_folds: int) -> dict[str, int]:
+    """{attack type: group} for every type of a family with >= 2 types. Inside a family the types are taken
+    largest first and dealt round-robin, so group 0 holds each family's largest type."""
+    by_family: dict[str, list[str]] = {}
+    for lab, fam in label_family.items():
+        by_family.setdefault(fam, []).append(lab)
+    groups = {}
+    for fam, labs in by_family.items():
+        if len(labs) < 2:
+            continue
+        for i, lab in enumerate(sorted(labs, key=lambda x: (-label_rows[x], x))):
+            groups[lab] = i % n_folds
+    return groups
+
+
+def build_unseen_type(label_ranges: dict[str, tuple[int, int]], label_family: dict[str, str], *, dataset: str,
+                      n_folds: int = 5, gap: int = 0, max_gap_frac: float = 0.1, source: dict | None = None) -> dict:
+    """Protocol B manifest. `label_family` maps every attack type to its family (benign included)."""
+    if set(label_family) != set(label_ranges):
+        raise ValueError("label_family must name the family of every attack type in label_ranges")
+    rows = {lab: b - a for lab, (a, b) in label_ranges.items()}
+    groups = unseen_type_groups(label_family, rows, n_folds)
+    timed = {lab: r for lab, r in label_ranges.items() if lab not in groups}
+    if not timed:
+        raise ValueError("protocol B needs at least one time-blocked type (benign)")
+    tb = build_time_blocked(timed, dataset=dataset, n_folds=n_folds, gap=gap, max_gap_frac=max_gap_frac)
+    labels = {lab: {"range": [int(a), int(b)], "gap": 0, "group": groups[lab], "family": label_family[lab]}
+              for lab, (a, b) in label_ranges.items() if lab in groups}
+    for lab, v in tb["labels"].items():
+        labels[lab] = {**v, "family": label_family[lab], "group": None}
+    folds = []
+    for k in range(n_folds):
+        f = {"fold": k, **{r: list(tb["folds"][k][r]) for r in ROLES},
+             "test_types": sorted(l for l, g in groups.items() if g == k),
+             "val_types": sorted(l for l, g in groups.items() if g == (k + 1) % n_folds)}
+        for lab, g in groups.items():
+            role = "test" if g == k else "val" if g == (k + 1) % n_folds else "train"
+            f[role].append(list(label_ranges[lab]))
+        for r in ROLES:
+            f[r] = merge_ranges(f[r])
+        folds.append(f)
+    manifest = {"format": FORMAT, "dataset": dataset, "protocol": "B", "n_folds": n_folds, "gap": int(gap),
+                "max_gap_frac": max_gap_frac, "source": source or {},
+                "n_rows": int(sum(rows.values())), "labels": labels, "folds": folds,
+                "time_blocked_types": sorted(timed)}
+    check_manifest(manifest)
+    return manifest
+
+
 # ---- checks every manifest must pass ----------------------------------------------------------------
 def check_manifest(m: dict) -> None:
     """Raises ValueError unless: the format is known; inside every fold no row has two roles and every
@@ -187,6 +245,12 @@ def main():
     b.add_argument("--gap", type=int, required=True, help="rows dropped at each boundary (decision D8a)")
     b.add_argument("--max-gap-frac", type=float, default=0.1)
     b.add_argument("--out", default=None)
+    bb = sub.add_parser("build-b", help="protocol B (unseen attack type) from a cleaning report")
+    for arg, kw in (("--report", dict(required=True)), ("--dataset", dict(default="ciciot2023")),
+                    ("--n-folds", dict(type=int, default=5)),
+                    ("--gap", dict(type=int, required=True, help="gap for the time-blocked types (D8a)")),
+                    ("--max-gap-frac", dict(type=float, default=0.1)), ("--out", dict(default=None))):
+        bb.add_argument(arg, **kw)
     c = sub.add_parser("check", help="check a manifest file")
     c.add_argument("path")
     a = ap.parse_args()
@@ -197,14 +261,23 @@ def main():
     report = json.loads(Path(a.report).read_text())
     ranges = {lab: (d["row_start"], d["row_stop"]) for lab, d in report["per_label"].items()
               if d["rows_written"] > 0}
-    m = build_time_blocked(ranges, dataset=a.dataset, n_folds=a.n_folds, gap=a.gap, max_gap_frac=a.max_gap_frac,
-                           source={"report": a.report, "cleaner": report.get("cleaner"),
-                                   "settings": report.get("settings"), "rows_written": report["totals"]["rows_written"]})
-    out = Path(a.out) if a.out else manifest_path(a.dataset, "A")
+    src = {"report": a.report, "cleaner": report.get("cleaner"), "settings": report.get("settings"),
+           "rows_written": report["totals"]["rows_written"]}
+    if a.cmd == "build-b":
+        fam = {lab: d["family"] for lab, d in report["per_label"].items() if d["rows_written"] > 0}
+        m = build_unseen_type(ranges, fam, dataset=a.dataset, n_folds=a.n_folds, gap=a.gap,
+                              max_gap_frac=a.max_gap_frac, source=src)
+    else:
+        m = build_time_blocked(ranges, dataset=a.dataset, n_folds=a.n_folds, gap=a.gap, max_gap_frac=a.max_gap_frac,
+                               source=src)
+    out = Path(a.out) if a.out else manifest_path(a.dataset, m["protocol"])
     save_manifest(m, out)
     for f in m["folds"]:
         print(f"fold {f['fold']}: " + ", ".join(f"{r} {ranges_len(f[r]):,}" for r in ROLES))
-    reduced = {lab: v["gap"] for lab, v in m["labels"].items() if v["gap"] < a.gap}
+        if m["protocol"] == "B":
+            print(f"    unseen in test: {', '.join(f['test_types']) or '-'}")
+            print(f"    unseen in validation: {', '.join(f['val_types']) or '-'}")
+    reduced = {lab: v["gap"] for lab, v in m["labels"].items() if v.get("group") is None and v["gap"] < a.gap}
     if reduced:
         print(f"gap reduced for small attack types: {reduced}")
     print(f"wrote {out}")

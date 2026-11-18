@@ -8,6 +8,8 @@ script trains ONE strong classical model (XGBoost, fixed settings, no tuning) un
             A-gap0       protocol A, fold `--fold`, no rows dropped at block boundaries
             A-gap100     protocol A with the proposed gap (D8a)
             A-gap1000    protocol A with a 10x larger gap
+            B-gap100     protocol B: the validation block holds attack types never seen in training (D8a gap
+                         for the time-blocked benign rows); adds "unseen" scores for those types
   features  all          the 37 features of cleaner v1
             no_iat       without IAT (decision D9)
 
@@ -42,13 +44,13 @@ import numpy as np
 from sklearn.metrics import (average_precision_score, confusion_matrix, f1_score, precision_score, recall_score,
                              roc_auc_score)
 
-from fqml.data.folds import build_time_blocked, fold_rows, ranges_to_rows, twin_mask
+from fqml.data.folds import build_time_blocked, build_unseen_type, fold_rows
 from fqml.data.rows import CICIOT2023_V1, cap_per_label, read_rows
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "results/data_reports/ciciot2023_clean_v1.json"
 OUT = ROOT / "results/checkpoint1.json"
-SPLITS = ("R", "A-gap0", "A-gap100", "A-gap1000")
+SPLITS = ("R", "A-gap0", "A-gap100", "A-gap1000", "B-gap100")
 FEATURE_SETS = ("all", "no_iat")
 WEIGHTINGS = ("balanced", "sqrt", "none")
 XGB_PARAMS = dict(n_estimators=400, max_depth=8, learning_rate=0.1, subsample=0.8, colsample_bytree=0.8,
@@ -60,17 +62,45 @@ def label_ranges(report: dict) -> dict[str, tuple[int, int]]:
     return {lab: (d["row_start"], d["row_stop"]) for lab, d in report["per_label"].items() if d["rows_written"] > 0}
 
 
-def split_rows(split: str, report: dict, fold: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
-    """(training pool, validation rows) as sorted row_ids."""
+def split_rows(split: str, report: dict, fold: int, seed: int) -> tuple[np.ndarray, np.ndarray, dict]:
+    """(training pool, validation rows, info) as sorted row_ids. For protocol B, info["unseen_types"] lists the
+    attack types in the validation block that the model never sees in training."""
     ranges = label_ranges(report)
     if split == "R":
         n = report["totals"]["rows_written"]
         u = np.random.default_rng(seed).random(n, dtype=np.float32)
-        return np.flatnonzero(u < 0.6), np.flatnonzero((u >= 0.6) & (u < 0.8))
-    if not split.startswith("A-gap"):
-        raise ValueError(f"unknown split {split!r}")
-    m = build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=int(split[5:]))
-    return fold_rows(m, fold, "train"), fold_rows(m, fold, "val")
+        return np.flatnonzero(u < 0.6), np.flatnonzero((u >= 0.6) & (u < 0.8)), {}
+    if split.startswith("A-gap"):
+        m = build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=int(split[5:]))
+        return fold_rows(m, fold, "train"), fold_rows(m, fold, "val"), {}
+    if split.startswith("B-gap"):
+        fam = {lab: report["per_label"][lab]["family"] for lab in ranges}
+        m = build_unseen_type(ranges, fam, dataset="ciciot2023", n_folds=5, gap=int(split[5:]))
+        return fold_rows(m, fold, "train"), fold_rows(m, fold, "val"), {"unseen_types": m["folds"][fold]["val_types"]}
+    raise ValueError(f"unknown split {split!r}")
+
+
+def unseen_scores(row_ids, y, p, attack_score, report, unseen_types) -> dict:
+    """Protocol B: how the model does on attack types it never saw. Detection uses the alarm threshold that gives
+    1% (0.1%) false positives on the benign validation rows; `family_correct` is the share given the right family."""
+    ranges = label_ranges(report)
+    mask = np.zeros(len(row_ids), bool)
+    for lab in unseen_types:
+        a, b = ranges[lab]
+        mask |= (row_ids >= a) & (row_ids < b)
+    benign = attack_score[y == 0]
+    out = {"types": list(unseen_types), "rows": int(mask.sum())}
+    if not mask.any() or not len(benign):
+        return out
+    for name, f in (("1pct", 0.01), ("0.1pct", 0.001)):
+        t = np.quantile(benign, 1.0 - f, method="higher")
+        out[f"detected_at_fpr_{name}"] = float((attack_score[mask] > t).mean())
+    out["detected_at_default"] = float((p[mask] != 0).mean())
+    out["family_correct"] = float((p[mask] == y[mask]).mean())
+    y7, _ = merge_ddos_dos(y[mask], report["families"])
+    p7, _ = merge_ddos_dos(p[mask], report["families"])
+    out["family_correct_c7m"] = float((p7 == y7).mean())
+    return out
 
 
 # ---- scoring --------------------------------------------------------------------------------------
@@ -140,19 +170,21 @@ def score(y: np.ndarray, p: np.ndarray, families: list[str], attack_score: np.nd
 
 
 # ---- one setting ----------------------------------------------------------------------------------
-def class_weights(y: np.ndarray, n_classes: int, weighting: str) -> np.ndarray:
+def class_weights(y: np.ndarray, n_classes: int, weighting: str, allow_absent: bool = False) -> np.ndarray:
     """Per-row training weight.
-      balanced  every family carries the same total weight (weight ~ 1 / count)
+      balanced  every family present carries the same total weight (weight ~ 1 / count)
       sqrt      weight ~ 1 / sqrt(count), mean 1: the rule of the shared training loop (fqml.train.loop)
       none      every row weighs 1
+    allow_absent: a family may have no training rows (protocol B can hold out every type of a two-type family).
     """
     counts = np.bincount(y, minlength=n_classes).astype(float)
-    if (counts == 0).any():
+    if (counts == 0).any() and not allow_absent:
         raise RuntimeError(f"a family has no training rows: {counts.tolist()}")
+    safe = np.maximum(counts, 1.0)
     if weighting == "balanced":
-        per_class = len(y) / (n_classes * counts)
+        per_class = len(y) / (int((counts > 0).sum()) * safe)
     elif weighting == "sqrt":
-        per_class = 1.0 / np.sqrt(counts)
+        per_class = 1.0 / np.sqrt(safe)
         per_class = per_class / per_class[y].mean()
     elif weighting == "none":
         per_class = np.ones(n_classes)
@@ -190,7 +222,7 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
     families = report["families"]
     feats = [f for f in report["features"] if not (feature_set == "no_iat" and f == "IAT")]
     t0 = time.time()
-    pool, val_ids = split_rows(split, report, fold, seed)
+    pool, val_ids, info = split_rows(split, report, fold, seed)
     rng = np.random.default_rng(seed) if split == "R" else None
     train_ids = cap_per_label(pool, label_ranges(report), train_per_type, rng)
     cols = ["y", "dup_group", "conflict", *feats]
@@ -199,12 +231,19 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
         f"validation {len(val_ids):,} rows")
 
     y = tr["y"].to_numpy(np.int64)
-    w = class_weights(y, len(families), weighting)
+    w = class_weights(y, len(families), weighting, allow_absent=split.startswith("B"))
     # early stopping on 10% of the training rows (never on the validation block)
     inner = np.random.default_rng(seed + 1).random(len(y)) < 0.1
     X = tr[feats].to_numpy(np.float32)
+    # XGBoost needs class labels 0..m-1: families absent from training (possible under protocol B) are left out
+    # of the model and get probability 0
+    present = np.unique(y[~inner])
+    absent = [families[i] for i in range(len(families)) if i not in set(present.tolist())]
+    keep = ~inner | np.isin(y, present)
+    X, y, w, inner = X[keep], y[keep], w[keep], inner[keep]
+    yc = np.searchsorted(present, y)
     model = xgb.XGBClassifier(**XGB_PARAMS, n_jobs=threads, random_state=seed)
-    model.fit(X[~inner], y[~inner], sample_weight=w[~inner], eval_set=[(X[inner], y[inner])],
+    model.fit(X[~inner], yc[~inner], sample_weight=w[~inner], eval_set=[(X[inner], yc[inner])],
               sample_weight_eval_set=[w[inner]], verbose=False)
     t_train = time.time() - t0
     train_dups = np.unique(tr["dup_group"].to_numpy())
@@ -215,7 +254,8 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
     for chunk in np.array_split(val_ids, max(1, len(val_ids) // 2_000_000)):
         va = read_rows(data, chunk, cols)
         ys.append(va["y"].to_numpy(np.int64))
-        proba = model.predict_proba(va[feats].to_numpy(np.float32))
+        proba = np.zeros((len(va), len(families)), np.float32)
+        proba[:, present] = model.predict_proba(va[feats].to_numpy(np.float32))
         ps.append(proba.argmax(axis=1).astype(np.int64))
         att.append((1.0 - proba[:, 0]).astype(np.float32))          # attack score = 1 - P(benign)
         twins.append(np.isin(va["dup_group"].to_numpy(), train_dups))
@@ -224,6 +264,7 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
     yv, pv, tw, cf, rid, sv = (np.concatenate(a) for a in (ys, ps, twins, conf, ids, att))
     res = {
         "split": split, "features": feature_set, "weighting": weighting, "n_features": len(feats), "fold": fold,
+        "families_absent_from_training": absent,
         "seed": seed,
         "train_rows": int(len(y)), "train_pool_rows": int(len(pool)), "val_rows": int(len(yv)),
         "trees": int(model.best_iteration + 1) if getattr(model, "best_iteration", None) is not None else None,
@@ -232,6 +273,7 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
         "scores_no_twin": score(yv[~tw], pv[~tw], families, sv[~tw]),
         "scores_no_conflict": score(yv[cf == 0], pv[cf == 0], families, sv[cf == 0]),
         "per_type": per_type_recall(rid, yv, pv, report),
+        **({"unseen": unseen_scores(rid, yv, pv, sv, report, info["unseen_types"])} if "unseen_types" in info else {}),
         "seconds_train": round(t_train, 1), "seconds_total": round(time.time() - t0, 1),
     }
     if feature_set == "all":
@@ -287,6 +329,11 @@ def main():
                     "train_per_type": a.train_per_type, "scored_on": "validation block only", "runs": done},
                     indent=1))
                 print("    " + _row(r) + f"   ({r['seconds_total']:.0f} s)", flush=True)
+                if "unseen" in r and r["unseen"].get("rows"):
+                    u = r["unseen"]
+                    print(f"        UNSEEN types ({u['rows']:,} rows): detected at 1% FPR {u['detected_at_fpr_1pct']:.1%}, "
+                          f"at 0.1% FPR {u['detected_at_fpr_0.1pct']:.1%}; right family {u['family_correct']:.1%} "
+                          f"(7-class {u['family_correct_c7m']:.1%})")
                 worst = sorted(r["per_type"].items(), key=lambda kv: kv[1]["recall"])[:5]
                 for lab, d in worst:
                     print(f"        {lab:26s} recall {d['recall']:6.1%}   most often -> {d['most_confused_with']}"

@@ -100,6 +100,8 @@ def test_class_weights():
         class_weights(y, 3, "inverse")
     with pytest.raises(RuntimeError):
         class_weights(np.array([0, 0, 1]), 3, "sqrt")
+    w = class_weights(np.array([0, 0, 1]), 3, "balanced", allow_absent=True)    # family 2 absent: allowed
+    assert np.allclose([w[:2].sum(), w[2]], [1.5, 1.5])
 
 
 @pytest.mark.parametrize("weighting", ["sqrt", "none"])
@@ -123,3 +125,30 @@ def test_recall_at_fpr():
     assert rec2 <= 0.02                                         # attacks look like benign: almost nothing caught
     same = np.zeros(1100)                                       # all scores tied: no alarm at all
     assert recall_at_fpr(is_attack, same, 0.01) == (0.0, 0.0)
+
+
+def test_checkpoint1_protocol_b(cleaned):
+    pytest.importorskip("xgboost")
+    from fqml.eval.checkpoint1 import run_setting, split_rows
+    out, report = cleaned
+    # TYPES has one type per family, so protocol B needs a second type in some families: none -> no unseen types
+    pool, val, info = split_rows("B-gap10", report, 0, 0)
+    assert info["unseen_types"] == [] and len(pool) and len(val)
+    r = run_setting("B-gap10", "all", data=out, report=report, fold=0, seed=0, train_per_type=100, threads=1,
+                    log=lambda m: None)
+    assert r["unseen"]["rows"] == 0 and r["val_rows"] > 0
+
+
+def test_unseen_scores():
+    from fqml.eval.checkpoint1 import unseen_scores
+    families = ["Benign", "DDoS", "DoS", "Recon", "Web", "BruteForce", "Spoofing", "Mirai"]
+    report = {"families": families, "per_label": {
+        "BenignTraffic": {"row_start": 0, "row_stop": 100, "rows_written": 100},
+        "DoS-X": {"row_start": 100, "row_stop": 150, "rows_written": 50}}}
+    rid = np.arange(150)
+    y = np.array([0] * 100 + [2] * 50)
+    p = np.array([0] * 100 + [1] * 30 + [2] * 10 + [0] * 10)              # 30 as DDoS, 10 right, 10 missed
+    score = np.concatenate([np.linspace(0, 0.5, 100), np.full(40, 0.9), np.full(10, 0.1)])
+    u = unseen_scores(rid, y, p, score, report, ["DoS-X"])
+    assert u["rows"] == 50 and np.isclose(u["detected_at_fpr_1pct"], 0.8) and np.isclose(u["detected_at_default"], 0.8)
+    assert np.isclose(u["family_correct"], 0.2) and np.isclose(u["family_correct_c7m"], 0.8)
