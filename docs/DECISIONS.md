@@ -389,14 +389,141 @@ assuming it), or D9 adds `Time_To_Live` (then the cleaner is re-run with it and 
 
 ---
 
+## Checkpoint 1 — what it measured (17–18 Nov 2026)
+
+XGBoost with fixed settings (`fqml/eval/checkpoint1.py`, task DATA-5), trained on at most 50,000 rows per attack
+type from the training side, scored on **validation blocks only** (test blocks unused), fold 0, seed 0.
+Results: `results/checkpoint1.json` (8 settings) and `results/checkpoint1_fpr.json` (3 weightings with
+fixed-alarm-rate scores). One fold and one seed: differences under about 0.005 are noise; the decisions below
+rest on larger ones. D8a, D9, D11 (part 1) and D17 are taken from it.
+
+| Split / features (balanced weighting) | 8-class macro-F1 | 7-class (`c7m`) | Binary F1 |
+|---|---|---|---|
+| Random row split, all features | 0.628 | 0.667 | 0.996 |
+| Random row split, no IAT | 0.626 | 0.665 | 0.996 |
+| Protocol A, gap 0, all / no IAT | 0.571 / 0.574 | 0.613 / 0.616 | 0.995 |
+| Protocol A, gap 100, all / no IAT | 0.575 / 0.573 | 0.615 / 0.615 | 0.995 |
+| Protocol A, gap 1000, all / no IAT | 0.576 / 0.573 | 0.617 / 0.615 | 0.995 |
+
+Scores without twin rows move by at most 0.003; scores without conflict rows are 0.008–0.019 higher in every
+setting alike. Neither changes a conclusion.
+
+---
+
+## D8a — Evaluation protocol A: 5 time-blocked folds, gap 100 rows
+
+**Date:** 18 Nov 2026 · **Owners:** Ganna + Nouran; all four approve · **Status:** proposed; the manifest is in
+the pull request `data/folds-a`.
+
+**Decision.** `data/folds/ciciot2023_A.json`, built by `python -m fqml.data.folds build-a --gap 100`: every attack
+type (and the benign capture) in recorded order cut into 5 blocks; fold k tests on block k, validates on block
+k+1, trains on the rest; 100 rows dropped at every boundary between blocks of different roles (reduced to at
+most 10% of a block for Recon-PingSweep 45, Backdoor_Malware 64, XSS 76, Uploading_Attack 25). Per fold about
+28.06 M training, 9.35 M validation and 9.36 M test rows; every row is a test row exactly once.
+
+**Why, with the measurement.**
+- **The gap is large enough:** 8-class macro-F1 0.571 / 0.575 / 0.576 with gap 0 / 100 / 1,000. The score does
+  not fall as the gap grows, so neighbouring rows across a boundary do not leak.
+- **Protocol A is needed:** the random row split scores 0.628, protocol A 0.575 (−0.053, about 9% relative);
+  7-class 0.667 → 0.615. Most of the drop is a real change over time that a random split hides: under
+  protocol A **32% of DoS-UDP_Flood validation rows are predicted Mirai** (196,717 rows; 258 under the random
+  split), and Mirai F1 falls from 0.998 to 0.840.
+- The binary task hardly moves (F1 0.996 → 0.995); see D11 for how it is judged.
+
+**Still open:** protocol B (unseen attack type) and C (CICIoMT2024) manifests, tasks DATA-3 and DATA-8b.
+
+**Revisit if:** another fold or seed shows the score still falling between gap 100 and 1,000.
+
+---
+
+## D9 — IAT is dropped from every feature set
+
+**Date:** 18 Nov 2026 · **Owners:** Ganna + Nouran · **Status:** proposed from Checkpoint 1.
+
+**Decision.** `IAT` is never a model input. 36 features remain (37 standard features of cleaner v1 minus IAT).
+
+**Why, with the measurement.** With and without IAT, 8-class macro-F1 differs by at most 0.003 in every split
+(random 0.628 / 0.626; protocol A gap 0 0.571 / 0.574, gap 100 0.575 / 0.573, gap 1,000 0.576 / 0.573), in both
+directions, and binary F1 is the same. Dropping it removes a feature a public audit ties to the capture setup,
+at no measured cost.
+
+**Flag for DATA-4:** XGBoost puts 40–47% of its importance on `Number` in every run. In CICIoT2023 this column
+probably reflects the packet-window size (100 packets for DDoS, DoS and Mirai, 10 for the rest), which would
+make it a shortcut like IAT. The window-size screen in DATA-4 checks it before the top-8 features are chosen.
+`Time_To_Live` stays unused (D8).
+
+**Revisit if:** the window-size screen finds that `Number` (or another feature) is a shortcut; then this entry
+gains that feature and Checkpoint 1 is re-run without it.
+
+---
+
+## D11 (part 1) — Class weighting and training sample, the same for every model
+
+**Date:** 18 Nov 2026 · **Owner:** Nouran · **Status:** proposed from Checkpoint 1. Part 2 (tuning per fold, VQC
+depth, MLP size ladder) is still due Mon 23 Nov.
+
+**Decision.**
+- **Training sample:** at most N rows per native attack type, spread evenly over time inside that fold's training
+  blocks (`fqml.data.rows.cap_per_label`). N is set per model in part 2 (Checkpoint 1 used 50,000).
+- **Weighting:** each row weighs ∝ 1/√(count of its family in the training sample), mean 1: the rule of the
+  shared training loop (`fqml.train.loop.class_weights`). The same for XGBoost, the MLPs and the VQC.
+- **How the binary task is judged:** attack recall at a fixed false-positive rate (0.1% and 1%; threshold set on
+  the validation block, scored on the test block) and ROC-AUC. Binary F1 and the false-positive rate at the
+  default decision are reported but never used to judge.
+
+**Why, with the measurement** (protocol A, gap 100, all features):
+
+| Weighting | 8-class F1 | 7-class F1 | Web F1 | BruteForce F1 | FPR at default decision | Attack recall at 1% FPR | at 0.1% FPR | ROC-AUC |
+|---|---|---|---|---|---|---|---|---|
+| balanced (equal family weight) | 0.575 | 0.615 | 0.10 | 0.08 | 33.2% | 0.983 | 0.981 | 0.997 |
+| **sqrt** | **0.607** | **0.642** | 0.20 | 0.16 | 39.8% | **0.983** | **0.980** | **0.997** |
+| none | 0.613 | 0.645 | 0.25 | 0.24 | 52.2% | 0.983 | 0.980 | 0.997 |
+
+- **The binary task does not depend on the weighting.** At a fixed alarm rate all three are the same (recall
+  0.983 at 1% FPR, 0.980–0.981 at 0.1%, ROC-AUC 0.997). The 33–52% false-positive rates at the default decision
+  come from the class mix of the training sample: sampling per attack type gives Recon (5 types) about 4× the
+  rows of benign (1 type), so benign rows are pushed to Recon. That is a threshold effect, not model quality,
+  and it is why the binary task is judged at a fixed alarm rate.
+- **The multi-class task does depend on it:** macro-F1 moves by up to 0.04, as much as the whole random-vs-A
+  effect. So the weighting is fixed once for all models. `sqrt` is chosen because it is the rule every PyTorch
+  model already trains with; `none` is 0.006 higher on this one fold, which is within noise.
+
+**What still fails (per attack type, `sqrt`):** DDoS-UDP / TCP / SYN floods (34–69% recall, mostly to DoS),
+DoS-UDP_Flood (32% to Mirai), DoS-SYN (46% to DDoS); SqlInjection (6%, to Recon), DictionaryBruteForce (23%),
+the other Web types (38–52%); benign 60% (33% to Recon). The remaining types are at 74–100%; the ICMP /
+RSTFIN / PSHACK / fragmentation floods and all Mirai types are above 99%.
+
+**Revisit if:** part 2 changes the training sample (for example a per-family cap), or other folds show `none`
+clearly above `sqrt`.
+
+---
+
+## D17 — The 7-class task (DDoS and DoS merged) is reported beside the 8-class task
+
+**Date:** 18 Nov 2026 · **Owners:** Ganna + Nouran · **Status:** proposed from D8 and Checkpoint 1.
+
+**Decision.** Every E0 setting is scored on both the 8-class task and `c7m` (label-map variant: Benign,
+DDoS_DoS, Recon, Web, BruteForce, Spoofing, Mirai). The 8 families stay the primary label map
+(INTERFACES 1.1); which task the EXP-1 win rules use is set in EXP-1.
+
+**Why, with the measurement.**
+- D8: half of all DoS rows are byte-identical to DDoS rows in the 37 features.
+- Checkpoint 1 (protocol A, gap 100, balanced): 33% of DDoS rows are predicted DoS, still 21% on rows with no
+  conflict at all. Per attack type the floods that use the same protocol fail (DDoS-UDP 26% recall, DDoS-TCP 39%,
+  DDoS-SYN 42%, DDoS-SynonymousIP 39%, all mostly to DoS); merged, DDoS_DoS reaches F1 0.988.
+- A distributed and a single-source flood of the same protocol differ in how many machines send, which
+  per-window averages cannot see. The 8-class score therefore mixes model quality with a limit of the features;
+  the 7-class score removes that limit.
+
+**Revisit if:** a feature that sees the number of sources is added.
+
+---
+
 ## Pending decisions
 
 | # | Decision | Owner | Due |
 |---|---|---|---|
-| D8a | Evaluation protocols A, B and C: folds, gap, the benign capture, single-type families | Ganna + Nouran; all four approve | Wed 18 Nov |
-| D9 | `IAT` dropped, by the rule written in advance (task EXP-1) | Ganna + Nouran | Mon 23 Nov |
-| D17 | Whether the 7-class task with DDoS and DoS merged (`c7m`) is reported beside the 8-class task. Evidence in D8: 50% of DoS rows are identical to DDoS rows | Ganna + Nouran | Mon 23 Nov |
-| D11 | Tuning per fold, fixed VQC depth, MLP size ladder | Nouran | Mon 23 Nov |
+| D11 (part 2) | Tuning per fold, fixed VQC depth, MLP size ladder, training-sample size per model (part 1, weighting, is above) | Nouran | Mon 23 Nov |
 | D14 | Where runs happen; result files; environment tags | Sheghaf | Mon 23 Nov |
 | E5 | Shot training: shots during training (parameter-shift, very expensive), or shots only at evaluation plus a small shot-trained subset, or simulated shot sampling in the PyTorch simulator | Nouran + Sheghaf | Wed 25 Nov |
 | D13 | δ, the batch sampling method for DP-SGD, and the privacy unit | Nouran | Fri 27 Nov |
