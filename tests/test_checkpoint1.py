@@ -80,6 +80,9 @@ def test_checkpoint1_runs(cleaned, split):
     assert r["val_conflict_share"] > 0 and r["top_features"] and r["weighting"] == "balanced"
     assert set(r["per_type"]) == set(TYPES) and all(0 <= d["recall"] <= 1 for d in r["per_type"].values())
     assert sum(d["rows"] for d in r["per_type"].values()) == r["val_rows"]
+    b = r["scores_all"]["binary"]
+    assert 0 <= b["recall_at_fpr_1pct"] <= 1 and b["fpr_reached_1pct"] <= 0.01 + 1e-9 and 0 < b["pr_auc"] <= 1
+    assert 0.5 < b["roc_auc"] <= 1 and 0 < b["benign_pr_auc"] <= 1
     json.dumps(r)
     y7, fam7 = merge_ddos_dos(np.arange(8), report["families"])
     assert list(y7) == [0, 1, 1, 2, 3, 4, 5, 6] and fam7[1] == "DDoS_DoS" and len(fam7) == 7
@@ -107,3 +110,16 @@ def test_checkpoint1_weightings_run(cleaned, weighting):
     r = run_setting("A-gap10", "all", data=out, report=report, fold=0, seed=0, train_per_type=100, threads=1,
                     weighting=weighting, log=lambda m: None)
     assert r["weighting"] == weighting and r["scores_all"]["binary"]["f1"] > 0.9
+
+
+def test_recall_at_fpr():
+    from fqml.eval.checkpoint1 import recall_at_fpr
+    is_attack = np.array([False] * 1000 + [True] * 100)
+    s = np.concatenate([np.linspace(0, 1, 1000), np.linspace(0.995, 1.5, 100)])
+    rec, reached = recall_at_fpr(is_attack, s, 0.01)
+    assert reached <= 0.01 and rec == 1.0                      # every attack scores above the 99th benign percentile
+    s2 = np.concatenate([np.linspace(0, 1, 1000), np.linspace(0, 1, 100)])
+    rec2, _ = recall_at_fpr(is_attack, s2, 0.01)
+    assert rec2 <= 0.02                                         # attacks look like benign: almost nothing caught
+    same = np.zeros(1100)                                       # all scores tied: no alarm at all
+    assert recall_at_fpr(is_attack, same, 0.01) == (0.0, 0.0)

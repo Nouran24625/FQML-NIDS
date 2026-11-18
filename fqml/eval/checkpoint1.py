@@ -39,7 +39,8 @@ import time
 from pathlib import Path
 
 import numpy as np
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import (average_precision_score, confusion_matrix, f1_score, precision_score, recall_score,
+                             roc_auc_score)
 
 from fqml.data.folds import build_time_blocked, fold_rows, ranges_to_rows, twin_mask
 from fqml.data.rows import CICIOT2023_V1, cap_per_label, read_rows
@@ -89,7 +90,21 @@ def merge_ddos_dos(y: np.ndarray, families: list[str]) -> tuple[np.ndarray, list
     return y7, fam7
 
 
-def score(y: np.ndarray, p: np.ndarray, families: list[str]) -> dict:
+def recall_at_fpr(is_attack: np.ndarray, attack_score: np.ndarray, fpr: float) -> tuple[float, float]:
+    """Attack recall when the alarm threshold is set so that at most `fpr` of benign rows raise an alarm.
+
+    Returns (recall, the false-positive rate actually reached; ties between equal scores can keep it
+    below `fpr`). The threshold is chosen on the same rows it is scored on: fine for comparing settings
+    with each other; in E0 the threshold comes from the validation block and is scored on the test block.
+    """
+    benign = attack_score[~is_attack]
+    if not len(benign) or not is_attack.any():
+        return float("nan"), float("nan")
+    t = np.quantile(benign, 1.0 - fpr, method="higher")
+    return float((attack_score[is_attack] > t).mean()), float((benign > t).mean())
+
+
+def score(y: np.ndarray, p: np.ndarray, families: list[str], attack_score: np.ndarray | None = None) -> dict:
     """8-class, c7m and binary scores, plus the DDoS <-> DoS confusion."""
     k = len(families)
     y7, fam7 = merge_ddos_dos(y, families)
@@ -99,13 +114,25 @@ def score(y: np.ndarray, p: np.ndarray, families: list[str]) -> dict:
     cm = confusion_matrix(y, p, labels=list(range(k)))
     dos_rows, ddos_rows = max(cm[i_dos].sum(), 1), max(cm[i_ddos].sum(), 1)
     benign = max(int((yb == 0).sum()), 1)
+    binary = {"f1": float(f1_score(yb, pb, zero_division=0)),
+              "attack_recall": float(recall_score(yb, pb, zero_division=0)),
+              "precision": float(precision_score(yb, pb, zero_division=0)),
+              "false_positive_rate": float(((pb == 1) & (yb == 0)).sum() / benign)}
+    if attack_score is not None:
+        is_attack = yb == 1
+        for name, f in (("1pct", 0.01), ("0.1pct", 0.001)):
+            rec, reached = recall_at_fpr(is_attack, attack_score, f)
+            binary[f"recall_at_fpr_{name}"] = rec
+            binary[f"fpr_reached_{name}"] = reached
+        both = 0 < is_attack.sum() < len(yb)
+        # attacks are ~98% of rows, so attack PR-AUC starts near 0.98; ROC-AUC and benign PR-AUC separate better
+        binary["pr_auc"] = float(average_precision_score(is_attack, attack_score)) if both else float("nan")
+        binary["roc_auc"] = float(roc_auc_score(is_attack, attack_score)) if both else float("nan")
+        binary["benign_pr_auc"] = float(average_precision_score(~is_attack, -attack_score)) if both else float("nan")
     return {
         "c8": _scores(y, p, k),
         "c7m": _scores(y7, p7, len(fam7)),
-        "binary": {"f1": float(f1_score(yb, pb, zero_division=0)),
-                   "attack_recall": float(recall_score(yb, pb, zero_division=0)),
-                   "precision": float(precision_score(yb, pb, zero_division=0)),
-                   "false_positive_rate": float(((pb == 1) & (yb == 0)).sum() / benign)},
+        "binary": binary,
         "dos_predicted_ddos": float(cm[i_dos, i_ddos] / dos_rows),
         "ddos_predicted_dos": float(cm[i_ddos, i_dos] / ddos_rows),
         "confusion_c8": cm.tolist(),
@@ -184,24 +211,26 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
     del tr, X
 
     # validation, read and scored in chunks so 9.35 M rows never sit in memory twice
-    ys, ps, twins, conf, ids = [], [], [], [], []
+    ys, ps, twins, conf, ids, att = [], [], [], [], [], []
     for chunk in np.array_split(val_ids, max(1, len(val_ids) // 2_000_000)):
         va = read_rows(data, chunk, cols)
         ys.append(va["y"].to_numpy(np.int64))
-        ps.append(model.predict(va[feats].to_numpy(np.float32)).astype(np.int64))
+        proba = model.predict_proba(va[feats].to_numpy(np.float32))
+        ps.append(proba.argmax(axis=1).astype(np.int64))
+        att.append((1.0 - proba[:, 0]).astype(np.float32))          # attack score = 1 - P(benign)
         twins.append(np.isin(va["dup_group"].to_numpy(), train_dups))
         conf.append(va["conflict"].to_numpy())
         ids.append(va["row_id"].to_numpy())
-    yv, pv, tw, cf, rid = (np.concatenate(a) for a in (ys, ps, twins, conf, ids))
+    yv, pv, tw, cf, rid, sv = (np.concatenate(a) for a in (ys, ps, twins, conf, ids, att))
     res = {
         "split": split, "features": feature_set, "weighting": weighting, "n_features": len(feats), "fold": fold,
         "seed": seed,
         "train_rows": int(len(y)), "train_pool_rows": int(len(pool)), "val_rows": int(len(yv)),
         "trees": int(model.best_iteration + 1) if getattr(model, "best_iteration", None) is not None else None,
         "val_twin_share": float(tw.mean()), "val_conflict_share": float((cf != 0).mean()),
-        "scores_all": score(yv, pv, families),
-        "scores_no_twin": score(yv[~tw], pv[~tw], families),
-        "scores_no_conflict": score(yv[cf == 0], pv[cf == 0], families),
+        "scores_all": score(yv, pv, families, sv),
+        "scores_no_twin": score(yv[~tw], pv[~tw], families, sv[~tw]),
+        "scores_no_conflict": score(yv[cf == 0], pv[cf == 0], families, sv[cf == 0]),
         "per_type": per_type_recall(rid, yv, pv, report),
         "seconds_train": round(t_train, 1), "seconds_total": round(time.time() - t0, 1),
     }
@@ -215,7 +244,9 @@ def _row(r):
     a, n, c = r["scores_all"], r["scores_no_twin"], r["scores_no_conflict"]
     return (f"{r['split']:10s}{r['features']:8s}{r.get('weighting', 'balanced'):9s}{a['c8']['macro_f1']:8.3f}"
             f"{n['c8']['macro_f1']:8.3f}{c['c8']['macro_f1']:8.3f}{a['c7m']['macro_f1']:8.3f}{a['binary']['f1']:8.3f}"
-            f"{a['binary']['false_positive_rate']:7.1%}{a['dos_predicted_ddos']:9.2f}{r['val_twin_share']:7.1%}")
+            f"{a['binary']['false_positive_rate']:7.1%}{a['binary'].get('recall_at_fpr_1pct', float('nan')):8.3f}"
+            f"{a['binary'].get('recall_at_fpr_0.1pct', float('nan')):8.3f}{a['dos_predicted_ddos']:9.2f}"
+            f"{r['val_twin_share']:7.1%}")
 
 
 def main():
@@ -261,7 +292,7 @@ def main():
                     print(f"        {lab:26s} recall {d['recall']:6.1%}   most often -> {d['most_confused_with']}"
                           f" ({d['share_to_it']:.1%})")
     print(f"\n{'split':10s}{'feat':8s}{'weights':9s}{'c8':>8s}{'c8 -tw':>8s}{'c8 -cf':>8s}{'c7m':>8s}"
-          f"{'bin F1':>8s}{'FPR':>7s}{'DoS>DDoS':>9s}{'twins':>7s}")
+          f"{'bin F1':>8s}{'FPR':>7s}{'rec@1%':>8s}{'rec@.1%':>8s}{'DoS>DDoS':>9s}{'twins':>7s}")
     order = {s: i for i, s in enumerate(SPLITS)}
     wo = {w: i for i, w in enumerate(WEIGHTINGS)}
     for r in sorted(done, key=lambda r: (order.get(r["split"], 9), r["features"], wo.get(r.get("weighting"), 0))):
