@@ -87,6 +87,13 @@ traffic-like data in CI and on real CICIoT2023 rows wherever the cleaned file ex
 (`fqml/fl/equivalence.py`, `tests/test_fedavg_real_data.py`); the federated trial run (FED-4) calls
 `compare_modes` on its own data before round 1.
 
+*Checked on real data, 18 Nov 2026:* `python -m fqml.fl.equivalence` on 20,007 rows of the cleaned
+CICIoT2023 (top-8 features, IAT excluded; 3,293 exact duplicate rows in the sample; smallest client 10 rows
+under Dirichlet 0.1): **8 of 8 cases pass** (VQC 8-class and binary, entanglement-free VQC, MLP; IID and
+Dirichlet 0.1). Largest difference between batched and one-client-at-a-time training 1.1e-10 in the weights,
+4.6e-11 in the logits (tolerance 1e-7). Record: `results/checks/fedavg_equivalence.json`. Phase 0
+amendment 8 is closed.
+
 ---
 
 ## D4 — DP-SGD per-sample gradients: expanded weights on the PyTorch simulator
@@ -405,6 +412,29 @@ rest on larger ones. D8a, D9, D11 (part 1) and D17 are taken from it.
 | Protocol A, gap 100, all / no IAT | 0.575 / 0.573 | 0.615 / 0.615 | 0.995 |
 | Protocol A, gap 1000, all / no IAT | 0.576 / 0.573 | 0.617 / 0.615 | 0.995 |
 
+**Protocol B (unseen attack type), all 5 folds** (`results/checkpoint1_protocol_b.json`; sqrt weighting,
+no IAT; manifest `data/folds/ciciot2023_B.json`). Scored on each fold's validation types, which the model
+never saw in training:
+
+| Fold | Unseen types in validation | Detected at 1% FPR | at 0.1% FPR | Right family, 8-class | Right family, 7-class |
+|---|---|---|---|---|---|
+| 0 | 8 (incl. DDoS-UDP, DoS-TCP, DNS_Spoofing) | 98.0% | 97.8% | 60.2% | 98.1% |
+| 1 | 6 (incl. DDoS-TCP, DoS-SYN, SqlInjection) | 99.2% | 99.0% | 73.5% | 99.4% |
+| 2 | 5 (incl. DDoS-PSHACK, DoS-HTTP, XSS) | 99.0% | 98.8% | 90.5% | 98.1% |
+| 3 | 4 (incl. DDoS-SYN, DDoS-ACK_Fragmentation) | 99.9% | 99.9% | 30.9% | 93.6% |
+| 4 | 9 (incl. DDoS-ICMP, DoS-UDP, MITM) | 97.2% | 97.0% | 57.0% | 98.4% |
+| **Mean** | | **98.7%** | **98.5%** | **62.4%** | **97.5%** |
+
+- **Unseen attacks are detected:** 98.7% raise an alarm at 1% false positives, about the same as seen attacks
+  under protocol A (98.3%).
+- **Almost every family error on an unseen type is DDoS vs DoS:** merged, 97.5% get the right family. Every
+  held-out DoS type is called DDoS (DoS-TCP, DoS-SYN, DoS-HTTP, DoS-UDP: 99.2–99.8% to DDoS). This is more
+  evidence for D17.
+- **Other failures:** DDoS-ACK_Fragmentation 97% to Mirai; DNS_Spoofing 0% right family in fold 0, where all of
+  Spoofing is held out (expected); the small Web and BruteForce types 13–59%.
+- **Limit:** detection is counted over rows, so the large floods dominate it. Detection per attack type,
+  averaged over types, is required in the metrics module (EVAL-1) so the small types count.
+
 Scores without twin rows move by at most 0.003; scores without conflict rows are 0.008–0.019 higher in every
 setting alike. Neither changes a conclusion.
 
@@ -430,7 +460,10 @@ most 10% of a block for Recon-PingSweep 45, Backdoor_Malware 64, XSS 76, Uploadi
   split), and Mirai F1 falls from 0.998 to 0.840.
 - The binary task hardly moves (F1 0.996 → 0.995); see D11 for how it is judged.
 
-**Still open:** protocol B (unseen attack type) and C (CICIoMT2024) manifests, tasks DATA-3 and DATA-8b.
+**Protocol B** is built too (`data/folds/ciciot2023_B.json`, `python -m fqml.data.folds build-b --gap 100`):
+inside every family with 2+ types, the types are dealt into 5 groups; fold k tests on group k and validates on
+group k+1, both never seen in training; benign and DictionaryBruteForce are split in time as in protocol A.
+**Still open:** protocol C (CICIoMT2024), task DATA-8b.
 
 **Revisit if:** another fold or seed shows the score still falling between gap 100 and 1,000.
 
