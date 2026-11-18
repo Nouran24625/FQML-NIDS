@@ -77,7 +77,33 @@ def test_checkpoint1_runs(cleaned, split):
         assert 0 <= s["c8"]["macro_f1"] <= 1 and len(s["c8"]["per_class_f1"]) == 8
         assert len(s["c7m"]["per_class_f1"]) == 7 and 0 <= s["binary"]["false_positive_rate"] <= 1
     assert r["scores_all"]["binary"]["f1"] > 0.9                # benign is far from every attack here
-    assert r["val_conflict_share"] > 0 and r["top_features"]
+    assert r["val_conflict_share"] > 0 and r["top_features"] and r["weighting"] == "balanced"
+    assert set(r["per_type"]) == set(TYPES) and all(0 <= d["recall"] <= 1 for d in r["per_type"].values())
+    assert sum(d["rows"] for d in r["per_type"].values()) == r["val_rows"]
     json.dumps(r)
     y7, fam7 = merge_ddos_dos(np.arange(8), report["families"])
     assert list(y7) == [0, 1, 1, 2, 3, 4, 5, 6] and fam7[1] == "DDoS_DoS" and len(fam7) == 7
+
+
+def test_class_weights():
+    from fqml.eval.checkpoint1 import class_weights
+    y = np.array([0] * 90 + [1] * 9 + [2] * 1)
+    b = class_weights(y, 3, "balanced")
+    assert np.allclose([b[y == k].sum() for k in range(3)], 100 / 3)          # equal total weight per family
+    s = class_weights(y, 3, "sqrt")
+    assert np.isclose(s.mean(), 1) and np.isclose(s[y == 2][0] / s[y == 0][0], np.sqrt(90))
+    assert (class_weights(y, 3, "none") == 1).all()
+    with pytest.raises(ValueError):
+        class_weights(y, 3, "inverse")
+    with pytest.raises(RuntimeError):
+        class_weights(np.array([0, 0, 1]), 3, "sqrt")
+
+
+@pytest.mark.parametrize("weighting", ["sqrt", "none"])
+def test_checkpoint1_weightings_run(cleaned, weighting):
+    pytest.importorskip("xgboost")
+    from fqml.eval.checkpoint1 import run_setting
+    out, report = cleaned
+    r = run_setting("A-gap10", "all", data=out, report=report, fold=0, seed=0, train_per_type=100, threads=1,
+                    weighting=weighting, log=lambda m: None)
+    assert r["weighting"] == weighting and r["scores_all"]["binary"]["f1"] > 0.9
