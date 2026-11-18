@@ -9,6 +9,15 @@
     "source": "",
     "total_gb": 0.037
   },
+  "interim/ciciot2023_v1": {
+    "files": {
+      "interim/ciciot2023_v1/ciciot2023_clean_v1.parquet": "aff28456bffcef317aec8e4343fb55d79342e94a806f01debe13e25944a342da"
+    },
+    "n_files": 1,
+    "recorded": "2026-11-17",
+    "source": "cleaner v1, --per-label-cap 0 --conflicts keep",
+    "total_gb": 1.502
+  },
   "raw/cicids2017": {
     "files": {
       "raw/cicids2017/friday.csv": "ebd499e6f23bd59f9cb81bec28178491b02b925fa5640a24215c9437d79482d0",
