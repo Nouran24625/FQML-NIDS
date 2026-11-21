@@ -29,7 +29,6 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from fqml.models.vqc import n_params
 from fqml.quantum.torch_sim import TorchVQC
 
 MODELS = {  # name: (n_classes, entangler, readout) - the E0 quantum models (PREREG_E0 §6)
@@ -38,6 +37,10 @@ MODELS = {  # name: (n_classes, entangler, readout) - the E0 quantum models (PRE
     "vqc_noent": (8, "none", "linear"),
     "vqc_binary": (2, "chain", "local"),
 }
+
+
+def n_params(model):   # same as fqml.models.vqc.n_params, without importing PennyLane (not on Colab)
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def _sync(device):
