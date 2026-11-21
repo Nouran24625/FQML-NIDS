@@ -22,6 +22,7 @@ import torch
 from torch import nn
 
 from fqml.quantum.layout import entangler_pairs, initial_scale, readout_wires
+from fqml.quantum.shots import shot_expz
 
 
 def _cnot_permutation(n: int, entangler: str = "ring") -> torch.Tensor:
@@ -42,7 +43,7 @@ class TorchVQC(nn.Module):
     """Drop-in replacement for fqml.models.vqc.VQC (same constructor, parameters and outputs)."""
 
     def __init__(self, n_qubits=8, n_classes=2, n_layers=3, seed=0, entangler="chain", version=2,
-                 readout="local"):
+                 readout="local", shots=None, shot_grad="shift"):
         super().__init__()
         self.n_qubits, self.n_layers, self.n_classes = n_qubits, n_layers, n_classes
         self.entangler, self.version, self.readout = entangler, version, readout
@@ -59,10 +60,24 @@ class TorchVQC(nn.Module):
         bits = (idx[:, None] >> (n_qubits - 1 - ro)) & 1
         self.register_buffer("perm", _cnot_permutation(n_qubits, entangler), persistent=False)
         self.register_buffer("zsign", (1 - 2 * bits).float(), persistent=False)   # [256, n_read]
+        # Finite-shot mode (Q-1, fqml/quantum/shots.py). shots=None: exact <Z> and backprop (default).
+        # shots=S: every <Z> is estimated from S measurements; gradients by parameter shift
+        # (shot_grad="shift") or exact (shot_grad="exact", noise in the outputs only).
+        self.shots, self.shot_grad = shots, shot_grad
+        self.shot_generator = None      # optional torch.Generator on the model's device, for reproducible shots
+        self.shot_max_rows = None       # optional cap on shifted circuits simulated at once (memory)
 
-    def expz(self, x, theta=None):
+    def expz(self, x, theta=None, shots=None):
         """<Z_i> for the readout qubits (all n for readout="linear"). x: [B, n].
-        theta: [L, n, 2] (shared) or [B, L, n, 2]."""
+        theta: [L, n, 2] (shared) or [B, L, n, 2]. shots=None: exact; shots=S: estimated from S measurements."""
+        theta = self.theta if theta is None else theta
+        if shots is not None:
+            return shot_expz(self, x, theta, shots, self.shot_grad, self.shot_generator, self.shot_max_rows)
+        probs = self.probs(x, theta)
+        return probs @ self.zsign.to(probs.dtype)
+
+    def probs(self, x, theta=None):
+        """Probabilities of the 2^n bitstrings at the end of the circuit. x: [B, n]; theta as in expz."""
         theta = self.theta if theta is None else theta
         B, n = x.shape[0], self.n_qubits
         cdt = torch.complex128 if x.dtype == torch.float64 else torch.complex64
@@ -103,15 +118,14 @@ class TorchVQC(nn.Module):
                     psi = torch.stack([a00 * p0 + a01 * p1,
                                        a10 * p0 + a11 * p1], dim=-1).movedim(-1, q + 1)
             psi = psi.reshape(B, -1)[:, self.perm]             # CNOT ring or chain
-        probs = psi.real ** 2 + psi.imag ** 2
-        return probs @ self.zsign.to(probs.dtype)
+        return psi.real ** 2 + psi.imag ** 2
 
-    def logits(self, x, theta=None, scale=None, bias=None):
+    def logits(self, x, theta=None, scale=None, bias=None, shots="model"):
         """Same output as VQC.forward. scale/bias may also be per-sample: local readout scale [B, n_out],
-        linear readout scale [B, n_out, n]; bias [B, n_out]."""
+        linear readout scale [B, n_out, n]; bias [B, n_out]. shots: "model" uses self.shots; None = exact."""
         scale = self.scale if scale is None else scale
         bias = self.bias if bias is None else bias
-        z = self.expz(x, theta)
+        z = self.expz(x, theta, self.shots if shots == "model" else shots)
         if self.readout == "linear":                           # [B, n] x [n_out, n] or [B, n_out, n]
             out = (scale * z.unsqueeze(-2).to(scale.dtype)).sum(-1) + bias
         else:

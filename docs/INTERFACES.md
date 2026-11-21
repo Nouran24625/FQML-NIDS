@@ -1,7 +1,7 @@
 # FQML-NIDS — Frozen interfaces
 
-**Version:** 2.0.0 (see change log) · **First frozen:** 2 Nov 2026 (Gate 0) · **Amended:** 16 Nov 2026
-(Phase 0 amendments, `docs/DECISIONS.md`)
+**Version:** 2.1.0 (see change log) · **First frozen:** 2 Nov 2026 (Gate 0) · **Amended:** 21 Nov 2026
+(finite-shot mode, Q-1)
 
 Every track codes against what is written here. **Any change to an item in this file needs a pull request
 that (1) says "Interface change" in its title, (2) updates this file and its change log, and (3) is approved
@@ -138,8 +138,16 @@ Every model is a `torch.nn.Module` with `forward(x) -> logits`:
     `entangler="chain", readout="linear"` (model name `vqc_lin`): the two differ only by the CNOT gates.
 - Per-sample weights: `TorchVQC.logits(x, theta, scale, bias)` accepts `theta [B, L, n, 2]`, `bias [B, n_out]`,
   and `scale [B, n_out]` (local) or `[B, n_out, n]` (linear). This is what DP-SGD per-sample gradients use (D4).
-- Per-sample weights: `TorchVQC.logits(x, theta, scale, bias)` accepts `theta [B, L, n, 2]`,
-  `scale [B, n_out]` and `bias [B, n_out]`. This is what DP-SGD per-sample gradients use (D4).
+- **Finite shots** (`TorchVQC` only, Q-1, `fqml/quantum/shots.py`): extra constructor arguments
+  `shots=None, shot_grad="shift"`; `TorchVQC.logits(..., shots=...)` and `TorchVQC.expz(x, theta, shots=...)`
+  override the model setting for one call. `shots=None` (default) is the exact simulation with backprop,
+  unchanged. `shots=S`: every sample's circuit is measured S times (one bitstring per shot for all qubits)
+  and `<Z>` is the average. Gradients for `theta`: `shot_grad="shift"` uses the parameter-shift rule with
+  S shots for each of the 2 × 48 shifted circuits (what hardware training does); `shot_grad="exact"` keeps
+  the exact gradient (noise in the outputs only). `scale` and `bias` get autograd gradients from the
+  sampled `<Z>`; inputs `x` get no gradient. Per-sample weights work with shots. Optional attributes:
+  `shot_generator` (a `torch.Generator` on the model's device) and `shot_max_rows` (memory cap).
+  `TorchVQC.probs(x, theta)` returns the `[B, 2^n]` bitstring probabilities.
 
 ### 2.3 Classical models and the model size setting
 - `fqml.models.mlp.MatchedMLP(n_in, n_classes, target_params, seed=None)`: one hidden layer (ReLU) whose
@@ -268,3 +276,4 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
 | 1.0.0 | 2 Nov 2026 | First freeze: circuit v2 + chain (D6, D7), batched FedAvg (D3), capture column and capture-disjoint split announced for Phase 1 | Kareem, Sheghaf, Nouran, Ganna |
 | 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | Nouran, Sheghaf (PR #12) |
 | 2.0.0 | 16 Nov 2026 | Phase 0 amendments. Section owners follow the new areas. **1:** cleaner v1 file (`row_id`, `file`, `file_seq`, `row_index`, `dup_group`, `conflict`, `sample_rate`, optional `ts`; fixed row order; duplicates marked, not deleted), v0 file retired, label-map variants (`c7m`), protocols A / B / C and fold manifests (`fqml-folds/1`) replace the capture-disjoint split, preprocessing fitted per fold. **2:** `entangler="none"`, `readout="linear"` (the control is always `none` + `linear`, compared with `chain` + `linear`), model size setting and MLP size ladder. **3:** sites split, one-type-per-client split and local-only mode (signatures), partition path carries protocol and fold, real-data FedAvg equivalence check. **5:** run ID carries protocol and fold; 5 folds × 3 seeds replaces "seeds 0, 1, 2 on one split" | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |
+| 2.1.0 | 21 Nov 2026 | Section 2.2: finite-shot mode of `TorchVQC` (`shots`, `shot_grad`, `probs`; Q-1). Default behaviour unchanged. Duplicate per-sample-weights line removed | Pending: Nouran + one other (this PR) |
