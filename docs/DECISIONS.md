@@ -493,7 +493,7 @@ gains that feature and Checkpoint 1 is re-run without it.
 ## D11 (part 1) — Class weighting and training sample, the same for every model
 
 **Date:** 18 Nov 2026 · **Owner:** Nouran · **Status:** proposed from Checkpoint 1. Part 2 (tuning per fold, VQC
-depth, MLP size ladder) is still due Mon 23 Nov.
+depth, MLP size ladder, training-sample size) is the next entry.
 
 **Decision.**
 - **Training sample:** at most N rows per native attack type, spread evenly over time inside that fold's training
@@ -531,6 +531,69 @@ clearly above `sqrt`.
 
 ---
 
+## D11 (part 2) — Tuning, VQC depth, size ladder and training-sample size: the same rules for every model
+
+**Date:** 21 Nov 2026 · **Owner:** Nouran · **Reviewer:** Ganna · **Status:** proposed; due Mon 23 Nov. Fixed before
+any E0 run, together with `docs/PREREG_E0.md` (EXP-1).
+
+**Decision.**
+- **Models trained:** 8-class only. The 7-class and binary results are computed from the 8-class predictions
+  (D17; PREREG_E0 §2), so no separate 7-class or binary models are trained for E0.
+- **Tuning budget:** 12 trials per model per fold, for every model. The trial settings are drawn by random search
+  with a seed derived from the model name (`experiments/make_tuning_configs.py`) and committed in
+  `configs/tuning/<model>.yaml` before any E0 run; `tests/test_tuning_configs.py` fails if a file differs from
+  what the generator produces. Every fold tries the same 12 settings and keeps the one with the best 8-class
+  macro-F1 on **its own validation block**; test blocks are never used.
+- **Seeds:** trials run with seed 0; the chosen setting is then trained with seeds 1 and 2 (the seed-0 trial run
+  is reused: training is deterministic, H-10).
+- **Protocol B:** no new tuning. Each model uses the setting chosen most often across the five protocol A folds
+  (ties: best mean validation score), trained with seeds 0, 1, 2 on every protocol B fold.
+- **Search spaces** (fixed settings in brackets):
+
+  | Model | Tuned | Fixed |
+  |---|---|---|
+  | `vqc`, `vqc_lin`, `vqc_noent` | learning rate, log 1e-3 to 1e-1 | 3 layers, batch 256 |
+  | MLP ladder (`mlp_p64` … `mlp_p3000`), RFF | learning rate, log 1e-4 to 3e-2; weight decay {0, 1e-5, 1e-4} | width per rung; RFF frequencies ≤ 3; batch 256 |
+  | MLP-large | as the ladder, plus dropout {0, 0.1} | 2 × 256 hidden; batch 256 |
+  | Logistic regression | C, log 1e-4 to 1e2 | max 1,000 iterations |
+  | XGBoost | max depth {4, 6, 8, 10}; learning rate, log 0.03 to 0.3; subsample and column sample, 0.6 to 1; min child weight, log 1 to 10 | up to 1,000 trees, early stop after 50 rounds on the validation block, `hist` |
+  | Random Forest | max depth {none, 16, 32}; max features {sqrt, 0.3, 0.5}; min samples per leaf {1, 5, 20} (12 distinct cells of the 27) | 300 trees |
+
+- **Early stopping** (every PyTorch model): at most 100 epochs, patience 10 epochs, the best epoch's weights are
+  kept (H-10). Early stopping scores a **fixed validation sample**: at most 2,000 rows per attack type, spread
+  evenly over time, drawn with seed 0, the same rows for every model. Choosing the best trial and setting the
+  decision thresholds (D11 part 1) use the **full** validation block.
+- **VQC depth:** 3 layers for every E0 VQC. Side check: `vqc` at 2 and 4 layers, protocol A, 5 folds, seed 0,
+  with the 3-layer tuned settings; reported, never used to decide.
+- **Size ladder:** 64 (`mlp_p64`, = `vqc`), 120 (`mlp_p120`, = `vqc_lin` and `vqc_noent`), 128, 256, 512, 1,000
+  and 3,000 parameters (8 inputs, 8 outputs; widths move in steps of 17, so the actual count is logged).
+- **Training sample per attack type** (`cap_per_label`, D11 part 1):
+  - **N = 5,000** for every model in the six comparisons and on the ladder: `vqc`, `vqc_lin`, `vqc_noent`,
+    the MLP ladder and RFF (about 150,000 rows per fold);
+  - the reference models (XGBoost, Random Forest, MLP-large, logistic regression) at **both N = 5,000 and
+    N = 50,000**, so the effect of more data is shown separately from the model;
+  - side check: `vqc` and `mlp_p64` at N = 20,000, protocol A, 5 folds, seed 0, the N = 5,000 tuned settings.
+
+**Why.**
+- **Fairness comes from an equal, pre-committed budget.** Every model gets the same number of trials, the same
+  data, the same early-stopping rule and the same selection metric; the trials exist in the repository before any
+  result does.
+- **N = 5,000 is set by the VQC's cost, and applied to every compared model.** At 50,000 rows per type one VQC
+  epoch takes about 10 minutes on a T4; E0 needs about 265 VQC runs (3 models × 5 folds × 14 runs under A,
+  45 under B, the depth side check). At 5,000 a run takes about 12 minutes with early stopping, about 50
+  GPU-hours in total, shared across the team's Colab and Kaggle accounts. The same N for the VQC and its
+  rivals keeps the comparison fair; the N = 20,000 side check tests whether the ranking depends on it.
+- **Batch 256:** Q-1 measured the same T4 time per step at small batches (`results/spikes/Q1_shots.json`), so
+  256 makes VQC epochs about 4× faster; it is fixed for every PyTorch model.
+- **A fixed validation sample for early stopping:** scoring all ~9.35 M validation rows after every epoch would
+  take longer than the training itself.
+
+**Revisit if:** the N = 20,000 side check changes the ranking of `vqc` and `mlp_p64`; the measured run time is far
+from the estimate (H-10 / EXP-0); or a model's chosen setting lies at the edge of its search space in most
+folds (the space is then widened for every model of that family, before the test blocks are scored).
+
+---
+
 ## D17 — The 7-class task (DDoS and DoS merged) is reported beside the 8-class task
 
 **Date:** 18 Nov 2026 · **Owners:** Ganna + Nouran · **Status:** proposed from D8 and Checkpoint 1.
@@ -556,7 +619,6 @@ DDoS_DoS, Recon, Web, BruteForce, Spoofing, Mirai). The 8 families stay the prim
 
 | # | Decision | Owner | Due |
 |---|---|---|---|
-| D11 (part 2) | Tuning per fold, fixed VQC depth, MLP size ladder, training-sample size per model (part 1, weighting, is above) | Nouran | Mon 23 Nov |
 | D14 | Where runs happen; result files; environment tags | Sheghaf | Mon 23 Nov |
 | E5 | Shot training: shots during training (parameter-shift, very expensive), or shots only at evaluation plus a small shot-trained subset, or simulated shot sampling in the PyTorch simulator | Nouran + Sheghaf | Wed 25 Nov |
 | D13 | δ, the batch sampling method for DP-SGD, and the privacy unit | Nouran | Fri 27 Nov |
