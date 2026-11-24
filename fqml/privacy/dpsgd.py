@@ -92,6 +92,12 @@ def poisson_batches(n: int, sample_rate: float, steps: int, generator: torch.Gen
 
 
 # ---------------------------------------------------------------------------------------------------- accounting
+# RDP orders searched by the accountant. Opacus's default list stops at 63; with few steps or a large epsilon the best
+# order can sit at that edge (Opacus warns "Optimal order is the largest alpha"), which gives a valid but looser
+# epsilon and therefore more noise than the target needs. A wider list keeps the bound tight.
+ALPHAS = [1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64)) + list(range(64, 512, 4)) + [512, 768, 1024]
+
+
 def noise_multiplier_for(target_epsilon: float, delta: float, sample_rate: float, steps: int) -> float:
     """sigma such that the RDP accountant gives epsilon <= target after `steps` steps at `sample_rate`."""
     if math.isinf(target_epsilon):
@@ -99,7 +105,7 @@ def noise_multiplier_for(target_epsilon: float, delta: float, sample_rate: float
     from opacus.accountants.utils import get_noise_multiplier
 
     return float(get_noise_multiplier(target_epsilon=target_epsilon, target_delta=delta, sample_rate=sample_rate,
-                                      steps=steps, accountant="rdp"))
+                                      steps=steps, accountant="rdp", alphas=ALPHAS))
 
 
 class Accountant:
@@ -126,7 +132,7 @@ class Accountant:
         return sum(k for *_, k in self._history)
 
     def epsilon(self, delta: float) -> float:
-        return float(self.rdp.get_epsilon(delta=delta)) if self._history else float("inf")
+        return float(self.rdp.get_epsilon(delta=delta, alphas=ALPHAS)) if self._history else float("inf")
 
     def epsilon_prv(self, delta: float) -> float | None:
         """PRV estimate of the same history; None if Opacus cannot compute it for these settings."""
