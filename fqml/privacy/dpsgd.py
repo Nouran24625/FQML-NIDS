@@ -189,11 +189,13 @@ def _macro_f1(model, X, y, n_classes, batch=8192) -> float:
 def dp_fit(model: nn.Module, X, y, n_classes: int, *, target_epsilon: float, delta: float = 1e-6,
            clip: float = 1.0, batch_size: int = 256, max_epochs: int = 100, lr: float = 0.01,
            weight_decay: float = 0.0, seed: int = 0, X_val=None, y_val=None, patience: int = 10,
-           eval_every: int = 1, max_seconds: float | None = None, on_epoch=None) -> DPResult:
+           eval_every: int = 1, max_seconds: float | None = None, on_epoch=None,
+           class_weighted: bool = True) -> DPResult:
     """Train `model` with DP-SGD (D13). The model ends with the weights of the best validation epoch.
 
     X: float32 [n, d] in [0, pi]; y: int64 family index. Validation rows are not training rows, so early stopping
-    on them costs no privacy of the training rows."""
+    on them costs no privacy of the training rows. class_weighted=False drops the D11 class weights (used only to
+    compare with Opacus on an identical loss, PRIV-3)."""
     device = next(model.parameters()).device
     Xt = torch.as_tensor(np.asarray(X), dtype=torch.float32, device=device)
     yt = torch.as_tensor(np.asarray(y), dtype=torch.long, device=device)
@@ -204,7 +206,7 @@ def dp_fit(model: nn.Module, X, y, n_classes: int, *, target_epsilon: float, del
     private = not math.isinf(target_epsilon)
     sigma = noise_multiplier_for(target_epsilon, delta, q, max_steps) if private else 0.0
     C = clip if private else float("inf")
-    cw = _class_weight_tensor(np.asarray(y), n_classes, device)
+    cw = _class_weight_tensor(np.asarray(y), n_classes, device) if class_weighted else None
     Xv = None if X_val is None else torch.as_tensor(np.asarray(X_val), dtype=torch.float32, device=device)
 
     gen = torch.Generator(device=device).manual_seed(seed)
