@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FQML-NIDS live federation</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#121211; --surface-1:#1a1a19; --surface-2:#222220; --grid:#2c2c2a; --border:rgba(255,255,255,0.10);
+  --text-primary:#f0efec; --text-secondary:#c3c2b7; --muted:#898781;
+  --series-1:#3987e5; --good:#0ca30c; --warning:#fab219; --critical:#d03b3b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text-primary);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 22px 30px}
+header{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:22px;font-weight:700}
+.sub{color:var(--text-secondary);font-size:13px;margin-top:2px}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--border);border-radius:999px;font-size:13px;color:var(--text-secondary);background:var(--surface-1)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.pill.live .dot{background:var(--good);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.kpi .v{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .n{color:var(--text-secondary);font-size:12.5px}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:14px 16px;min-width:0}
+.card h2{margin:0 0 2px;font-size:15px;font-weight:650}
+.card .hint{color:var(--muted);font-size:12.5px;margin-bottom:8px}
+svg text{fill:var(--muted);font-size:11px;font-family:inherit}
+.fams{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.fam{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px 6px;min-width:0}
+.fam .top{display:flex;align-items:baseline;gap:8px}
+.fam .name{font-weight:600;color:var(--text-secondary)}
+.fam .val{margin-left:auto;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.fam .delta{font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums;min-height:17px}
+.flag{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-primary)}
+.flag i{font-style:normal;color:var(--warning)}
+.sites{display:grid;gap:10px}
+.site{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.site .row1{display:flex;align-items:center;gap:8px}
+.site .nm{font-weight:650}
+.site .st{color:var(--text-secondary);font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.site .meta{color:var(--muted);font-size:12.5px;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:11.5px;padding:1px 7px;border:1px solid var(--border);border-radius:999px;color:var(--text-secondary)}
+.distrow{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--muted)}
+.bar{flex:1;height:8px;background:var(--grid);border-radius:4px;overflow:hidden}
+.bar > span{display:block;height:100%;background:var(--series-1);border-radius:0 4px 4px 0}
+.log{max-height:230px;overflow:auto;font-size:12.5px;color:var(--text-secondary)}
+.log div{padding:3px 0;border-bottom:1px solid var(--grid)}
+.log time{color:var(--muted);margin-right:8px;font-variant-numeric:tabular-nums}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--text-secondary)}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums;margin-top:8px}
+th,td{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+#tip{position:fixed;pointer-events:none;background:#000c;border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12.5px;color:var(--text-primary);display:none;z-index:9;white-space:nowrap}
+.net .link{stroke:var(--grid);stroke-width:2}
+.net .link.on{stroke:var(--series-1)}
+.net .node{fill:var(--surface-2);stroke:var(--border);stroke-width:1.5}
+.net .server{fill:#1d2a3a;stroke:var(--series-1)}
+.net .lbl{fill:var(--text-primary);font-size:12px;font-weight:600}
+.net .sml{fill:var(--muted);font-size:10.5px}
+.net .pkt{fill:var(--series-1)}
+.note{color:var(--muted);font-size:12px;margin-top:14px}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.fams{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>FQML-NIDS: live federated intrusion detection</h1>
+      <div class="sub" id="sub">connecting to the server ...</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill" id="phase"><span class="dot"></span><span id="phaseText">waiting</span></span>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">Round</div><div class="v" id="kRound">0</div><div class="n" id="kRoundN">&nbsp;</div></div>
+    <div class="kpi"><div class="l">Macro-F1, 8 families</div><div class="v" id="kF1">-</div><div class="n" id="kF1N">&nbsp;</div></div>
+    <div class="kpi"><div class="l">Attacks caught at 1% false alarms</div><div class="v" id="kAtt">-</div><div class="n">share of attack rows flagged</div></div>
+    <div class="kpi"><div class="l">Unseen attack types, right family</div><div class="v" id="kUn">-</div><div class="n">types a site never had in its data</div></div>
+    <div class="kpi"><div class="l">Encrypted data on the wire</div><div class="v" id="kBytes">0</div><div class="n" id="kBytesN">every model signed and encrypted</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Server and sites</h2>
+      <div class="hint">Each site keeps its traffic; only signed, encrypted model updates travel. A moving dot is a message in flight.</div>
+      <svg class="net" id="net" viewBox="0 0 760 230" width="100%" role="img" aria-label="Network of the server and its sites"></svg>
+    </div>
+    <div class="card">
+      <h2>Macro-F1 of the shared model</h2>
+      <div class="hint">Validation block, after each round's aggregation. Hover for values.</div>
+      <svg id="f1chart" viewBox="0 0 460 230" width="100%" role="img" aria-label="Macro-F1 over rounds"></svg>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2>Detection by attack family</h2>
+    <div class="hint">Recall of each family by the shared model, round by round (same 0 to 1 scale in every panel). A sudden fall with nothing else moving is what a targeted attack looks like.</div>
+    <div class="fams" id="fams"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Sites</h2>
+      <div class="hint">What each site holds and how far its last update was from the global model (the server sees only updates, not data).</div>
+      <div class="sites" id="sites"></div>
+    </div>
+    <div class="card">
+      <h2>Events</h2>
+      <div class="hint">Handshakes, verified signatures and rounds, newest first.</div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Table view: every round</summary>
+    <div id="table"></div>
+  </details>
+  <div class="note">Demo, not a result: one fold and one seed, validation block, stand-in features until DATA-6. The measured results come from the experiment scripts.</div>
+</div>
+<div id="tip"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const tip = $('tip');
+const fmt = v => (v === undefined || v === null || Number.isNaN(v)) ? '-' : v.toFixed(3);
+const pct = v => (v === undefined || v === null || Number.isNaN(v)) ? '-' : Math.round(v * 100) + '%';
+const kb = b => b >= 1e6 ? (b / 1e6).toFixed(2) + ' MB' : (b / 1e3).toFixed(1) + ' kB';
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+function showTip(e, html){ tip.innerHTML = html; tip.style.display = 'block';
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
+function hideTip(){ tip.style.display = 'none'; }
+
+// line chart on a fixed 0..1 scale, with a crosshair tooltip
+function lineChart(svg, values, rounds, opts){
+  const W = opts.w, H = opts.h, L = opts.left ?? 34, R = 8, T = 8, B = opts.bottom ?? 22;
+  const n = Math.max(rounds, values.length, 2);
+  const x = i => L + (W - L - R) * (i / (n - 1));
+  const y = v => T + (H - T - B) * (1 - v);
+  let g = '';
+  for (const t of (opts.ticks ?? [0, .25, .5, .75, 1])){
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)" stroke-width="1"/>`;
+    if (opts.axis !== false) g += `<text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  }
+  if (opts.axis !== false){
+    const step = Math.max(1, Math.ceil(n / 6));
+    for (let i = 0; i < n; i += step) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${i + 1}</text>`;
+  }
+  if (values.length){
+    const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+    g += `<path d="${d}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const li = values.length - 1;
+    g += `<circle cx="${x(li)}" cy="${y(values[li])}" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>`;
+  }
+  g += `<line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>`;
+  g += `<circle class="xd" r="5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2" visibility="hidden"/>`;
+  g += `<rect x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent"/>`;
+  svg.innerHTML = g;
+  const hit = svg.lastElementChild, xh = svg.querySelector('.xh'), xd = svg.querySelector('.xd');
+  hit.onmousemove = e => {
+    if (!values.length) return;
+    const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    const q = p.matrixTransform(svg.getScreenCTM().inverse());
+    const i = Math.max(0, Math.min(values.length - 1, Math.round((q.x - L) / (W - L - R) * (n - 1))));
+    xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
+    xd.setAttribute('cx', x(i)); xd.setAttribute('cy', y(values[i])); xd.setAttribute('visibility', 'visible');
+    showTip(e, `${opts.label}: round ${i + 1}<br><b>${fmt(values[i])}</b>`);
+  };
+  hit.onmouseleave = () => { xh.setAttribute('visibility', 'hidden'); xd.setAttribute('visibility', 'hidden'); hideTip(); };
+}
+
+function network(st){
+  const sites = Object.values(st.sites).sort((a, b) => a.name.localeCompare(b.name));
+  const W = 760, sx = 380, sy = 46, n = Math.max(sites.length, 1);
+  let g = '';
+  sites.forEach((s, i) => {
+    const x = 70 + (W - 140) * (n === 1 ? .5 : i / (n - 1)), y = 182;
+    const on = st.now - (s.active || 0) < 1.5;
+    g += `<line class="link ${on ? 'on' : ''}" x1="${sx}" y1="${sy + 26}" x2="${x}" y2="${y - 24}"/>`;
+    if (on){
+      const up = s.dir === 'up';
+      const [x1, y1, x2, y2] = up ? [x, y - 24, sx, sy + 26] : [sx, sy + 26, x, y - 24];
+      g += `<circle class="pkt" r="5"><animate attributeName="cx" from="${x1}" to="${x2}" dur="0.9s" repeatCount="indefinite"/>` +
+           `<animate attributeName="cy" from="${y1}" to="${y2}" dur="0.9s" repeatCount="indefinite"/></circle>`;
+    }
+    g += `<rect class="node" x="${x - 56}" y="${y - 24}" width="112" height="48" rx="8"/>`;
+    g += `<text class="lbl" x="${x}" y="${y - 4}" text-anchor="middle">${esc(s.name)}</text>`;
+    g += `<text class="sml" x="${x}" y="${y + 12}" text-anchor="middle">${s.rows ? s.rows.toLocaleString() + ' rows' : 'connecting'}</text>`;
+  });
+  g += `<rect class="node server" x="${sx - 70}" y="${sy - 26}" width="140" height="52" rx="10"/>`;
+  g += `<text class="lbl" x="${sx}" y="${sy - 4}" text-anchor="middle">Server</text>`;
+  g += `<text class="sml" x="${sx}" y="${sy + 12}" text-anchor="middle">${esc(st.settings.aggregator || '')} aggregation</text>`;
+  $('net').innerHTML = g;
+}
+
+function families(st){
+  const fams = st.families, h = st.history, box = $('fams');
+  if (box.children.length !== fams.length){
+    box.innerHTML = fams.map((f, i) => `<div class="fam"><div class="top"><span class="name">${esc(f)}</span>` +
+      `<span class="val" id="fv${i}">-</span></div><div class="delta" id="fd${i}">&nbsp;</div>` +
+      `<svg id="fs${i}" viewBox="0 0 240 70" width="100%" role="img" aria-label="${esc(f)} recall over rounds"></svg></div>`).join('');
+  }
+  fams.forEach((f, i) => {
+    const vals = h.map(e => e.recall[f]);
+    const cur = vals.at(-1), prev = vals.at(-2), best = vals.length ? Math.max(...vals) : 0;
+    $('fv' + i).textContent = vals.length ? pct(cur) : '-';
+    let d = '&nbsp;';
+    if (prev !== undefined){
+      const dd = Math.round((cur - prev) * 100);
+      d = dd === 0 ? 'no change since last round' : (dd > 0 ? '&#9650; ' : '&#9660; ') + Math.abs(dd) + ' pts since last round';
+    }
+    // warn only on a sustained fall: the mean of the last 3 rounds against the best earlier 3-round mean
+    const m3 = vals.map((_, j) => j < 2 ? null : (vals[j] + vals[j - 1] + vals[j - 2]) / 3);
+    const nowM = m3.at(-1), bestM = Math.max(...m3.slice(0, -3).filter(v => v !== null), -1);
+    if (nowM !== null && nowM !== undefined && bestM - nowM > 0.3)
+      d = `<span class="flag"><i>&#9888;</i> fell ${Math.round((bestM - nowM) * 100)} pts from its level earlier in the run</span>`;
+    $('fd' + i).innerHTML = d;
+    lineChart($('fs' + i), vals, st.rounds, {w: 240, h: 70, left: 4, bottom: 4, axis: false, ticks: [0, .5, 1], label: f + ' recall'});
+  });
+}
+
+function sites(st){
+  const list = Object.values(st.sites).sort((a, b) => a.name.localeCompare(b.name));
+  const maxD = Math.max(1e-9, ...list.map(s => s.distance || 0));
+  $('sites').innerHTML = list.map(s => {
+    const ok = s.verified_round;
+    return `<div class="site"><div class="row1"><span class="nm">${esc(s.name)}</span><span class="spacer"></span>` +
+      `<span class="st"><span class="dot" style="background:${ok ? 'var(--good)' : 'var(--muted)'}"></span>${esc(s.status || '')}</span></div>` +
+      `<div class="meta">${s.rows ? s.rows.toLocaleString() + ' rows, ' + s.n_types + ' attack types' : 'loading its data'}` +
+      `${s.handshake_ms ? ' · handshake ' + Math.round(s.handshake_ms) + ' ms' : ''}` +
+      `${ok ? ' · &#10003; signature verified, round ' + ok : ''} · in ${kb(s.bytes_in)} / out ${kb(s.bytes_out)}</div>` +
+      `<div class="chips">${(s.families_held || []).map(f => `<span class="chip">${esc(f)}</span>`).join('')}</div>` +
+      (s.distance !== undefined ? `<div class="distrow">update distance<div class="bar"><span style="width:${(100 * s.distance / maxD).toFixed(1)}%"></span></div>` +
+        `<b style="color:var(--text-primary)">${s.distance.toFixed(2)}</b></div>` : '') + `</div>`;
+  }).join('');
+}
+
+function render(st){
+  const s = st.settings || {};
+  $('sub').textContent = `${s.model || ''}${st.n_params ? ' (' + st.n_params.toLocaleString() + ' parameters)' : ''} · split: ${s.split || ''} · ` +
+    `aggregator: ${s.aggregator || ''} · ${st.channel || ''}`;
+  const live = st.phase === 'training';
+  $('phase').classList.toggle('live', live);
+  $('phaseText').textContent = st.phase;
+  const h = st.history, last = h.at(-1);
+  $('kRound').textContent = `${st.round || 0} / ${st.rounds || 0}`;
+  $('kRoundN').textContent = `${Object.keys(st.sites).length} sites connected`;
+  $('kF1').textContent = last ? fmt(last.macro_f1) : '-';
+  $('kF1N').textContent = h.length > 1 ? `best so far ${fmt(Math.max(...h.map(e => e.macro_f1)))}` : ' ';
+  $('kAtt').textContent = last ? pct(last.attack_recall_at_1pct_fpr) : '-';
+  $('kUn').textContent = last ? pct(last.unseen_family_recall.mean) : '-';
+  const bytes = Object.values(st.sites).reduce((a, x) => a + (x.bytes_in || 0) + (x.bytes_out || 0), 0);
+  $('kBytes').textContent = kb(bytes);
+  network(st);
+  lineChart($('f1chart'), h.map(e => e.macro_f1), st.rounds, {w: 460, h: 230, label: 'Macro-F1'});
+  families(st);
+  sites(st);
+  $('log').innerHTML = st.events.slice().reverse().map(e =>
+    `<div><time>${new Date(e.t * 1000).toLocaleTimeString()}</time>${esc(e.text)}</div>`).join('');
+  if ($('table').closest('details').open || !$('table').innerHTML){
+    const fams = st.families;
+    $('table').innerHTML = `<table><tr><th>Round</th><th>Macro-F1</th><th>Caught @1%</th>${fams.map(f => `<th>${esc(f)}</th>`).join('')}</tr>` +
+      h.map(e => `<tr><td>${e.round}</td><td>${fmt(e.macro_f1)}</td><td>${pct(e.attack_recall_at_1pct_fpr)}</td>` +
+        fams.map(f => `<td>${pct(e.recall[f])}</td>`).join('') + '</tr>').join('') + '</table>';
+  }
+}
+
+async function poll(){
+  try { const r = await fetch('/api/state', {cache: 'no-store'}); render(await r.json()); }
+  catch (e) { $('phaseText').textContent = 'server not reachable'; $('phase').classList.remove('live'); }
+  setTimeout(poll, 1000);
+}
+poll();
+</script>
+</body>
+</html>
