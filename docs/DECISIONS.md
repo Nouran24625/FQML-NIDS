@@ -693,11 +693,53 @@ DDoS_DoS, Recon, Web, BruteForce, Spoofing, Mirai). The 8 families stay the prim
 
 ---
 
+## D12 — Federated tree models: per-client ensembles now, histogram-based XGBoost only with a federated build
+
+**Date:** 24 Nov 2026 · **Owner:** Kareem · **Status:** proposed (FED-5); reviewer Nouran.
+
+**Decision.**
+1. E1 reports XGBoost and Random Forest federated as a **per-client ensemble**: every client trains its own model
+   on its own rows, once; the server averages the clients' class probabilities weighted by row count
+   (`experiments/fed5_trees.py`, `fed_xgb_ens`, `fed_rf`). No row leaves a client; one round; no new library.
+2. Centralised XGBoost stays the **ceiling** (E0), and the gap to it is reported per split.
+3. **MLP-large and MLP-3k under FedAvg** are the strong iteratively-trained federated baselines beside the VQC,
+   because a one-round ensemble cannot be updated round by round like the other federated models.
+4. Histogram-based federated XGBoost (sites send gradient histograms, every site grows the same trees) is **not used
+   in Phase 1 or E1**: the pinned wheel is built without it (see below). It comes back only through a requirements
+   pull request that adds a federated build, with its own test against central XGBoost.
+
+**Why, with the measurement** (`results/fed5/trees_A_f0.json`; protocol A fold 0, 5,000 rows per attack type,
+top-8 stand-in features, validation block, seed 0; 8-class macro-F1):
+
+| Split | Central XGBoost | Central RF | Fed XGBoost ensemble | Fed RF ensemble | Local-only RF (mean / worst client) |
+|---|---|---|---|---|---|
+| IID, 50 clients | 0.584 | 0.582 | 0.576 | 0.569 | 0.536 / 0.515 |
+| Sites, 10 × 8 attack types | 0.584 | 0.582 | 0.525 | 0.517 | 0.347 / 0.263 |
+| Whole-family sites, 10 × 3 families | 0.584 | 0.582 | 0.444 | 0.438 | 0.229 / 0.157 |
+
+- The ensemble is within 0.01 of pooled training on IID data, loses 0.06 on the sites split and 0.14 when sites hold
+  whole families. It beats the mean site training alone by 0.04 on IID and by 0.18 and 0.21 on the two sites splits,
+where federation is needed. Under whole-family sites it loses DoS and Web
+  entirely (recall 0.00): the sites that never saw a family outvote the ones that did.
+- Histogram-based federation: XGBoost 3.2.0 in the image (`xgboost-cpu`, H-9) reports `USE_FEDERATED: False` in
+  `xgboost.build_info()`; `experiments/fed5_xgb_federated.py` (10 site processes and a federated server) stops at
+  `assert is_distributed()`. Using it needs XGBoost built with the federated plugin or NVIDIA FLARE.
+- Flower's `FedXgbBagging` (every sampled client adds trees to the shared model each round) and `FedXgbCyclic`
+  (clients boost in turn) exist and Flower is in the image, but they are not measured here. Bagging run for one
+  round is close to the ensemble above.
+- Caveats: one fold, one seed, validation block; `Number` is among the 8 stand-in features until DATA-4 decides
+  whether it is a shortcut. The decision rests on the ordering of the options, which is large, not on the third
+  decimal.
+
+**Revisit if:** a federated XGBoost build is added to the lock file; Flower bagging over several rounds closes the
+whole-family gap in a measured run; or the E1 design needs trees updated every round.
+
+---
+
 ## Pending decisions
 
 | # | Decision | Owner | Due |
 |---|---|---|---|
 | D14 | Where runs happen; result files; environment tags | Sheghaf | Mon 23 Nov |
 | D16 | Second dataset: whether CICIoMT2024's feature columns match CICIoT2023's, and the shared classes | Ganna | Fri 27 Nov |
-| D12 | Whether and how tree models are trained federated | Kareem | Fri 11 Dec |
 | D10 | CICIDS2017 labels and split | Ganna | Fri 18 Dec |

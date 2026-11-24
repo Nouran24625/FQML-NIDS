@@ -172,12 +172,29 @@ def run_fedavg(model: nn.Module, X, y, parts: list[np.ndarray], *, rounds: int, 
                local_steps: int = 50, batch_size: int = 64, lr: float = 0.01,
                class_weights: torch.Tensor | None = None, seed: int = 0, device: str = "cpu",
                mode: str = "batched", X_val=None, y_val=None, on_round=None,
-               dtype: torch.dtype = torch.float32, families: list[str] | None = None) -> FedResult:
+               dtype: torch.dtype = torch.float32, families: list[str] | None = None,
+               aggregator=None, attack=None, malicious: np.ndarray | None = None) -> FedResult:
     """Simulate FedAvg. mode = "batched" (D3), "sequential" (reference, one client at a time) or "local"
     (FED-7: local-only, no aggregation; `clients_per_round` is ignored, every client trains every round).
-    With X_val and `families`, `final_val` holds the full validation scores at the end (FED-1)."""
+    With X_val and `families`, `final_val` holds the full validation scores at the end (FED-1).
+
+    FED-6 hooks (INTERFACES 3.2), applied each round between local training and aggregation:
+      attack(stacked, chosen, malicious) -> stacked   weight attack; `chosen` = the round's client ids [K],
+                                                      `malicious` = [K] bool, which of them are malicious
+      aggregator(stacked, n_rows) -> params           default `fedavg`; robust ones in fqml.fl.robust
+    `malicious` is the [n_clients] bool mask (fqml.attacks.poison.choose_malicious); needed with `attack`.
+    Label attacks need no hook: pass the poisoned labels as `y` (fqml.attacks.poison.poison_labels)."""
     if mode not in ("batched", "sequential", "local"):
         raise ValueError(f"unknown mode {mode!r}")
+    if mode == "local" and (aggregator is not None or attack is not None):
+        raise ValueError('mode="local" has no aggregation: aggregator and attack do not apply')
+    if attack is not None and malicious is None:
+        raise ValueError("attack needs the malicious client mask")
+    if malicious is not None:
+        malicious = np.asarray(malicious, dtype=bool)
+        if malicious.shape != (len(parts),):
+            raise ValueError("malicious must be a bool mask with one entry per client")
+    aggregate = fedavg if aggregator is None else aggregator
     model = copy.deepcopy(model).to(device=device, dtype=dtype)
     X = torch.as_tensor(X, dtype=dtype, device=device)
     y = torch.as_tensor(y, dtype=torch.long, device=device)
@@ -198,10 +215,14 @@ def run_fedavg(model: nn.Module, X, y, parts: list[np.ndarray], *, rounds: int, 
         chosen = np.sort(rng.choice(len(parts), clients_per_round, replace=False))
         batches = np.stack([client_batches(parts[k], local_steps, batch_size, rng) for k in chosen])
         stacked = local(model, gparams, X, y, torch.as_tensor(batches, device=device), lr, w)
-        gparams = fedavg(stacked, torch.as_tensor(sizes[chosen], dtype=dtype, device=device))
+        if attack is not None:
+            stacked = attack(stacked, chosen, malicious[chosen])
+        gparams = aggregate(stacked, torch.as_tensor(sizes[chosen], dtype=dtype, device=device))
         if device == "cuda":
             torch.cuda.synchronize()
         entry = {"round": r, "train_seconds": time.perf_counter() - t0, "clients": chosen.tolist()}
+        if malicious is not None:
+            entry["malicious"] = int(malicious[chosen].sum())
         if X_val is not None:
             entry.update({f"val_{k}": v for k, v in evaluate(model, gparams, X_val, y_val).items()})
         entry["seconds"] = time.perf_counter() - t0
