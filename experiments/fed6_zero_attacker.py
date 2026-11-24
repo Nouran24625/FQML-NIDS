@@ -13,7 +13,8 @@ A pipeline check on protocol A fold 0, not a reported result:
   - aggregators: fedavg, median, trimmed_mean (beta 0.2)
   - scores on the validation block: macro-F1 and recall per family (8 classes); class weights 1/sqrt(count)
 
-Writes results/fed6/zero_attacker_<protocol>_f<fold>_<model>_r<rounds>.json.
+Writes results/fed6/zero_attacker_<protocol>_f<fold>_<model>_r<rounds>[_s<seed>][_xNumber].json
+(_xNumber: Number excluded, the default since 24 Nov; files without it kept Number as a candidate input).
 
     python -m experiments.fed6_zero_attacker --fold 0 --rounds 20
 """
@@ -43,6 +44,28 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data/interim/ciciot2023_v1/ciciot2023_clean_v1.parquet"
 AGGREGATORS = ("fedavg", "median", "trimmed_mean")
 SPLITS = ("iid", "dir0.5", "sites", "sitesfam")
+# D9 (IAT, accepted) and its proposed addition (Number: the packet-window size, a recording setting that is a
+# shortcut under protocol B, results/checkpoint1_no_number.json). Same default as the DATA-6 spec's `exclude`.
+EXCLUDE = ("IAT", "Number")
+
+
+def input_features(report, exclude=EXCLUDE):
+    """Candidate input columns: the cleaner's features minus the excluded ones (IAT is always excluded, D9)."""
+    drop = {"IAT", *exclude}
+    unknown = drop - set(report["features"])
+    if unknown:
+        raise SystemExit(f"--exclude names unknown features: {sorted(unknown)}")
+    return [c for c in report["features"] if c not in drop]
+
+
+def exclude_tag(exclude):
+    """File-name tag: empty for IAT only (the first runs' names), '_xNumber' when Number is dropped too."""
+    extra = sorted(set(exclude) - {"IAT"})
+    return "".join(f"_x{c.replace(' ', '')}" for c in extra)
+
+
+def parse_exclude(text):
+    return tuple(c.strip() for c in text.split(",") if c.strip())
 
 
 def load_block(m, fold, role, ranges, cap, feats):
@@ -95,13 +118,15 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--splits", default=",".join(SPLITS))
     ap.add_argument("--aggregators", default=",".join(AGGREGATORS))
+    ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
     a = ap.parse_args()
+    exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
 
     t0 = time.perf_counter()
     report = json.loads(REPORT.read_text())
     families = report["families"]
-    feats = [c for c in report["features"] if c != "IAT"]            # D9
+    feats = input_features(report, exclude)                          # D9 and its Number addition
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", a.protocol)
     if path.exists():
@@ -164,12 +189,12 @@ def main():
               " ".join(f"{d[f]:+7.2f}" for f in families))
 
     seed_tag = f"_s{a.seed}" if a.seed else ""          # seed 0 keeps the first runs' file names
-    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}.json"
+    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}{exclude_tag(exclude)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"task": "FED-6 zero-attacker control", "protocol": a.protocol, "fold": a.fold,
                                "model": a.model, "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds,
                                "local_steps": a.local_steps, "seed": a.seed, "families": families,
-                               "features": [feats[i] for i in top], "runs": runs}, indent=1))
+                               "exclude": sorted({"IAT", *exclude}), "features": [feats[i] for i in top], "runs": runs}, indent=1))
     print(f"\nwrote {out.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
 
 

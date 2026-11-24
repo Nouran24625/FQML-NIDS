@@ -13,7 +13,8 @@ Scores on the clean validation block: macro-F1, recall per family, attack recall
 the same block: a first-pass shortcut) and, for class suppression, the target family's recall and the share of its
 rows called Benign. Each attacked run is compared with the same split and aggregator with no attacker.
 
-Writes results/fed2/attacks_<protocol>_f<fold>_<model>_s<seed>.json.
+Writes results/fed2/attacks_<protocol>_f<fold>_<model>_s<seed>[_xNumber].json (_xNumber: Number excluded, the
+default since 24 Nov).
 
     python -m experiments.fed2_attacks --fold 0 --rounds 50
 """
@@ -29,7 +30,8 @@ import torch
 from sklearn.metrics import f1_score, recall_score
 
 from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
-from experiments.fed6_zero_attacker import fit_inputs, load_block, splits
+from experiments.fed6_zero_attacker import (EXCLUDE, exclude_tag, fit_inputs, input_features, load_block,
+                                            parse_exclude, splits)
 from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
 from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import sqrt_class_weights
@@ -98,21 +100,23 @@ def main():
     ap.add_argument("--splits", default="iid,sites,sitesfam")
     ap.add_argument("--attacks", default="none,lf20,cs20web,cs20mirai")
     ap.add_argument("--aggregators", default="fedavg,median,trimmed_mean")
+    ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
     a = ap.parse_args()
+    exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
     t0 = time.perf_counter()
 
     report = json.loads(REPORT.read_text())
     fams = report["families"]
     C = len(fams)
-    feats = [c for c in report["features"] if c != "IAT"]
+    feats = input_features(report, exclude)                          # D9 and its Number addition
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", a.protocol)
     m = load_manifest(path) if path.exists() else build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=GAP)
     print(f"[data] protocol {a.protocol} fold {a.fold} ...", flush=True)
     Ftr, native, ytr = load_block(m, a.fold, "train", ranges, a.cap, feats)
     Fva, _, yva = load_block(m, a.fold, "val", ranges, a.val_cap, feats)
-    _, transform = fit_inputs(Ftr, ytr)
+    top, transform = fit_inputs(Ftr, ytr)
     Xtr, Xva = transform(Ftr), transform(Fva)
     Xva_t = torch.as_tensor(Xva, dtype=torch.float32)
     w = sqrt_class_weights(ytr, C).float()                                # clean weights (D11): attacker can't change
@@ -171,10 +175,10 @@ def main():
         print(f"{r['split']:9s} {r['attack']:10s} {r['aggregator']:13s} {r['delta_macro_f1']:+7.3f} "
               + (f"{r['delta_target_recall']:+8.2f}" if "target" in r else f"{'':>8s}"))
 
-    out = ROOT / f"results/fed2/attacks_{a.protocol}_f{a.fold}_{a.model}_s{a.seed}.json"
+    out = ROOT / f"results/fed2/attacks_{a.protocol}_f{a.fold}_{a.model}_s{a.seed}{exclude_tag(exclude)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"task": "FED-2 attack grid (first pass)", **{k: v for k, v in vars(a).items()},
-                               "families": fams, "runs": runs}, indent=1))
+                               "families": fams, "features": [feats[i] for i in top], "runs": runs}, indent=1))
     print(f"\nwrote {out.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
 
 

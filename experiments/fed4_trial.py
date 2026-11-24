@@ -18,7 +18,8 @@ Scores on the validation block (thresholds and test blocks belong to the runner,
 Until DATA-6 lands, features are the stand-in used by FED-3/5/6 (top-8 by mutual information on the training sample,
 clipped and scaled to [0, pi]). Swap `fit_inputs` for fqml.data.preprocess once it exists; nothing else changes.
 
-Writes results/fed4/trial_<protocol>_f<fold>_r<rounds>.json.
+Writes results/fed4/trial_<protocol>_f<fold>_r<rounds>[_xNumber].json (_xNumber: Number excluded, the default
+since 24 Nov; files without it kept Number as a candidate input).
 
     python -m experiments.fed4_trial --fold 0 --rounds 20
     python -m experiments.fed4_trial --rounds 2 --local-steps 5 --models mlp --splits sites   (quick check)
@@ -36,7 +37,8 @@ import torch
 from sklearn.metrics import f1_score, recall_score
 
 from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
-from experiments.fed6_zero_attacker import fit_inputs, load_block, splits
+from experiments.fed6_zero_attacker import (EXCLUDE, exclude_tag, fit_inputs, input_features, load_block,
+                                            parse_exclude, splits)
 from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
 from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import compare_modes, passed, sqrt_class_weights
@@ -94,14 +96,16 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--models", default="mlp,vqc")
     ap.add_argument("--splits", default="iid,sites,sitesfam")
+    ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
     a = ap.parse_args()
+    exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
     t0 = time.perf_counter()
 
     report = json.loads(REPORT.read_text())
     families = report["families"]
     C = len(families)
-    feats = [c for c in report["features"] if c != "IAT"]            # D9
+    feats = input_features(report, exclude)                          # D9 and its Number addition
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", a.protocol)
     m = load_manifest(path) if path.exists() else build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=GAP)
@@ -118,7 +122,7 @@ def main():
     parts_by = splits(native_tr, ytr, a.seed)
     out = {"task": "FED-4 federated trial run (pipeline check)", "protocol": a.protocol, "fold": a.fold,
            "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds, "local_steps": a.local_steps, "seed": a.seed,
-           "families": families, "features": [feats[i] for i in top], "features_source": "stand-in (DATA-6 pending)",
+           "families": families, "exclude": sorted({"IAT", *exclude}), "features": [feats[i] for i in top], "features_source": "stand-in (DATA-6 pending)",
            "eval1": HAVE_EVAL1, "runs": []}
 
     for kind in a.models.split(","):
@@ -197,7 +201,7 @@ def main():
                 print(f"  -> attack types a client never held, {label:18s}: fedavg {u(run['fedavg'], key):.3f} | "
                       f"local {u(run['local'], key):.3f} | central {u(run['central'], key):.3f}", flush=True)
 
-    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}.json"
+    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}{exclude_tag(exclude)}.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(out, indent=1, default=float))
     print(f"\nwrote {dest.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
