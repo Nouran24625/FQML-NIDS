@@ -78,6 +78,8 @@ def make_model(kind, n_classes):
         return MatchedMLP(8, n_classes, target_params=64, seed=0)
     if kind == "vqc":
         return TorchVQC(8, n_classes, 3, seed=0)
+    if kind.startswith("mlp_p"):                       # MLP size ladder, e.g. mlp_p3000
+        return MatchedMLP(8, n_classes, target_params=int(kind[5:]), seed=0)
     raise SystemExit(f"unknown model {kind}")
 
 
@@ -87,7 +89,7 @@ def main():
     ap.add_argument("--protocol", default="A")
     ap.add_argument("--cap", type=int, default=5000, help="rows per attack type in the training sample")
     ap.add_argument("--val-cap", type=int, default=1000)
-    ap.add_argument("--model", default="mlp", choices=["mlp", "vqc"])
+    ap.add_argument("--model", default="mlp", help="mlp (64 parameters), mlp_p<N> e.g. mlp_p3000, vqc")
     ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--local-steps", type=int, default=50)
     ap.add_argument("--seed", type=int, default=0)
@@ -161,7 +163,8 @@ def main():
         print(f"{r['split']:10s} {r['aggregator']:13s} {d['macro_f1']:+7.3f} " +
               " ".join(f"{d[f]:+7.2f}" for f in families))
 
-    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}.json"
+    seed_tag = f"_s{a.seed}" if a.seed else ""          # seed 0 keeps the first runs' file names
+    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"task": "FED-6 zero-attacker control", "protocol": a.protocol, "fold": a.fold,
                                "model": a.model, "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds,

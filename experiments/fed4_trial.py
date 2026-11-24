@@ -18,7 +18,7 @@ Scores on the validation block (thresholds and test blocks belong to the runner,
 Until DATA-6 lands, features are the stand-in used by FED-3/5/6 (top-8 by mutual information on the training sample,
 clipped and scaled to [0, pi]). Swap `fit_inputs` for fqml.data.preprocess once it exists; nothing else changes.
 
-Writes results/fed4/trial_<protocol>_f<fold>.json.
+Writes results/fed4/trial_<protocol>_f<fold>_r<rounds>.json.
 
     python -m experiments.fed4_trial --fold 0 --rounds 20
     python -m experiments.fed4_trial --rounds 2 --local-steps 5 --models mlp --splits sites   (quick check)
@@ -197,7 +197,7 @@ def main():
                 print(f"  -> attack types a client never held, {label:18s}: fedavg {u(run['fedavg'], key):.3f} | "
                       f"local {u(run['local'], key):.3f} | central {u(run['central'], key):.3f}", flush=True)
 
-    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}.json"
+    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(out, indent=1, default=float))
     print(f"\nwrote {dest.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
