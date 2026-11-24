@@ -1,7 +1,7 @@
 # FQML-NIDS — Frozen interfaces
 
-**Version:** 2.2.0 (see change log) · **First frozen:** 2 Nov 2026 (Gate 0) · **Amended:** 23 Nov 2026
-(federated section 3, FED-1 / FED-3 / FED-7; earlier amendments in the change log and `docs/DECISIONS.md`)
+**Version:** 2.3.0 (see change log) · **First frozen:** 2 Nov 2026 (Gate 0) · **Amended:** 24 Nov 2026
+(federated section 3, FED-1 / FED-3 / FED-6 / FED-7; earlier amendments in the change log and `docs/DECISIONS.md`)
 
 Every track codes against what is written here. **Any change to an item in this file needs a pull request
 that (1) says "Interface change" in its title, (2) updates this file and its change log, and (3) is approved
@@ -194,7 +194,8 @@ Validation data and early stopping: **(Phase 1: H-10)**.
 ```python
 run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, batch_size=64,
            lr=0.01, class_weights=None, seed=0, device="cpu", mode="batched",
-           X_val=None, y_val=None, on_round=None, dtype=torch.float32) -> FedResult
+           X_val=None, y_val=None, on_round=None, dtype=torch.float32, families=None,
+           aggregator=None, attack=None, malicious=None) -> FedResult
 ```
 - Each round: sample `clients_per_round` clients without replacement → each trains `local_steps`
   mini-batches of `batch_size` from its own rows, with a **fresh Adam every round** → FedAvg weighted by
@@ -219,6 +220,13 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
   aggregation. An aggregator is a function `stacked, n_rows -> global params`, with the same signature as
   `fedavg`. An attack modifies the rows of malicious clients before aggregation. Every robust aggregator is
   measured with zero attackers first.
+- **(FED-6)** `aggregator=` takes such a function (default `fedavg`); `fqml.fl.robust` gives
+  `coordinate_median`, `trimmed_mean(..., beta=0.2)` and `get_aggregator("fedavg" | "median" | "trimmed_mean")`.
+  Both robust ones work coordinate by coordinate and ignore `n_rows`. `attack(stacked, chosen, malicious) ->
+  stacked` runs before aggregation; `chosen` = the round's client ids `[K]`, `malicious` = `[K]` bool. The run's
+  `malicious=` is the `[n_clients]` bool mask (`fqml.attacks.poison.choose_malicious`); with it, each history entry
+  gains `malicious` (malicious clients in that round). Neither hook applies to `mode="local"` (refused).
+  Zero-attacker control: `python -m experiments.fed6_zero_attacker --fold 0 --rounds 100`.
 - `evaluate(model, params, X, y, batch_size=8192, *, families=None)` returns `macro_f1` and `accuracy` as
   before; with `families` (FED-1) it adds `multiclass` and `binary` from the shared metrics module
   (`fqml.eval.metrics`, EVAL-1: per-class precision / recall / F1, confusion matrix, ROC-AUC, PR-AUC, F1 and
@@ -291,3 +299,4 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
 | 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | Nouran, Sheghaf (PR #12) |
 | 2.0.0 | 16 Nov 2026 | Phase 0 amendments. Section owners follow the new areas. **1:** cleaner v1 file (`row_id`, `file`, `file_seq`, `row_index`, `dup_group`, `conflict`, `sample_rate`, optional `ts`; fixed row order; duplicates marked, not deleted), v0 file retired, label-map variants (`c7m`), protocols A / B / C and fold manifests (`fqml-folds/1`) replace the capture-disjoint split, preprocessing fitted per fold. **2:** `entangler="none"`, `readout="linear"` (the control is always `none` + `linear`, compared with `chain` + `linear`), model size setting and MLP size ladder. **3:** sites split, one-type-per-client split and local-only mode (signatures), partition path carries protocol and fold, real-data FedAvg equivalence check. **5:** run ID carries protocol and fold; 5 folds × 3 seeds replaces "seeds 0, 1, 2 on one split" | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |
 | 2.2.0 | 23 Nov 2026 | Section 3 (Kareem): `type_partition`, `sites_partition` (+ optional `groups`) implemented (FED-3); `mode="local"`, `FedResult.client_params`, `fqml.fl.unseen` (FED-7); `evaluate(..., families=)`, `predict_proba`, `FedResult.final_val`, `run_fedavg(..., families=)` (FED-1); label attacks (FED-2). Existing calls unchanged | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |
+| 2.3.0 | 24 Nov 2026 | Section 3 (Kareem): `run_fedavg(..., aggregator=, attack=, malicious=)` and `fqml.fl.robust` (median, trimmed mean) (FED-6). Existing calls unchanged | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |

@@ -499,8 +499,18 @@ gains that feature and Checkpoint 1 is re-run without it.
   Checkpoint 1, where XGBoost put 40–47% of its importance on it.
 - **Cost:** none at the row level: dropping it merges no rows (13,923,837 distinct rows with and without it), and
   every ceiling and twin share is unchanged (DATA-4).
-- **Check before E0:** Checkpoint 1's XGBoost setting is re-run once without `Number` (protocol A, fold 0, about
-  30 minutes) so the E0 report can state its score effect.
+- **Measured 24 Nov** (Checkpoint 1's XGBoost, `sqrt` weighting, fold 0, validation blocks,
+  `results/checkpoint1_no_number.json`), 36 features → 35 without `Number`:
+  - protocol A: 8-class macro-F1 0.607 → 0.587, 7-class 0.642 → 0.624, attack recall at 1% / 0.1% FPR
+    0.983 / 0.979 → 0.975 / 0.952. Other traffic features take over (`Protocol Type`, `Tot sum`, `Min`).
+  - **protocol B (unseen attack types): attack recall at 1% FPR 0.980 → 0.519, at 0.1% FPR 0.977 → 0.495,
+    ROC-AUC 0.994 → 0.946**, while the family assignment (60.2% / 98.1% for 8 / 7 classes) and the recall at the
+    default threshold (99.5%) do not change.
+  - **Reading:** with `Number`, any 100-packet-window recording looks like an attack, so unseen DDoS / DoS / Mirai
+    types were "detected" by the recording setting. Checkpoint 1's 98.7% unseen detection (protocol B) was
+    mostly this shortcut; without it, about half of the unseen-type rows are caught when false alarms are held
+    at 1%. This is the strongest reason to drop `Number`, and E0 results under protocol B are expected far below
+    the Checkpoint 1 figure.
 
 ---
 
@@ -652,11 +662,10 @@ due Wed 25 Nov.
 - **Every trained VQC is also scored with 1,024 shots at test time** (`TorchVQC(..., shots=1024)` in eval mode,
   fixed `shot_generator` seed per run). Reported beside the exact scores; the six comparisons in PREREG_E0 use the
   exact scores.
-- **Shot-trained subset:** `vqc` trained with 1,024 shots and parameter-shift gradients (`shot_grad="shift"`),
-  protocol A, 5 folds, seed 0, the exact run's tuned setting. Compared with exact training on the same folds
-  (paired, reported, not one of the six comparisons). `vqc_lin` is added if its measured step time allows.
-- **Before the subset runs:** Q-1's spike is re-run at batch 256 (`python -m spikes.q1_shots --device cuda
-  --batch 256`), because D11 part 2 fixed batch 256 and Q-1 measured batch 64.
+- **Shot-trained subset:** `vqc` and `vqc_lin` trained with 1,024 shots and parameter-shift gradients
+  (`shot_grad="shift"`), protocol A, 5 folds, seed 0, each with its exact run's tuned setting. Compared with exact
+  training on the same folds (paired, reported, not one of the six comparisons). About 30 minutes per run on a
+  T4, about 5 GPU-hours in total (measured at batch 256, below).
 
 **Why, with the measurement (Q-1, `results/spikes/Q1_shots.json`).**
 - Test-time shots cost almost nothing: 0.005 s per batch of 64 on a T4, so scoring every VQC with shots adds no
@@ -664,8 +673,12 @@ due Wed 25 Nov.
 - Training with shots is unbiased but noisy: the batch-gradient RMS error is 58% of the gradient at 128 shots and
   21% at 1,024 for `vqc` (51% for the binary model). Whether that costs accuracy is an empirical question; one
   model on 5 folds answers it without multiplying the E0 runs.
-- On a T4 at batch 64 a shot-trained step took the same time as an exact one (0.025–0.027 s vs 0.028 s); at
-  batch 256 the 97 circuits per sample may make it compute-bound, hence the re-measurement.
+- Cost at the E0 batch size (re-measured 24 Nov at batch 256, `results/spikes/Q1_shots_b256.json`): a shot-trained
+  step takes 0.080 s against 0.025 s exact (3.1× for `vqc`, 3.2× for `vqc_lin`); test-time shots 0.005 s per batch.
+  At batch 64 the two had taken the same time (the GPU was launch-bound); at 256 the 97 circuits per sample start
+  to count, but 3× keeps a 5-fold subset of two models affordable.
+- The noise constant of the Q-1b note is unchanged at batch 256 (κ = 1.33 for `vqc`, 0.76 `vqc_lin`, 0.64
+  `vqc_noent`, 0.50 binary; 1.31 / 0.75 / 0.66 / 0.50 at batch 64), so the shot-vs-DP crossover there holds.
 
 **Revisit if:** the subset shows shot training changes the 8-class macro-F1 by more than 0.01 on average (then the
 shot-trained `vqc` is added to the core comparison as a reported model).
@@ -693,11 +706,53 @@ DDoS_DoS, Recon, Web, BruteForce, Spoofing, Mirai). The 8 families stay the prim
 
 ---
 
+## D12 — Federated tree models: per-client ensembles now, histogram-based XGBoost only with a federated build
+
+**Date:** 24 Nov 2026 · **Owner:** Kareem · **Status:** proposed (FED-5); reviewer Nouran.
+
+**Decision.**
+1. E1 reports XGBoost and Random Forest federated as a **per-client ensemble**: every client trains its own model
+   on its own rows, once; the server averages the clients' class probabilities weighted by row count
+   (`experiments/fed5_trees.py`, `fed_xgb_ens`, `fed_rf`). No row leaves a client; one round; no new library.
+2. Centralised XGBoost stays the **ceiling** (E0), and the gap to it is reported per split.
+3. **MLP-large and MLP-3k under FedAvg** are the strong iteratively-trained federated baselines beside the VQC,
+   because a one-round ensemble cannot be updated round by round like the other federated models.
+4. Histogram-based federated XGBoost (sites send gradient histograms, every site grows the same trees) is **not used
+   in Phase 1 or E1**: the pinned wheel is built without it (see below). It comes back only through a requirements
+   pull request that adds a federated build, with its own test against central XGBoost.
+
+**Why, with the measurement** (`results/fed5/trees_A_f0.json`; protocol A fold 0, 5,000 rows per attack type,
+top-8 stand-in features, validation block, seed 0; 8-class macro-F1):
+
+| Split | Central XGBoost | Central RF | Fed XGBoost ensemble | Fed RF ensemble | Local-only RF (mean / worst client) |
+|---|---|---|---|---|---|
+| IID, 50 clients | 0.584 | 0.582 | 0.576 | 0.569 | 0.536 / 0.515 |
+| Sites, 10 × 8 attack types | 0.584 | 0.582 | 0.525 | 0.517 | 0.347 / 0.263 |
+| Whole-family sites, 10 × 3 families | 0.584 | 0.582 | 0.444 | 0.438 | 0.229 / 0.157 |
+
+- The ensemble is within 0.01 of pooled training on IID data, loses 0.06 on the sites split and 0.14 when sites hold
+  whole families. It beats the mean site training alone by 0.04 on IID and by 0.18 and 0.21 on the two sites splits,
+where federation is needed. Under whole-family sites it loses DoS and Web
+  entirely (recall 0.00): the sites that never saw a family outvote the ones that did.
+- Histogram-based federation: XGBoost 3.2.0 in the image (`xgboost-cpu`, H-9) reports `USE_FEDERATED: False` in
+  `xgboost.build_info()`; `experiments/fed5_xgb_federated.py` (10 site processes and a federated server) stops at
+  `assert is_distributed()`. Using it needs XGBoost built with the federated plugin or NVIDIA FLARE.
+- Flower's `FedXgbBagging` (every sampled client adds trees to the shared model each round) and `FedXgbCyclic`
+  (clients boost in turn) exist and Flower is in the image, but they are not measured here. Bagging run for one
+  round is close to the ensemble above.
+- Caveats: one fold, one seed, validation block; `Number` is among the 8 stand-in features until DATA-4 decides
+  whether it is a shortcut. The decision rests on the ordering of the options, which is large, not on the third
+  decimal.
+
+**Revisit if:** a federated XGBoost build is added to the lock file; Flower bagging over several rounds closes the
+whole-family gap in a measured run; or the E1 design needs trees updated every round.
+
+---
+
 ## Pending decisions
 
 | # | Decision | Owner | Due |
 |---|---|---|---|
 | D14 | Where runs happen; result files; environment tags | Sheghaf | Mon 23 Nov |
 | D16 | Second dataset: whether CICIoMT2024's feature columns match CICIoT2023's, and the shared classes | Ganna | Fri 27 Nov |
-| D12 | Whether and how tree models are trained federated | Kareem | Fri 11 Dec |
 | D10 | CICIDS2017 labels and split | Ganna | Fri 18 Dec |
