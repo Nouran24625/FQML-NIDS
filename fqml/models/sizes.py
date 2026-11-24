@@ -9,9 +9,12 @@ of sizes, the first rung matched to the VQC:
 
     VQC's own count (50 / 64), 128, 256, 512, 1,000, 3,000 parameters
 
-and the result is reported as the VQC's "classical-equivalent size": the smallest rung whose score is
-not lower than the VQC's (rule fixed in docs/PREREG_E0.md, task EXP-1). Every rung is the same model
-family (one hidden layer, ReLU); only the hidden width changes.
+and the result is reported as the VQC's "classical-equivalent size": the parameter count at which the
+ladder's score curve (made non-decreasing) reaches the VQC's score, interpolated in log(parameters)
+between neighbouring rungs, per fold (rule fixed in docs/PREREG_E0.md section 4, task EXP-1). E0 also
+trains a 120-parameter rung (mlp_p120), the same-size twin of vqc_lin / vqc_noent (decision D11 part 2);
+build it with MatchedMLP(8, 8, 120). Every rung is the same model family (one hidden layer, ReLU); only
+the hidden width changes.
 
 A one-hidden-layer MLP has n_in*h + h + h*n_out + n_out parameters, so sizes move in steps of
 (n_in + n_out + 1): 11 for 8 inputs and 2 outputs, 17 for 8 and 8. Targets are therefore met only
