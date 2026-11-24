@@ -1,6 +1,6 @@
 # FQML-NIDS — Team context (read this first)
 
-**Last updated:** Tue 24 Nov 2026 · **Status covered up to:** end of Tue 24 Nov 2026 (GitHub audit and branch fix, Nouran's week-2 tasks, the `Number` check)
+**Last updated:** Tue 24 Nov 2026 · **Status covered up to:** Tue 24 Nov 2026, 20:30 (all Phase 1 work so far merged into `main`, INTERFACES 2.4.0)
 **Rule:** this file is the single source of truth for project status. Whoever finishes a work session that changes status, a decision or a deadline updates it in the same pull request (see "How to keep this file current" at the end). Details live in the files linked from each section.
 
 ---
@@ -37,7 +37,7 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 
 - **Repo:** `github.com/Nouran24625/FQML-NIDS` — **publicly readable as of 24 Nov** (anonymous clone works); change under Settings → General if it should be private. CI = GitHub Actions (Docker build, pytest, PQ smoke test).
 - **Decisions log:** `docs/DECISIONS.md` (every D-number below is explained there).
-- **Interfaces:** `docs/INTERFACES.md`: 2.3.0 after the federated PRs; Q-1's finite-shot mode becomes 2.4.0 when #21 is merged.
+- **Interfaces:** `docs/INTERFACES.md` 2.4.0 (2.2.0 and 2.3.0 federated section 3, Kareem; 2.4.0 finite-shot mode of `TorchVQC`, Q-1).
 - **Datasets list:** `docs/DATASETS.md`. **Specs:** `docs/specs/` (EVAL-1, H-10, DATA-6, EVAL-2). **Pre-registration:** `docs/PREREG_E0.md` (final, 24 Nov), `docs/PREREG_MIA.md`. **Notes:** `docs/notes/Q1b_shot_noise_vs_dp.md`. **Thesis outlines:** `docs/thesis/`. **Team notebook:** `notebooks/LEARN-1_E0_ideas.ipynb` (everyone runs it and answers its 5 questions).
 - **Cleaned data:** `data/interim/ciciot2023_v1/ciciot2023_clean_v1.parquet` (1.5 GB, not in git). Shared copy on Drive: `FQML-NIDS-data/2023 cleaned + readme/` (checksum in `data/checksums.json`, verified 20 Nov). Report: `results/data_reports/ciciot2023_clean_v1.json`.
 - **Folds:** `data/folds/ciciot2023_A.json`, `data/folds/ciciot2023_B.json`.
@@ -50,12 +50,12 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 
 **Phase 1: running Thu 19 Nov → Gate 1 Fri 18 Dec 2026** (spare days 21–24 Dec). SYNC-1 (19 Nov) accepted D8, D8a, D9, D11 part 1 and D17 (all four). Integrator and Scribe for this month: not recorded yet — whoever knows, add them here.
 
-**How the branches stand (read before merging anything).** Nothing from Phase 1 reached `main` until #19 merges: the Checkpoint 1 chain lives on `data/checkpoint1`, and later work was merged into it on purpose (#22, #24, #33, #37). Twice on 24 Nov work was stranded by merging into a branch whose own PR was already merged (#27, #28, #32, #34); it was rescued as `fed/rescue`. **Rule: before clicking Merge, check that the PR's base branch is not already merged; if it is, change the base first. Merge with "Create a merge commit", never squash or rebase.** Order to finish: `fed/rescue` and `data/no-number-check` → `data/checkpoint1`, then #19 → `main` (Ganna), then `fix_q1_after_merges.sh` updates #21 (Q-1), then delete merged branches.
+**Branches (24 Nov, 20:30): everything is on `main`.** #19, #38, #39, #41 and #21 brought the Checkpoint 1 chain, the rescued federated work (#27, #28, #32, #34) and Q-1 to `main`; old branches are being deleted. Open: #35 (Kareem's live federation demo). **Rules from the 24 Nov clean-up:** every new PR targets `main`; before clicking Merge, check that the PR's base branch is not already merged (if it is, change the base first); merge with "Create a merge commit", never squash or rebase; after a merge that changes `requirements/lock.txt`, everyone rebuilds Docker and runs the tests (H-3).
 
 **Done:**
 - Data: DATA-2 cleaner v1 (D8), DATA-3 folds A and B (D8a), DATA-5 Checkpoint 1, DATA-4 quality report + DATA-1b (Ganna, #33), the `Number` check (24 Nov).
-- Models and privacy (Nouran): Q-1 finite shots (#21) and its batch-256 re-run; Q-2; EXP-1 final pre-registration (#20); D11 part 2 with committed tuning trials (#22); DATA-6 spec and EVAL-2 spec, Q-1b note, LEARN-1 notebook (#36); Q-3 RFF model, CLS-1 model factory, PRIV-2 DP-SGD (#37); PRIV-3 checks 1–3 code (check 2 in CI; checks 1 and 3 have a real-data script); WRITE outline of the AI/QML chapter.
-- Federated and security (Kareem): H-8 scope (#26), SEC-1 + FED-2 (#24), FED-1/3/7 (#25, INTERFACES 2.2.0), FED-4, FED-5 (D12), FED-6 (INTERFACES 2.3.0) and the attack grid (in `fed/rescue`), PRIV-5 (#29), ABS-1 (#30), attacks chapter outline (#31).
+- Models and privacy (Nouran): Q-1 finite shots (#21, INTERFACES 2.4.0) and its batch-256 re-run; Q-2; EXP-1 final pre-registration (#20); D11 part 2 with committed tuning trials (#22); DATA-6 spec and EVAL-2 spec, Q-1b note, LEARN-1 notebook (#36); Q-3 RFF model, CLS-1 model factory, PRIV-2 DP-SGD (#37); PRIV-3 checks 1–3 (#39: Opacus equivalence and per-sample gradients in CI, one-run canary audit; real-data run `python -m experiments.priv3_checks`); WRITE outline of the AI/QML chapter (#40).
+- Federated and security (Kareem): H-8 scope (#26), SEC-1 + FED-2 (#24), FED-1/3/7 (#25, INTERFACES 2.2.0), FED-4, FED-5 (D12), FED-6 (INTERFACES 2.3.0) and the attack grid (rescued via #38, on `main` since #41), PRIV-5 (#29), ABS-1 (#30), attacks chapter outline (#31).
 - Team: CONTEXT.md and CLAUDE.md (#23); H-1, H-2.
 
 **Not started on GitHub (24 Nov):** D14 (Sheghaf, was due 23 Nov), **H-10 training loop and EVAL-1 metrics (Sheghaf, due Wed 25)**, **EXP-0 runner and EVAL-3 (Sheghaf, Fri 27)**, **DATA-6 build (Ganna, Fri 27)**, DATA-8a and IAT-DOC (Ganna, Fri 27). Everything left on Nouran's list (tuning, first pass, PRIV-4, E0 report) waits for H-10, EVAL-1, EXP-0 and DATA-6.
@@ -91,7 +91,7 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 
 | Date | What | Owner |
 |---|---|---|
-| **Now** | **Merge `fed/rescue` and `data/no-number-check` into `data/checkpoint1`, then #19 → `main`** | Kareem / Ganna |
+| **Now** | **H-3: everyone rebuilds Docker from `main` and runs the tests** (the lock file changed); delete merged branches | All |
 | Wed 25 Nov | **H-10 training loop and EVAL-1 metrics module** (from the specs) | Sheghaf |
 | Wed 25 Nov | E5 confirmed | Sheghaf (with Nouran) |
 | Thu 26 Nov | SYNC-2: approve the D9 addition (`Number`), D11 part 2, D13, E5; record Integrator and Scribe | All |
