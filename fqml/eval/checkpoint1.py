@@ -10,8 +10,9 @@ script trains ONE strong classical model (XGBoost, fixed settings, no tuning) un
             A-gap1000    protocol A with a 10x larger gap
             B-gap100     protocol B: the validation block holds attack types never seen in training (D8a gap
                          for the time-blocked benign rows); adds "unseen" scores for those types
-  features  all          the 37 features of cleaner v1
-            no_iat       without IAT (decision D9)
+  features  all               the 37 features of cleaner v1
+            no_iat            without IAT (decision D9)
+            no_iat_no_number  without IAT and Number (D9 addition, from DATA-4's window-size screen)
 
 and scores every setting on the VALIDATION block only, so the test blocks stay unused for the real
 experiments. Scores are given on all validation rows, on rows with no exact twin among the training rows
@@ -22,6 +23,7 @@ What each comparison answers:
   R vs A-gap100            how much a random split inflates scores (the Phase 0 question)
   A-gap0 / 100 / 1000      whether the gap is big enough (the score should stop falling)
   all vs no_iat            what dropping IAT costs (D9)
+  no_iat vs no_iat_no_number   what dropping Number costs (D9 addition)
   8-class vs c7m           how much of the error is the DDoS / DoS confusion (D17)
 
 Training uses at most `--train-per-type` rows of each attack type from the training side (spread over
@@ -51,7 +53,8 @@ ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "results/data_reports/ciciot2023_clean_v1.json"
 OUT = ROOT / "results/checkpoint1.json"
 SPLITS = ("R", "A-gap0", "A-gap100", "A-gap1000", "B-gap100")
-FEATURE_SETS = ("all", "no_iat")
+FEATURE_SETS = ("all", "no_iat", "no_iat_no_number")
+DROPPED = {"all": (), "no_iat": ("IAT",), "no_iat_no_number": ("IAT", "Number")}   # feature set -> features left out
 WEIGHTINGS = ("balanced", "sqrt", "none")
 XGB_PARAMS = dict(n_estimators=400, max_depth=8, learning_rate=0.1, subsample=0.8, colsample_bytree=0.8,
                   tree_method="hist", max_bin=256, early_stopping_rounds=20, eval_metric="mlogloss")
@@ -220,14 +223,14 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
     import xgboost as xgb
 
     families = report["families"]
-    feats = [f for f in report["features"] if not (feature_set == "no_iat" and f == "IAT")]
+    feats = [f for f in report["features"] if f not in DROPPED[feature_set]]
     t0 = time.time()
     pool, val_ids, info = split_rows(split, report, fold, seed)
     rng = np.random.default_rng(seed) if split == "R" else None
     train_ids = cap_per_label(pool, label_ranges(report), train_per_type, rng)
     cols = ["y", "dup_group", "conflict", *feats]
     tr = read_rows(data, train_ids, cols)
-    log(f"  {split:9s} {feature_set:6s}: {len(tr):,} training rows from a pool of {len(pool):,}; "
+    log(f"  {split:9s} {feature_set:16s}: {len(tr):,} training rows from a pool of {len(pool):,}; "
         f"validation {len(val_ids):,} rows")
 
     y = tr["y"].to_numpy(np.int64)
@@ -276,7 +279,7 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
         **({"unseen": unseen_scores(rid, yv, pv, sv, report, info["unseen_types"])} if "unseen_types" in info else {}),
         "seconds_train": round(t_train, 1), "seconds_total": round(time.time() - t0, 1),
     }
-    if feature_set == "all":
+    if True:                                    # every feature set: shows what replaces a dropped feature
         imp = model.feature_importances_
         res["top_features"] = [[feats[i], float(imp[i])] for i in np.argsort(imp)[::-1][:10]]
     return res
@@ -284,7 +287,7 @@ def run_setting(split, feature_set, *, data, report, fold, seed, train_per_type,
 
 def _row(r):
     a, n, c = r["scores_all"], r["scores_no_twin"], r["scores_no_conflict"]
-    return (f"{r['split']:10s}{r['features']:8s}{r.get('weighting', 'balanced'):9s}{a['c8']['macro_f1']:8.3f}"
+    return (f"{r['split']:10s}{r['features'][:16]:17s}{r.get('weighting', 'balanced'):9s}{a['c8']['macro_f1']:8.3f}"
             f"{n['c8']['macro_f1']:8.3f}{c['c8']['macro_f1']:8.3f}{a['c7m']['macro_f1']:8.3f}{a['binary']['f1']:8.3f}"
             f"{a['binary']['false_positive_rate']:7.1%}{a['binary'].get('recall_at_fpr_1pct', float('nan')):8.3f}"
             f"{a['binary'].get('recall_at_fpr_0.1pct', float('nan')):8.3f}{a['dos_predicted_ddos']:9.2f}"
@@ -338,7 +341,7 @@ def main():
                 for lab, d in worst:
                     print(f"        {lab:26s} recall {d['recall']:6.1%}   most often -> {d['most_confused_with']}"
                           f" ({d['share_to_it']:.1%})")
-    print(f"\n{'split':10s}{'feat':8s}{'weights':9s}{'c8':>8s}{'c8 -tw':>8s}{'c8 -cf':>8s}{'c7m':>8s}"
+    print(f"\n{'split':10s}{'feat':17s}{'weights':9s}{'c8':>8s}{'c8 -tw':>8s}{'c8 -cf':>8s}{'c7m':>8s}"
           f"{'bin F1':>8s}{'FPR':>7s}{'rec@1%':>8s}{'rec@.1%':>8s}{'DoS>DDoS':>9s}{'twins':>7s}")
     order = {s: i for i, s in enumerate(SPLITS)}
     wo = {w: i for i, w in enumerate(WEIGHTINGS)}
