@@ -24,11 +24,17 @@ content comes from, and whether that result exists yet.
 
 ## 4. Robust aggregation and its cost on non-IID sites
 - Coordinate-wise median and trimmed mean (`fqml/fl/robust.py`, FED-6).
-- **Zero-attacker control** (`experiments/fed6_zero_attacker.py`): first evidence (protocol A fold 0, one seed,
-  64-parameter MLP, 100 rounds) shows no cost under IID, a small cost on the sites split, and the loss of the
-  BruteForce family when sites hold whole families. Main point of the chapter if it holds over folds and seeds:
-  a defence that cannot tell a rare honest site from an attacker removes exactly the knowledge federation was for.
-- Defences under attack, judged as cost with no attacker plus what is saved under attack (after Gate 1).
+- **Zero-attacker control** (`experiments/fed6_zero_attacker.py`; protocol A fold 0, 100 rounds, three seeds of the
+  64-parameter MLP and one of a 3,000-parameter MLP): no cost under IID in every run (within 0.007 macro-F1); with
+  whole-family sites, median scores below FedAvg in 3 of 4 runs, but which family it loses changes from seed to seed.
+  A first single-seed run showed BruteForce falling from 0.85 to 0.01; the other seeds did not repeat it, so it is
+  not claimed.
+- **Defences under attack** (`experiments/fed2_attacks.py`; 20% malicious clients, 3,000-parameter MLP, one seed):
+  under IID, median and trimmed mean stop Web suppression (Web recall 0.22 with FedAvg, 0.50 and 0.49 with the
+  robust aggregators) and label flipping (macro-F1 -0.064 with FedAvg, -0.017 and +0.003); on the sites split,
+  where every site holds different attack types, no aggregator stops it (Web 0.00 with all three). Main point of
+  the chapter if it holds over folds and seeds: the defences that work when sites look alike fail in the setting
+  federation is for. Judged as cost with no attacker plus what is saved under attack.
 
 ## 5. Tree models under federation
 - Decision D12 (FED-5): per-client ensembles, Flower's bagging and cyclic XGBoost, histogram-based federated XGBoost;
