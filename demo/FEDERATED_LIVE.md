@@ -57,16 +57,17 @@ connect on 9443; both are published by the launcher.
    told" and, at round 12, "switching to poisoned labels now". On the dashboard the Web panel climbs for 11 rounds,
    then falls and shows a warning, while DDoS and macro-F1 barely move, and site 2's update distance looks like
    everyone else's: the server cannot pick it out. Measured on 24 Nov: Web 54-81% in rounds 3-11, 8% at round 12,
-   about 10% after; macro-F1 stays near 0.25.
+   about 10% after; macro-F1 stays near 0.25 (recorded with `Number` as an input; the demo excludes it since 24 Nov).
 3. **A defence** (`-Scenario defence`: the same attacker against median aggregation), then the cost of that defence
    with no attacker at all (`-Scenario defence-cost`). What the experiments found (FED-2 grid and FED-6 control,
-   protocol A fold 0): with similar sites (IID) median and trimmed mean cost nothing and stop the attack (Web 0.22
-   with FedAvg, 0.50 with median, 0.49 with trimmed mean); with sites that each hold different attack types they do
-   not stop it (Web 0.00 with all three), and with whole-family sites median scores lower than FedAvg in 3 of 4 runs
+   protocol A fold 0): with similar sites (IID) median and trimmed mean cost nothing and stop the attack (Web 0.24
+   with FedAvg, 0.53 with median, 0.48 with trimmed mean); with sites that each hold different attack types they do
+   not stop it (Web 0.00-0.03 with all three), and with whole-family sites median scores lower than FedAvg in 3 of 4 runs
    even with no attacker. Which family it loses varies from run to run, so say "can cost detection", not "always
    drops family X".
 
-Measured on 24 Nov 2026 (3 sites, sites split, 3000-parameter MLP, FedAvg, 30 rounds; mean of the last 5 rounds):
+Measured on 24 Nov 2026 (3 sites, sites split, 3000-parameter MLP, FedAvg, 30 rounds; mean of the last 5 rounds;
+with `Number` as an input, before it was excluded):
 
 | | All honest | Site 2 hides Web |
 |---|---|---|

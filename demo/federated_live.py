@@ -21,7 +21,8 @@ Demo shortcuts (say them when showing it):
     only its own data
   - sites tell the server which attack types they hold, so the server can score "attack types this site never
     saw"; a real site would not reveal that (docs/THREAT_MODEL.md section 4)
-  - features: the stand-in top-8 used by FED-3/4/5/6 until DATA-6; scores are on the validation block
+  - features: the stand-in top-8 used by FED-3/4/5/6 until DATA-6 (IAT and Number excluded); scores are on the
+    validation block
 
 Run (inside the project image; demo/federated_live.ps1 opens all the windows):
   python -m demo.federated_live keys   --sites 3
@@ -51,10 +52,10 @@ FAMILY_SHORT = {"Benign": "Ben", "DDoS": "DDoS", "DoS": "DoS", "Recon": "Rec", "
 # ---- shared: data, model, split (deterministic, so the server and every site build the same thing)
 def load_sample(fold: int, cap: int, val_cap: int):
     from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
-    from experiments.fed6_zero_attacker import fit_inputs, load_block
+    from experiments.fed6_zero_attacker import fit_inputs, input_features, load_block
     from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
     report = json.loads(REPORT.read_text())
-    feats = [c for c in report["features"] if c != "IAT"]                     # D9
+    feats = input_features(report)                                # D9 and its Number addition (IAT, Number)
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", "A")
     m = load_manifest(path) if path.exists() else build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=GAP)
