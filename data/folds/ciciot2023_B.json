@@ -1,0 +1,1029 @@
+{
+ "format": "fqml-folds/1",
+ "dataset": "ciciot2023",
+ "protocol": "B",
+ "n_folds": 5,
+ "gap": 100,
+ "max_gap_frac": 0.1,
+ "source": {
+  "report": "results/data_reports/ciciot2023_clean_v1.json",
+  "cleaner": "fqml.data.clean_ciciot2023_v1",
+  "settings": {
+   "per_label_cap": 0,
+   "conflicts": "keep"
+  },
+  "rows_written": 46775660
+ },
+ "n_rows": 46775660,
+ "labels": {
+  "DDoS-RSTFINFlood": {
+   "range": [
+    1098126,
+    5143374
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "DDoS"
+  },
+  "DDoS-PSHACK_Flood": {
+   "range": [
+    5143374,
+    9238101
+   ],
+   "gap": 0,
+   "group": 3,
+   "family": "DDoS"
+  },
+  "DDoS-SYN_Flood": {
+   "range": [
+    9238101,
+    13297198
+   ],
+   "gap": 0,
+   "group": 4,
+   "family": "DDoS"
+  },
+  "DDoS-UDP_Flood": {
+   "range": [
+    13297198,
+    18709367
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "DDoS"
+  },
+  "DDoS-TCP_Flood": {
+   "range": [
+    18709367,
+    23206913
+   ],
+   "gap": 0,
+   "group": 2,
+   "family": "DDoS"
+  },
+  "DDoS-ICMP_Flood": {
+   "range": [
+    23206913,
+    30407349
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "DDoS"
+  },
+  "DDoS-SynonymousIP_Flood": {
+   "range": [
+    30407349,
+    34005449
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "DDoS"
+  },
+  "DDoS-ACK_Fragmentation": {
+   "range": [
+    34005449,
+    34290494
+   ],
+   "gap": 0,
+   "group": 4,
+   "family": "DDoS"
+  },
+  "DDoS-UDP_Fragmentation": {
+   "range": [
+    34290494,
+    34577389
+   ],
+   "gap": 0,
+   "group": 3,
+   "family": "DDoS"
+  },
+  "DDoS-ICMP_Fragmentation": {
+   "range": [
+    34577389,
+    35029833
+   ],
+   "gap": 0,
+   "group": 2,
+   "family": "DDoS"
+  },
+  "DDoS-SlowLoris": {
+   "range": [
+    35029833,
+    35053258
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "DDoS"
+  },
+  "DDoS-HTTP_Flood": {
+   "range": [
+    35053258,
+    35082048
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "DDoS"
+  },
+  "DoS-UDP_Flood": {
+   "range": [
+    35082048,
+    38154931
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "DoS"
+  },
+  "DoS-SYN_Flood": {
+   "range": [
+    38154931,
+    40183722
+   ],
+   "gap": 0,
+   "group": 2,
+   "family": "DoS"
+  },
+  "DoS-TCP_Flood": {
+   "range": [
+    40183722,
+    42855085
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "DoS"
+  },
+  "DoS-HTTP_Flood": {
+   "range": [
+    42855085,
+    42926942
+   ],
+   "gap": 0,
+   "group": 3,
+   "family": "DoS"
+  },
+  "Recon-PingSweep": {
+   "range": [
+    42926942,
+    42929204
+   ],
+   "gap": 0,
+   "group": 4,
+   "family": "Recon"
+  },
+  "Recon-OSScan": {
+   "range": [
+    42929204,
+    43027459
+   ],
+   "gap": 0,
+   "group": 2,
+   "family": "Recon"
+  },
+  "Recon-PortScan": {
+   "range": [
+    43027459,
+    43109742
+   ],
+   "gap": 0,
+   "group": 3,
+   "family": "Recon"
+  },
+  "Recon-HostDiscovery": {
+   "range": [
+    43109742,
+    43244119
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "Recon"
+  },
+  "VulnerabilityScan": {
+   "range": [
+    43244119,
+    43617463
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "Recon"
+  },
+  "BrowserHijacking": {
+   "range": [
+    43617463,
+    43623322
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "Web"
+  },
+  "Backdoor_Malware": {
+   "range": [
+    43623322,
+    43626540
+   ],
+   "gap": 0,
+   "group": 4,
+   "family": "Web"
+  },
+  "XSS": {
+   "range": [
+    43626540,
+    43630386
+   ],
+   "gap": 0,
+   "group": 3,
+   "family": "Web"
+  },
+  "Uploading_Attack": {
+   "range": [
+    43630386,
+    43631638
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "Web"
+  },
+  "SqlInjection": {
+   "range": [
+    43631638,
+    43636882
+   ],
+   "gap": 0,
+   "group": 2,
+   "family": "Web"
+  },
+  "CommandInjection": {
+   "range": [
+    43636882,
+    43642291
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "Web"
+  },
+  "DNS_Spoofing": {
+   "range": [
+    43655355,
+    43834248
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "Spoofing"
+  },
+  "MITM-ArpSpoofing": {
+   "range": [
+    43834248,
+    44141790
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "Spoofing"
+  },
+  "Mirai-greeth_flood": {
+   "range": [
+    44141790,
+    45133564
+   ],
+   "gap": 0,
+   "group": 0,
+   "family": "Mirai"
+  },
+  "Mirai-greip_flood": {
+   "range": [
+    45133564,
+    45885153
+   ],
+   "gap": 0,
+   "group": 2,
+   "family": "Mirai"
+  },
+  "Mirai-udpplain": {
+   "range": [
+    45885153,
+    46775660
+   ],
+   "gap": 0,
+   "group": 1,
+   "family": "Mirai"
+  },
+  "BenignTraffic": {
+   "range": [
+    0,
+    1098126
+   ],
+   "gap": 100,
+   "blocks": [
+    [
+     0,
+     219625
+    ],
+    [
+     219625,
+     439250
+    ],
+    [
+     439250,
+     658875
+    ],
+    [
+     658875,
+     878500
+    ],
+    [
+     878500,
+     1098126
+    ]
+   ],
+   "family": "Benign",
+   "group": null
+  },
+  "DictionaryBruteForce": {
+   "range": [
+    43642291,
+    43655355
+   ],
+   "gap": 100,
+   "blocks": [
+    [
+     43642291,
+     43644903
+    ],
+    [
+     43644903,
+     43647516
+    ],
+    [
+     43647516,
+     43650129
+    ],
+    [
+     43650129,
+     43652742
+    ],
+    [
+     43652742,
+     43655355
+    ]
+   ],
+   "family": "BruteForce",
+   "group": null
+  }
+ },
+ "folds": [
+  {
+   "fold": 0,
+   "train": [
+    [
+     439350,
+     1098126
+    ],
+    [
+     5143374,
+     13297198
+    ],
+    [
+     18709367,
+     23206913
+    ],
+    [
+     34005449,
+     35029833
+    ],
+    [
+     38154931,
+     40183722
+    ],
+    [
+     42855085,
+     43109742
+    ],
+    [
+     43623322,
+     43630386
+    ],
+    [
+     43631638,
+     43636882
+    ],
+    [
+     43647616,
+     43655355
+    ],
+    [
+     45133564,
+     45885153
+    ]
+   ],
+   "val": [
+    [
+     219725,
+     439250
+    ],
+    [
+     13297198,
+     18709367
+    ],
+    [
+     30407349,
+     34005449
+    ],
+    [
+     35029833,
+     35053258
+    ],
+    [
+     40183722,
+     42855085
+    ],
+    [
+     43109742,
+     43244119
+    ],
+    [
+     43636882,
+     43642291
+    ],
+    [
+     43645003,
+     43647516
+    ],
+    [
+     43655355,
+     43834248
+    ],
+    [
+     45885153,
+     46775660
+    ]
+   ],
+   "test": [
+    [
+     0,
+     219625
+    ],
+    [
+     1098126,
+     5143374
+    ],
+    [
+     23206913,
+     30407349
+    ],
+    [
+     35053258,
+     38154931
+    ],
+    [
+     43244119,
+     43623322
+    ],
+    [
+     43630386,
+     43631638
+    ],
+    [
+     43642291,
+     43644903
+    ],
+    [
+     43834248,
+     45133564
+    ]
+   ],
+   "test_types": [
+    "BrowserHijacking",
+    "DDoS-HTTP_Flood",
+    "DDoS-ICMP_Flood",
+    "DDoS-RSTFINFlood",
+    "DoS-UDP_Flood",
+    "MITM-ArpSpoofing",
+    "Mirai-greeth_flood",
+    "Uploading_Attack",
+    "VulnerabilityScan"
+   ],
+   "val_types": [
+    "CommandInjection",
+    "DDoS-SlowLoris",
+    "DDoS-SynonymousIP_Flood",
+    "DDoS-UDP_Flood",
+    "DNS_Spoofing",
+    "DoS-TCP_Flood",
+    "Mirai-udpplain",
+    "Recon-HostDiscovery"
+   ]
+  },
+  {
+   "fold": 1,
+   "train": [
+    [
+     0,
+     219525
+    ],
+    [
+     658975,
+     13297198
+    ],
+    [
+     23206913,
+     30407349
+    ],
+    [
+     34005449,
+     34577389
+    ],
+    [
+     35053258,
+     38154931
+    ],
+    [
+     42855085,
+     42929204
+    ],
+    [
+     43027459,
+     43109742
+    ],
+    [
+     43244119,
+     43631638
+    ],
+    [
+     43642291,
+     43644803
+    ],
+    [
+     43650229,
+     43655355
+    ],
+    [
+     43834248,
+     45133564
+    ]
+   ],
+   "val": [
+    [
+     439350,
+     658875
+    ],
+    [
+     18709367,
+     23206913
+    ],
+    [
+     34577389,
+     35029833
+    ],
+    [
+     38154931,
+     40183722
+    ],
+    [
+     42929204,
+     43027459
+    ],
+    [
+     43631638,
+     43636882
+    ],
+    [
+     43647616,
+     43650129
+    ],
+    [
+     45133564,
+     45885153
+    ]
+   ],
+   "test": [
+    [
+     219625,
+     439250
+    ],
+    [
+     13297198,
+     18709367
+    ],
+    [
+     30407349,
+     34005449
+    ],
+    [
+     35029833,
+     35053258
+    ],
+    [
+     40183722,
+     42855085
+    ],
+    [
+     43109742,
+     43244119
+    ],
+    [
+     43636882,
+     43642291
+    ],
+    [
+     43644903,
+     43647516
+    ],
+    [
+     43655355,
+     43834248
+    ],
+    [
+     45885153,
+     46775660
+    ]
+   ],
+   "test_types": [
+    "CommandInjection",
+    "DDoS-SlowLoris",
+    "DDoS-SynonymousIP_Flood",
+    "DDoS-UDP_Flood",
+    "DNS_Spoofing",
+    "DoS-TCP_Flood",
+    "Mirai-udpplain",
+    "Recon-HostDiscovery"
+   ],
+   "val_types": [
+    "DDoS-ICMP_Fragmentation",
+    "DDoS-TCP_Flood",
+    "DoS-SYN_Flood",
+    "Mirai-greip_flood",
+    "Recon-OSScan",
+    "SqlInjection"
+   ]
+  },
+  {
+   "fold": 2,
+   "train": [
+    [
+     0,
+     439150
+    ],
+    [
+     878600,
+     5143374
+    ],
+    [
+     9238101,
+     18709367
+    ],
+    [
+     23206913,
+     34290494
+    ],
+    [
+     35029833,
+     38154931
+    ],
+    [
+     40183722,
+     42855085
+    ],
+    [
+     42926942,
+     42929204
+    ],
+    [
+     43109742,
+     43626540
+    ],
+    [
+     43630386,
+     43631638
+    ],
+    [
+     43636882,
+     43647416
+    ],
+    [
+     43652842,
+     45133564
+    ],
+    [
+     45885153,
+     46775660
+    ]
+   ],
+   "val": [
+    [
+     658975,
+     878500
+    ],
+    [
+     5143374,
+     9238101
+    ],
+    [
+     34290494,
+     34577389
+    ],
+    [
+     42855085,
+     42926942
+    ],
+    [
+     43027459,
+     43109742
+    ],
+    [
+     43626540,
+     43630386
+    ],
+    [
+     43650229,
+     43652742
+    ]
+   ],
+   "test": [
+    [
+     439250,
+     658875
+    ],
+    [
+     18709367,
+     23206913
+    ],
+    [
+     34577389,
+     35029833
+    ],
+    [
+     38154931,
+     40183722
+    ],
+    [
+     42929204,
+     43027459
+    ],
+    [
+     43631638,
+     43636882
+    ],
+    [
+     43647516,
+     43650129
+    ],
+    [
+     45133564,
+     45885153
+    ]
+   ],
+   "test_types": [
+    "DDoS-ICMP_Fragmentation",
+    "DDoS-TCP_Flood",
+    "DoS-SYN_Flood",
+    "Mirai-greip_flood",
+    "Recon-OSScan",
+    "SqlInjection"
+   ],
+   "val_types": [
+    "DDoS-PSHACK_Flood",
+    "DDoS-UDP_Fragmentation",
+    "DoS-HTTP_Flood",
+    "Recon-PortScan",
+    "XSS"
+   ]
+  },
+  {
+   "fold": 3,
+   "train": [
+    [
+     0,
+     658775
+    ],
+    [
+     1098126,
+     5143374
+    ],
+    [
+     13297198,
+     34005449
+    ],
+    [
+     34577389,
+     42855085
+    ],
+    [
+     42929204,
+     43027459
+    ],
+    [
+     43109742,
+     43623322
+    ],
+    [
+     43630386,
+     43650029
+    ],
+    [
+     43655355,
+     46775660
+    ]
+   ],
+   "val": [
+    [
+     878600,
+     1098126
+    ],
+    [
+     9238101,
+     13297198
+    ],
+    [
+     34005449,
+     34290494
+    ],
+    [
+     42926942,
+     42929204
+    ],
+    [
+     43623322,
+     43626540
+    ],
+    [
+     43652842,
+     43655355
+    ]
+   ],
+   "test": [
+    [
+     658875,
+     878500
+    ],
+    [
+     5143374,
+     9238101
+    ],
+    [
+     34290494,
+     34577389
+    ],
+    [
+     42855085,
+     42926942
+    ],
+    [
+     43027459,
+     43109742
+    ],
+    [
+     43626540,
+     43630386
+    ],
+    [
+     43650129,
+     43652742
+    ]
+   ],
+   "test_types": [
+    "DDoS-PSHACK_Flood",
+    "DDoS-UDP_Fragmentation",
+    "DoS-HTTP_Flood",
+    "Recon-PortScan",
+    "XSS"
+   ],
+   "val_types": [
+    "Backdoor_Malware",
+    "DDoS-ACK_Fragmentation",
+    "DDoS-SYN_Flood",
+    "Recon-PingSweep"
+   ]
+  },
+  {
+   "fold": 4,
+   "train": [
+    [
+     219725,
+     878400
+    ],
+    [
+     5143374,
+     9238101
+    ],
+    [
+     13297198,
+     23206913
+    ],
+    [
+     30407349,
+     34005449
+    ],
+    [
+     34290494,
+     35053258
+    ],
+    [
+     38154931,
+     42926942
+    ],
+    [
+     42929204,
+     43244119
+    ],
+    [
+     43626540,
+     43630386
+    ],
+    [
+     43631638,
+     43642291
+    ],
+    [
+     43645003,
+     43652642
+    ],
+    [
+     43655355,
+     43834248
+    ],
+    [
+     45133564,
+     46775660
+    ]
+   ],
+   "val": [
+    [
+     0,
+     219625
+    ],
+    [
+     1098126,
+     5143374
+    ],
+    [
+     23206913,
+     30407349
+    ],
+    [
+     35053258,
+     38154931
+    ],
+    [
+     43244119,
+     43623322
+    ],
+    [
+     43630386,
+     43631638
+    ],
+    [
+     43642291,
+     43644903
+    ],
+    [
+     43834248,
+     45133564
+    ]
+   ],
+   "test": [
+    [
+     878500,
+     1098126
+    ],
+    [
+     9238101,
+     13297198
+    ],
+    [
+     34005449,
+     34290494
+    ],
+    [
+     42926942,
+     42929204
+    ],
+    [
+     43623322,
+     43626540
+    ],
+    [
+     43652742,
+     43655355
+    ]
+   ],
+   "test_types": [
+    "Backdoor_Malware",
+    "DDoS-ACK_Fragmentation",
+    "DDoS-SYN_Flood",
+    "Recon-PingSweep"
+   ],
+   "val_types": [
+    "BrowserHijacking",
+    "DDoS-HTTP_Flood",
+    "DDoS-ICMP_Flood",
+    "DDoS-RSTFINFlood",
+    "DoS-UDP_Flood",
+    "MITM-ArpSpoofing",
+    "Mirai-greeth_flood",
+    "Uploading_Attack",
+    "VulnerabilityScan"
+   ]
+  }
+ ],
+ "time_blocked_types": [
+  "BenignTraffic",
+  "DictionaryBruteForce"
+ ]
+}

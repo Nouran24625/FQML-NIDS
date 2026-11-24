@@ -93,3 +93,51 @@ def test_twin_mask():
     train = np.array([5, 5, 9, -3], dtype=np.int64)
     test = np.array([9, 1, -3, 2, 5], dtype=np.int64)
     assert list(twin_mask(test, train)) == [True, False, True, False, True]
+
+
+B_RANGES = {"BenignTraffic": (0, 1000), "DDoS-A": (1000, 1400), "DDoS-B": (1400, 1700), "DDoS-C": (1700, 1900),
+            "DoS-A": (1900, 2100), "DoS-B": (2100, 2200), "Brute": (2200, 2300), "Spoof-A": (2300, 2400),
+            "Spoof-B": (2400, 2450)}
+B_FAMILY = {"BenignTraffic": "Benign", "DDoS-A": "DDoS", "DDoS-B": "DDoS", "DDoS-C": "DDoS", "DoS-A": "DoS",
+            "DoS-B": "DoS", "Brute": "BruteForce", "Spoof-A": "Spoofing", "Spoof-B": "Spoofing"}
+
+
+def test_unseen_type_groups():
+    from fqml.data.folds import unseen_type_groups
+    rows = {lab: b - a for lab, (a, b) in B_RANGES.items()}
+    g = unseen_type_groups(B_FAMILY, rows, 5)
+    assert "BenignTraffic" not in g and "Brute" not in g                   # single-type families: time-blocked
+    assert g == {"DDoS-A": 0, "DDoS-B": 1, "DDoS-C": 2, "DoS-A": 0, "DoS-B": 1, "Spoof-A": 0, "Spoof-B": 1}
+    assert unseen_type_groups(B_FAMILY, rows, 2)["DDoS-C"] == 0            # round-robin wraps
+
+
+@pytest.mark.parametrize("gap", [0, 10])
+def test_protocol_b(gap, tmp_path):
+    from fqml.data.folds import build_unseen_type
+    m = build_unseen_type(B_RANGES, B_FAMILY, dataset="toy", n_folds=5, gap=gap)
+    assert m["protocol"] == "B" and m["time_blocked_types"] == ["BenignTraffic", "Brute"]
+    save_manifest(m, tmp_path / "toy_B.json")
+    assert load_manifest(tmp_path / "toy_B.json") == m
+    tested = np.zeros(2450, int)
+    for k, f in enumerate(m["folds"]):
+        tr, va, te = (fold_rows(m, k, r) for r in ("train", "val", "test"))
+        tested[te] += 1
+        assert not (set(tr) & set(va)) and not (set(tr) & set(te)) and not (set(va) & set(te))
+        for lab, (a, b) in B_RANGES.items():
+            mine = {r: rows[(rows >= a) & (rows < b)] for r, rows in (("train", tr), ("val", va), ("test", te))}
+            if lab in f["test_types"]:                                     # unseen in test: whole type, nowhere else
+                assert len(mine["test"]) == b - a and not len(mine["train"]) and not len(mine["val"])
+            elif lab in f["val_types"]:                                    # unseen in validation: the same
+                assert len(mine["val"]) == b - a and not len(mine["train"]) and not len(mine["test"])
+            elif lab in m["time_blocked_types"]:                           # benign, Brute: in every role
+                assert len(mine["train"]) and len(mine["val"]) and len(mine["test"])
+            else:                                                          # every other type: training only
+                assert len(mine["train"]) == b - a and not len(mine["val"]) and not len(mine["test"])
+        assert not set(f["test_types"]) & set(f["val_types"])
+    unseen = [t for f in m["folds"] for t in f["test_types"]]
+    assert sorted(unseen) == sorted(set(B_FAMILY) - {"BenignTraffic", "Brute"})   # every type held out exactly once
+    assert (tested <= 1).all()
+    assert m["folds"][0]["test_types"] == ["DDoS-A", "DoS-A", "Spoof-A"] and m["folds"][4]["val_types"] == m["folds"][0]["test_types"]
+    assert m["folds"][3]["test_types"] == []                               # no family has a 4th type
+    with pytest.raises(ValueError):
+        build_unseen_type(B_RANGES, {**B_FAMILY, "extra": "DDoS"}, dataset="toy")

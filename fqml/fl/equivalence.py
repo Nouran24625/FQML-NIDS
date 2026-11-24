@@ -45,8 +45,8 @@ def compare_modes(model, X, y, parts, *, class_weights=None, rounds=2, clients_p
 
     Returns the largest absolute difference between the two global models (weights and logits on X),
     whether the same clients were sampled, and whether training moved the weights at all."""
-    X = torch.as_tensor(np.asarray(X), dtype=torch.float64)
-    y = torch.as_tensor(np.asarray(y), dtype=torch.long)
+    X = torch.as_tensor(np.array(X, dtype=np.float64))          # np.array copies: parquet arrays are read-only
+    y = torch.as_tensor(np.array(y, dtype=np.int64))
     kw = dict(rounds=rounds, clients_per_round=clients_per_round, local_steps=local_steps, batch_size=batch_size,
               lr=lr, class_weights=class_weights, seed=seed, dtype=torch.float64)
     a = run_fedavg(model, X, y, parts, mode="batched", **kw)

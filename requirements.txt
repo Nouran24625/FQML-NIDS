@@ -12,3 +12,5 @@ pytest
 tqdm
 qiskit
 qiskit-ibm-runtime
+xgboost-cpu
+opacus

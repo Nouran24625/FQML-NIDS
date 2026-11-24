@@ -1,7 +1,7 @@
 # FQML-NIDS — Frozen interfaces
 
-**Version:** 2.0.0 (see change log) · **First frozen:** 2 Nov 2026 (Gate 0) · **Amended:** 16 Nov 2026
-(Phase 0 amendments, `docs/DECISIONS.md`)
+**Version:** 2.2.0 (see change log) · **First frozen:** 2 Nov 2026 (Gate 0) · **Amended:** 23 Nov 2026
+(federated section 3, FED-1 / FED-3 / FED-7; earlier amendments in the change log and `docs/DECISIONS.md`)
 
 Every track codes against what is written here. **Any change to an item in this file needs a pull request
 that (1) says "Interface change" in its title, (2) updates this file and its change log, and (3) is approved
@@ -168,11 +168,16 @@ Validation data and early stopping: **(Phase 1: H-10)**.
 - Every partitioner returns `list[np.ndarray]`: client k → sorted row positions into the **training rows of
   one fold**. Fully determined by its seed.
 - `iid_partition(n_rows, n_clients, seed)` and `dirichlet_partition(y, n_clients, alpha, seed, min_size=10)`.
-- **(Phase 1: FED-3)** `type_partition(native_label, seed)`: one attack type per client (the most extreme
-  skew), benign rows spread over all clients.
-- **(Phase 1: FED-3)** `sites_partition(native_label, n_sites, types_per_site, seed)`: the **sites split**.
-  Each client is a site that holds benign traffic plus a subset of the attack types; every attack type is
-  held by at least one site. Returns the partition and, per site, the attack types it holds.
+- `type_partition(native_label, seed, *, benign="BenignTraffic")` (FED-3): one attack type per client (sorted
+  by name; the most extreme skew), benign rows spread evenly over all clients.
+- `sites_partition(native_label, n_sites, types_per_site, seed, *, benign="BenignTraffic", groups=None)`
+  (FED-3): the **sites split**. Each client is a site that holds an equal share of the benign rows plus exactly
+  `types_per_site` attack types; every attack type is held by at least one site; a type's rows are split evenly
+  among the sites holding it. Returns `(partition, site_types)`, `site_types[k]` = sorted attack types of site k.
+  With `groups` ({attack type: group}, e.g. its family) sites hold whole groups and `types_per_site` counts groups.
+- Every partitioner gives each row to exactly one client (label attacks rely on this, `docs/ATTACKS.md`).
+- Charts and per-client counts for one fold: `python -m experiments.fed3_partitions --fold 0`
+  (`results/partitions/fed3_<protocol>_f<fold>.json`, figures beside it).
 - Saved with `save_partition(parts, path)` as `.npz` with keys `client_000`, `client_001`, …; loaded with
   `load_partition(path)`. Path: `data/partitions/<dataset>_<protocol>_f<fold>_<scheme>_n<N>_s<seed>.npz`,
   for example `data/partitions/ciciot2023_A_f0_dir0.5_n50_s0.npz`. Not committed (derived from data).
@@ -191,20 +196,29 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
   is on the machine) check both give the same global weights. `fqml.fl.equivalence.compare_modes` is the
   same check as a function; **the federated trial run calls it on its real data before round 1**
   (Phase 1: FED-4).
-- **(Phase 1: FED-7)** `mode="local"`: **local-only training.** Every client trains alone on its own rows
-  for the same total number of local steps, with no aggregation; the result holds one model per client.
-  Reported with each client's recall on attack types it never saw locally (needs the sites split).
+- `mode="local"` (FED-7): **local-only training.** Every client trains alone on its own rows, `local_steps`
+  steps in every round (rounds × local_steps in total, as many as the global model gets), one Adam per client for
+  the whole run, no aggregation. `clients_per_round` is ignored. `FedResult.params` is `None`;
+  `FedResult.client_params` holds one model per client (`dict[name, tensor[N, …]]`). Reported with each client's
+  recall on attack types it never held: `fqml.fl.unseen` (`held_types`, `unseen_scores`, `per_client_unseen`).
 - `FedResult.params`: final global weights (`dict[name, tensor]`). `FedResult.history`: one dict per round
   with `round`, `clients`, `train_seconds`, `seconds`, and `val_macro_f1`, `val_accuracy` when validation
-  data is passed.
+  data is passed. `FedResult.final_val`: with `X_val` and `families=` (FED-1), the full validation scores at
+  the end (one dict per client in `mode="local"`).
 - Defaults (Plan §8.1): N = 50 clients, 20 per round, 100 rounds, 50 local steps of 64, Dirichlet α = 0.5.
 - **Where robust aggregators and attacks plug in (Phase 1–3):** they act on the stacked client weights
   (`dict[name, tensor[K, …]]`, flattened to a `[K, P]` matrix when needed) between local training and
   aggregation. An aggregator is a function `stacked, n_rows -> global params`, with the same signature as
   `fedavg`. An attack modifies the rows of malicious clients before aggregation. Every robust aggregator is
   measured with zero attackers first.
-- `evaluate()` currently returns macro-F1 and accuracy. **(Phase 1: FED-1)** it calls the shared metrics
-  module (per-class F1, recall, false-positive rate, PR-AUC); the existing keys stay.
+- `evaluate(model, params, X, y, batch_size=8192, *, families=None)` returns `macro_f1` and `accuracy` as
+  before; with `families` (FED-1) it adds `multiclass` and `binary` from the shared metrics module
+  (`fqml.eval.metrics`, EVAL-1: per-class precision / recall / F1, confusion matrix, ROC-AUC, PR-AUC, F1 and
+  false-positive rate at the default decision). Fixed-FPR thresholds are set on validation by the runner.
+  `predict_proba(model, params, X)` gives the probabilities the runner passes to `fqml.eval.metrics.evaluate`.
+- **Attacks** (FED-2, `fqml/attacks/poison.py`, `docs/ATTACKS.md`): label flipping and class suppression are
+  label attacks; `poison_labels(y, parts, attack, ...)` returns the training labels passed to `run_fedavg` in
+  place of `y`.
 
 ---
 
@@ -268,3 +282,4 @@ run_fedavg(model, X, y, parts, *, rounds, clients_per_round, local_steps=50, bat
 | 1.0.0 | 2 Nov 2026 | First freeze: circuit v2 + chain (D6, D7), batched FedAvg (D3), capture column and capture-disjoint split announced for Phase 1 | Kareem, Sheghaf, Nouran, Ganna |
 | 1.1.0 | 5 Nov 2026 | Section 4: post-quantum channel API (`fqml/pq`, D15): settings files, key files, `Link` API for E7, error types. The frozen choice (ML-KEM-768, ML-DSA-65, liboqs 0.16.0) is unchanged and is the default | Nouran, Sheghaf (PR #12) |
 | 2.0.0 | 16 Nov 2026 | Phase 0 amendments. Section owners follow the new areas. **1:** cleaner v1 file (`row_id`, `file`, `file_seq`, `row_index`, `dup_group`, `conflict`, `sample_rate`, optional `ts`; fixed row order; duplicates marked, not deleted), v0 file retired, label-map variants (`c7m`), protocols A / B / C and fold manifests (`fqml-folds/1`) replace the capture-disjoint split, preprocessing fitted per fold. **2:** `entangler="none"`, `readout="linear"` (the control is always `none` + `linear`, compared with `chain` + `linear`), model size setting and MLP size ladder. **3:** sites split, one-type-per-client split and local-only mode (signatures), partition path carries protocol and fold, real-data FedAvg equivalence check. **5:** run ID carries protocol and fold; 5 folds × 3 seeds replaces "seeds 0, 1, 2 on one split" | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |
+| 2.2.0 | 23 Nov 2026 | Section 3 (Kareem): `type_partition`, `sites_partition` (+ optional `groups`) implemented (FED-3); `mode="local"`, `FedResult.client_params`, `fqml.fl.unseen` (FED-7); `evaluate(..., families=)`, `predict_proba`, `FedResult.final_val`, `run_fedavg(..., families=)` (FED-1); label attacks (FED-2). Existing calls unchanged | Pending: Ganna, Kareem, Sheghaf, Nouran (this PR) |
