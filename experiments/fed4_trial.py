@@ -18,7 +18,8 @@ Scores on the validation block (thresholds and test blocks belong to the runner,
 Until DATA-6 lands, features are the stand-in used by FED-3/5/6 (top-8 by mutual information on the training sample,
 clipped and scaled to [0, pi]). Swap `fit_inputs` for fqml.data.preprocess once it exists; nothing else changes.
 
-Writes results/fed4/trial_<protocol>_f<fold>_r<rounds>.json.
+Writes results/fed4/trial_<protocol>_f<fold>_r<rounds>[_<models>][_xNumber].json (_xNumber: Number excluded, the default
+since 24 Nov; files without it kept Number as a candidate input).
 
     python -m experiments.fed4_trial --fold 0 --rounds 20
     python -m experiments.fed4_trial --rounds 2 --local-steps 5 --models mlp --splits sites   (quick check)
@@ -36,13 +37,12 @@ import torch
 from sklearn.metrics import f1_score, recall_score
 
 from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
-from experiments.fed6_zero_attacker import fit_inputs, load_block, splits
+from experiments.fed6_zero_attacker import (EXCLUDE, exclude_tag, fit_inputs, input_features, load_block,
+                                            make_model, parse_exclude, splits)
 from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
 from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import compare_modes, passed, sqrt_class_weights
 from fqml.fl.unseen import held_types, per_client_unseen, summary
-from fqml.models.mlp import MatchedMLP
-from fqml.quantum.torch_sim import TorchVQC
 
 ROOT = Path(__file__).resolve().parents[1]
 HAVE_EVAL1 = importlib.util.find_spec("fqml.eval.metrics") is not None
@@ -50,15 +50,6 @@ HAVE_EVAL1 = importlib.util.find_spec("fqml.eval.metrics") is not None
 
 def n_params(model) -> int:
     return sum(p.numel() for p in model.parameters())
-
-
-def make_model(kind: str, n_classes: int):
-    vqc = TorchVQC(8, n_classes, 3, seed=0)
-    if kind == "vqc":
-        return vqc
-    if kind == "mlp":
-        return MatchedMLP(8, n_classes, target_params=n_params(vqc), seed=0)
-    raise SystemExit(f"unknown model {kind}")
 
 
 FPR = 0.01
@@ -77,10 +68,18 @@ def scores(y, proba, families):
                                "attack_recall_at_1pct_fpr": float((attack[y != 0] > thr).mean())}
 
 
-def unseen(y, native, held, preds, attacks, thrs):
+def unseen(y, native, held, preds, attacks, thrs, everywhere=None):
+    """Attack types a client never held. With `everywhere` (every type of the training sample, protocol B), also the
+    types that NO client held: the protocol-B question, since federation cannot pass on a type nobody has."""
     pc = per_client_unseen(y, native, held, preds, scores=attacks, thresholds=thrs)
-    return {"detection_at_1pct_fpr": summary(pc, "detection_at_threshold_types"),
-            "family_recall": summary(pc, "family_recall_types")}
+    out = {"detection_at_1pct_fpr": summary(pc, "detection_at_threshold_types"),
+           "family_recall": summary(pc, "family_recall_types")}
+    if everywhere is not None:
+        pe = per_client_unseen(y, native, [everywhere] * len(preds), preds, scores=attacks, thresholds=thrs)
+        out["nowhere_detection_at_1pct_fpr"] = summary(pe, "detection_at_threshold_types")
+        out["nowhere_family_recall"] = summary(pe, "family_recall_types")
+        out["nowhere_types"] = sorted(set(np.asarray(native).tolist()) - everywhere - {"BenignTraffic"})
+    return out
 
 
 def main():
@@ -92,16 +91,18 @@ def main():
     ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--local-steps", type=int, default=50)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--models", default="mlp,vqc")
+    ap.add_argument("--models", default="mlp,vqc", help="vqc, vqc_lin, vqc_noent, mlp (= mlp_p64), mlp_p<N>, rff, logreg")
     ap.add_argument("--splits", default="iid,sites,sitesfam")
+    ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
     a = ap.parse_args()
+    exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
     t0 = time.perf_counter()
 
     report = json.loads(REPORT.read_text())
     families = report["families"]
     C = len(families)
-    feats = [c for c in report["features"] if c != "IAT"]            # D9
+    feats = input_features(report, exclude)                          # D9 and its Number addition
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", a.protocol)
     m = load_manifest(path) if path.exists() else build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=GAP)
@@ -116,9 +117,11 @@ def main():
           flush=True)
     w = sqrt_class_weights(ytr, C).float()                              # D11 part 1
     parts_by = splits(native_tr, ytr, a.seed)
+    # protocol B: validation attack types that are in no client's training rows (None under protocol A)
+    everywhere = set(np.unique(native_tr).tolist()) - {"BenignTraffic"} if a.protocol == "B" else None
     out = {"task": "FED-4 federated trial run (pipeline check)", "protocol": a.protocol, "fold": a.fold,
            "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds, "local_steps": a.local_steps, "seed": a.seed,
-           "families": families, "features": [feats[i] for i in top], "features_source": "stand-in (DATA-6 pending)",
+           "families": families, "exclude": sorted({"IAT", *exclude}), "features": [feats[i] for i in top], "features_source": "stand-in (DATA-6 pending)",
            "eval1": HAVE_EVAL1, "runs": []}
 
     for kind in a.models.split(","):
@@ -153,7 +156,8 @@ def main():
             fa = run_fedavg(make_model(kind, C), Xtr, ytr, parts, clients_per_round=cpr,
                             on_round=progress("fedavg"), **common)
             pred, att, thr, s = scores(yva, predict_proba(make_model(kind, C), fa.params, Xva_t), families)
-            s["unseen"] = unseen(yva, native_va, held, [pred] * len(parts), [att] * len(parts), [thr] * len(parts))
+            s["unseen"] = unseen(yva, native_va, held, [pred] * len(parts), [att] * len(parts), [thr] * len(parts),
+                                 everywhere)
             s["seconds"] = time.perf_counter() - t1
             if fa.final_val is not None:
                 s["eval1"] = fa.final_val
@@ -174,7 +178,7 @@ def main():
                 f1s.append(sk["macro_f1"])
             run["local"] = {"macro_f1_mean": float(np.mean(f1s)), "macro_f1_min": float(np.min(f1s)),
                             "macro_f1_max": float(np.max(f1s)),
-                            "unseen": unseen(yva, native_va, held, preds, atts, thrs),
+                            "unseen": unseen(yva, native_va, held, preds, atts, thrs, everywhere),
                             "seconds": time.perf_counter() - t1}
 
             # centralised: one client holding every training row, same number of steps
@@ -184,7 +188,8 @@ def main():
             pred, att, thr, s = scores(yva, predict_proba(make_model(kind, C),
                                                           {n: v[0] for n, v in ce.client_params.items()}, Xva_t),
                                        families)
-            s["unseen"] = unseen(yva, native_va, held, [pred] * len(parts), [att] * len(parts), [thr] * len(parts))
+            s["unseen"] = unseen(yva, native_va, held, [pred] * len(parts), [att] * len(parts), [thr] * len(parts),
+                                 everywhere)
             s["seconds"] = time.perf_counter() - t1
             run["central"] = s
             out["runs"].append(run)
@@ -196,8 +201,13 @@ def main():
             for key, label in (("detection_at_1pct_fpr", "detected at 1% FPR"), ("family_recall", "right family")):
                 print(f"  -> attack types a client never held, {label:18s}: fedavg {u(run['fedavg'], key):.3f} | "
                       f"local {u(run['local'], key):.3f} | central {u(run['central'], key):.3f}", flush=True)
+                if everywhere is not None:
+                    key = "nowhere_" + key
+                    print(f"  -> attack types NO client held,     {label:18s}: fedavg {u(run['fedavg'], key):.3f} | "
+                          f"local {u(run['local'], key):.3f} | central {u(run['central'], key):.3f}", flush=True)
 
-    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}.json"
+    mtag = "" if a.models == "mlp,vqc" else "_" + a.models.replace(",", "-")
+    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}{mtag}{exclude_tag(exclude)}.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(out, indent=1, default=float))
     print(f"\nwrote {dest.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
