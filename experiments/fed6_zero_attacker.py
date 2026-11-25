@@ -37,8 +37,7 @@ from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import sqrt_class_weights
 from fqml.fl.partition import dirichlet_partition, iid_partition, sites_partition
 from fqml.fl.robust import get_aggregator
-from fqml.models.mlp import MatchedMLP
-from fqml.quantum.torch_sim import TorchVQC
+from fqml.models.classical import build, is_torch
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data/interim/ciciot2023_v1/ciciot2023_clean_v1.parquet"
@@ -96,14 +95,19 @@ def splits(native, y, seed):
                                         groups={t: fam_of[t] for t in fam_of if t != "BenignTraffic"})[0]}
 
 
-def make_model(kind, n_classes):
-    if kind == "mlp":
-        return MatchedMLP(8, n_classes, target_params=64, seed=0)
-    if kind == "vqc":
-        return TorchVQC(8, n_classes, 3, seed=0)
-    if kind.startswith("mlp_p"):                       # MLP size ladder, e.g. mlp_p3000
-        return MatchedMLP(8, n_classes, target_params=int(kind[5:]), seed=0)
-    raise SystemExit(f"unknown model {kind}")
+# Names the federated runs accept besides the E0 names: "mlp" is the VQC-sized MLP of the first runs (= mlp_p64).
+ALIASES = {"mlp": "mlp_p64"}
+
+
+def make_model(kind, n_classes, **settings):
+    """Every federated model is built by the E0 model factory (fqml.models.classical.build, CLS-1), so a federated
+    `vqc` or `mlp_p64` is exactly the model E0 trains centrally: vqc, vqc_lin, vqc_noent, mlp_p<N>, mlp_large, rff,
+    logreg. Tree and scikit-learn models (lr, rf, xgb) have no weights to average: FED-5 (D12) handles them."""
+    name = ALIASES.get(kind, kind)
+    if not is_torch(name):
+        raise SystemExit(f"unknown or non-PyTorch model {kind!r} (federated models: vqc, vqc_lin, vqc_noent, "
+                         "mlp_p<N>, mlp_large, rff, logreg; trees: experiments/fed5_trees.py)")
+    return build(name, n_in=8, n_classes=n_classes, seed=0, **settings)
 
 
 def main():
@@ -112,7 +116,7 @@ def main():
     ap.add_argument("--protocol", default="A")
     ap.add_argument("--cap", type=int, default=5000, help="rows per attack type in the training sample")
     ap.add_argument("--val-cap", type=int, default=1000)
-    ap.add_argument("--model", default="mlp", help="mlp (64 parameters), mlp_p<N> e.g. mlp_p3000, vqc")
+    ap.add_argument("--model", default="mlp", help="vqc, vqc_lin, vqc_noent, mlp (= mlp_p64), mlp_p<N>, rff, logreg")
     ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--local-steps", type=int, default=50)
     ap.add_argument("--seed", type=int, default=0)

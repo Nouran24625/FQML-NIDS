@@ -31,28 +31,15 @@ from sklearn.metrics import f1_score, recall_score
 
 from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
 from experiments.fed6_zero_attacker import (EXCLUDE, exclude_tag, fit_inputs, input_features, load_block,
-                                            parse_exclude, splits)
+                                            make_model, parse_exclude, splits)
 from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
 from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import sqrt_class_weights
 from fqml.fl.robust import get_aggregator
-from fqml.models.mlp import MatchedMLP
-from fqml.quantum.torch_sim import TorchVQC
 
 ROOT = Path(__file__).resolve().parents[1]
 ATTACKS = {"none": None, "lf20": ("label_flip", None), "cs20web": ("class_suppression", "Web"),
            "cs20mirai": ("class_suppression", "Mirai")}
-
-
-def make_model(kind: str, n_classes: int):
-    if kind == "vqc":
-        return TorchVQC(8, n_classes, 3, seed=0)
-    if kind == "mlp":                                     # the VQC's parameter count (MatchedMLP)
-        return MatchedMLP(8, n_classes, target_params=sum(p.numel() for p in TorchVQC(8, n_classes, 3, seed=0)
-                                                          .parameters()), seed=0)
-    if kind.startswith("mlp_p"):
-        return MatchedMLP(8, n_classes, target_params=int(kind[5:]), seed=0)
-    raise SystemExit(f"unknown model {kind!r}: mlp_p<N>, mlp, vqc")
 
 
 def choose_malicious(parts, frac, seed, eligible=None):
@@ -92,7 +79,7 @@ def main():
     ap.add_argument("--val-cap", type=int, default=1000)
     ap.add_argument("--rounds", type=int, default=50)
     ap.add_argument("--local-steps", type=int, default=50)
-    ap.add_argument("--model", default="mlp_p3000", help="mlp_p<N>, mlp (VQC-sized) or vqc")
+    ap.add_argument("--model", default="mlp_p3000", help="mlp_p<N>, mlp (= mlp_p64), vqc, vqc_lin, vqc_noent, rff, logreg")
     ap.add_argument("--device", default="cpu", help="cpu or cuda")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--attack-seed", type=int, default=100)
