@@ -1,4 +1,4 @@
-# Federated work: first-pass results (Kareem, 24 Nov 2026; re-run without `Number` the same day)
+# Federated work: first-pass results (Kareem, 24 Nov 2026; re-run without `Number` the same day; protocol B 25 Nov)
 
 Protocol A fold 0, validation block, stand-in top-8 features (DATA-6 pending), thresholds for "caught at 1% false
 alarms" set on the same block. These are pipeline checks and first evidence, **not reported results**: those need
@@ -37,8 +37,51 @@ VQC (64 parameters) and MatchedMLP (59), 100 rounds x 50 local steps, seed 0.
   detects more (0.58 against 0.34).
 - Open point for E1: on whole-family sites the VQC under FedAvg catches 32% (29%) of attacks at 1% false alarms
   against 58% (63%) centralised; the MLP 65% (64%) against 64% (65%).
-- Not tested here: protocol B, where an attack type is missing from *every* site. That is where `Number` mattered
-  (centralised unseen detection 98% -> 52%); it is the next federated run.
+- Protocol B, where an attack type is missing from *every* site: section 1b.
+
+## 1b. Protocol B: attack types no site ever held (`results/fed4/trial_B_f0_r100*_xNumber.json`)
+
+Protocol B fold 0: the 8 validation attack types (CommandInjection, DDoS-SlowLoris, DDoS-SynonymousIP_Flood,
+DDoS-UDP_Flood, DNS_Spoofing, DoS-TCP_Flood, Mirai-udpplain, Recon-HostDiscovery) are in no site's training rows.
+Scores on those types, averaged over types (each type counts once, EVAL-1 2.4). Same settings as section 1.
+Features are re-fitted on protocol B's training rows: `Header_Length, ack_count, Tot sum, Max, AVG, Std, Tot size,
+Variance`.
+
+| Model | Split | Detected at 1% false alarms: FedAvg / local / central | Right family: FedAvg / local / central |
+|---|---|---|---|
+| MLP 3,000 | IID | 0.69 / 0.62 / 0.67 | 0.53 / 0.51 / 0.53 |
+| MLP 3,000 | Sites | 0.67 / 0.68 / 0.67 | **0.58 / 0.45** / 0.53 |
+| MLP 3,000 | Whole-family sites | 0.65 / 0.63 / 0.67 | **0.39 / 0.30** / 0.53 |
+| MLP 59 | IID | 0.64 / 0.64 / 0.64 | 0.53 / 0.50 / 0.47 |
+| MLP 59 | Sites | 0.64 / 0.63 / 0.64 | 0.42 / 0.40 / 0.47 |
+| MLP 59 | Whole-family sites | 0.64 / **0.55** / 0.64 | 0.27 / 0.30 / 0.47 |
+
+- **Detection of a never-seen type does not depend on federation**: about two thirds are flagged federated, alone
+  or pooled. "Not benign" is learnable from any attack type.
+- **Naming its family does, with enough capacity**: with the 3,000-parameter MLP, FedAvg names the family of types
+  no site held better than a site alone (0.58 against 0.45 on the sites split, 0.39 against 0.30 on whole-family
+  sites), most likely from related types of the same family held elsewhere. At the VQC's size (59 parameters) the
+  gain mostly disappears (0.42 against 0.40; 0.27 against 0.30 on whole-family sites).
+- The same pattern as protocol A: what a site gains from federation is naming families, not detecting attacks.
+- Not comparable with Checkpoint 1's 52% (XGBoost, counted over rows, test types).
+
+**The VQC under protocol B is not reported: its training was unstable at the fixed learning rate.** The centralised
+VQC caught only 12% of attacks at 1% false alarms (macro-F1 0.229), and its IID FedAvg run peaked at macro-F1 0.31
+in round 5 and fell to 0.18. A probe of the centralised VQC on the same data (`results/fed4/vqc_lr_probe_B_f0.json`,
+`experiments/fed4_vqc_lr_probe.py`, seed 0):
+
+| Learning rate | Inputs | Macro-F1 | Caught at 1% FPR |
+|---|---|---|---|
+| 0.01 (the FED-4 setting) | stand-in | 0.229 | 0.12 |
+| 0.003 | stand-in | 0.282 | 0.40 |
+| 0.001 | stand-in | 0.251 | 0.34 |
+| 0.01 | + log1p on `Variance` (DATA-6 step 1) | 0.304 | 0.35 |
+| 0.003 | + log1p on `Variance` | 0.300 | 0.43 |
+
+The collapse comes from the learning rate (0.12 -> 0.40 by lowering it) and partly from the heavy-tailed input
+(`Variance` without a log squeezes most rows into a small angle range). Both are fixed by work already planned: the
+per-fold tuning of D11 part 2 (Nouran) and DATA-6's log rule (Ganna). The federated VQC runs are repeated with both;
+until then no VQC number under protocol B is quoted.
 
 ## 2. Attacks against FedAvg and the robust aggregators (`results/fed2/attacks_A_f0_mlp_p3000_s0_xNumber.json`)
 
@@ -92,4 +135,5 @@ excludes it too.)
 - Still missing (other areas): DATA-6 features with the redundancy rule (Ganna), tuning (Nouran), EVAL-1 metrics
   (Sheghaf), the Benign share of the training sample (Benign is 3.3% of rows; Benign recall is often low, D11 part
   2, Nouran), and 5 folds x 3 seeds on the workstation.
-- Next federated run (not blocked): the unseen-type test under protocol B.
+- Done 25 Nov: the unseen-type test under protocol B (section 1b). The VQC part waits for tuned settings (D11
+  part 2) and DATA-6.
