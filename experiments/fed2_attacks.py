@@ -13,7 +13,8 @@ Scores on the clean validation block: macro-F1, recall per family, attack recall
 the same block: a first-pass shortcut) and, for class suppression, the target family's recall and the share of its
 rows called Benign. Each attacked run is compared with the same split and aggregator with no attacker.
 
-Writes results/fed2/attacks_<protocol>_f<fold>_<model>_s<seed>.json.
+Writes results/fed2/attacks_<protocol>_f<fold>_<model>_s<seed>[_xNumber].json (_xNumber: Number excluded, the
+default since 24 Nov).
 
     python -m experiments.fed2_attacks --fold 0 --rounds 50
 """
@@ -29,28 +30,16 @@ import torch
 from sklearn.metrics import f1_score, recall_score
 
 from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
-from experiments.fed6_zero_attacker import fit_inputs, load_block, splits
+from experiments.fed6_zero_attacker import (EXCLUDE, LR, exclude_tag, input_features, load_block, make_model,
+                                            parse_exclude, prepare_inputs, run_tag, splits)
 from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
 from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import sqrt_class_weights
 from fqml.fl.robust import get_aggregator
-from fqml.models.mlp import MatchedMLP
-from fqml.quantum.torch_sim import TorchVQC
 
 ROOT = Path(__file__).resolve().parents[1]
 ATTACKS = {"none": None, "lf20": ("label_flip", None), "cs20web": ("class_suppression", "Web"),
            "cs20mirai": ("class_suppression", "Mirai")}
-
-
-def make_model(kind: str, n_classes: int):
-    if kind == "vqc":
-        return TorchVQC(8, n_classes, 3, seed=0)
-    if kind == "mlp":                                     # the VQC's parameter count (MatchedMLP)
-        return MatchedMLP(8, n_classes, target_params=sum(p.numel() for p in TorchVQC(8, n_classes, 3, seed=0)
-                                                          .parameters()), seed=0)
-    if kind.startswith("mlp_p"):
-        return MatchedMLP(8, n_classes, target_params=int(kind[5:]), seed=0)
-    raise SystemExit(f"unknown model {kind!r}: mlp_p<N>, mlp, vqc")
 
 
 def choose_malicious(parts, frac, seed, eligible=None):
@@ -90,7 +79,7 @@ def main():
     ap.add_argument("--val-cap", type=int, default=1000)
     ap.add_argument("--rounds", type=int, default=50)
     ap.add_argument("--local-steps", type=int, default=50)
-    ap.add_argument("--model", default="mlp_p3000", help="mlp_p<N>, mlp (VQC-sized) or vqc")
+    ap.add_argument("--model", default="mlp_p3000", help="mlp_p<N>, mlp (= mlp_p64), vqc, vqc_lin, vqc_noent, rff, logreg")
     ap.add_argument("--device", default="cpu", help="cpu or cuda")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--attack-seed", type=int, default=100)
@@ -98,21 +87,26 @@ def main():
     ap.add_argument("--splits", default="iid,sites,sitesfam")
     ap.add_argument("--attacks", default="none,lf20,cs20web,cs20mirai")
     ap.add_argument("--aggregators", default="fedavg,median,trimmed_mean")
+    ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
+    ap.add_argument("--lr", type=float, default=LR, help="local learning rate (the VQC needs a tuned one)")
+    ap.add_argument("--features", default="auto", help="auto (DATA-6 when present, else stand-in), stand-in, data6")
     a = ap.parse_args()
+    exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
     t0 = time.perf_counter()
 
     report = json.loads(REPORT.read_text())
     fams = report["families"]
     C = len(fams)
-    feats = [c for c in report["features"] if c != "IAT"]
+    feats = input_features(report, exclude)                          # D9 and its Number addition
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", a.protocol)
     m = load_manifest(path) if path.exists() else build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=GAP)
     print(f"[data] protocol {a.protocol} fold {a.fold} ...", flush=True)
     Ftr, native, ytr = load_block(m, a.fold, "train", ranges, a.cap, feats)
     Fva, _, yva = load_block(m, a.fold, "val", ranges, a.val_cap, feats)
-    _, transform = fit_inputs(Ftr, ytr)
+    names, transform, source = prepare_inputs(m, a.fold, ranges, report, feats, exclude, Ftr, ytr,
+                                              protocol=a.protocol, source=a.features)
     Xtr, Xva = transform(Ftr), transform(Fva)
     Xva_t = torch.as_tensor(Xva, dtype=torch.float32)
     w = sqrt_class_weights(ytr, C).float()                                # clean weights (D11): attacker can't change
@@ -132,7 +126,7 @@ def main():
             y, mal, changed = poison(ytr, parts, kind, fams.index(target) if target else None, C, a.frac,
                                      a.attack_seed)
         t1 = time.perf_counter()
-        res = run_fedavg(make_model(a.model, C), Xtr, y, parts, rounds=a.rounds,
+        res = run_fedavg(make_model(a.model, C), Xtr, y, parts, rounds=a.rounds, lr=a.lr,
                          clients_per_round=min(20, len(parts)), local_steps=a.local_steps, class_weights=w,
                          seed=a.seed, aggregator=get_aggregator(agg), malicious=mal, device=a.device)
         params = {n: v.cpu() for n, v in res.params.items()}
@@ -171,10 +165,11 @@ def main():
         print(f"{r['split']:9s} {r['attack']:10s} {r['aggregator']:13s} {r['delta_macro_f1']:+7.3f} "
               + (f"{r['delta_target_recall']:+8.2f}" if "target" in r else f"{'':>8s}"))
 
-    out = ROOT / f"results/fed2/attacks_{a.protocol}_f{a.fold}_{a.model}_s{a.seed}.json"
+    out = ROOT / f"results/fed2/attacks_{a.protocol}_f{a.fold}_{a.model}_s{a.seed}{exclude_tag(exclude)}{run_tag(a.lr, source)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"task": "FED-2 attack grid (first pass)", **{k: v for k, v in vars(a).items()},
-                               "families": fams, "runs": runs}, indent=1))
+                               "families": fams, "features": names, "features_source": source,
+                               "runs": runs}, indent=1))
     print(f"\nwrote {out.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
 
 

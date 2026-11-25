@@ -1,0 +1,922 @@
+{
+ "settings": {
+  "cmd": "server",
+  "config": "default",
+  "keys": null,
+  "sites": 3,
+  "port": 9443,
+  "host": "0.0.0.0",
+  "rounds": 30,
+  "model": "mlp_p3000",
+  "split": "sites",
+  "aggregator": "fedavg",
+  "local_steps": 50,
+  "batch_size": 64,
+  "lr": 0.01,
+  "fold": 0,
+  "cap": 5000,
+  "val_cap": 1000,
+  "seed": 0,
+  "gui_port": 8050,
+  "round_delay": 1.0,
+  "keep_open": true
+ },
+ "channel": "post-quantum: ML-KEM-768 + X25519 (hybrid) -> HKDF-SHA-256 -> AES-256-GCM; signatures ML-DSA-65",
+ "families": [
+  "Benign",
+  "DDoS",
+  "DoS",
+  "Recon",
+  "Web",
+  "BruteForce",
+  "Spoofing",
+  "Mirai"
+ ],
+ "features": [
+  "Header_Length",
+  "ack_flag_number",
+  "ack_count",
+  "Tot sum",
+  "Max",
+  "AVG",
+  "Tot size",
+  "Number"
+ ],
+ "sites": [
+  "site-01",
+  "site-02",
+  "site-03"
+ ],
+ "history": [
+  {
+   "round": 1,
+   "macro_f1": 0.21044744900456933,
+   "attack_recall_at_1pct_fpr": 0.6416850434557011,
+   "recall": {
+    "Benign": 0.223,
+    "DDoS": 0.999,
+    "DoS": 0.0,
+    "Recon": 0.9205808940322214,
+    "Web": 0.08421765635583653,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5169582993944014,
+    "min": 0.4570835292327757,
+    "max": 0.631000054546057
+   },
+   "update_distance": {
+    "site-01": 5.10867166519165,
+    "site-02": 5.433228492736816,
+    "site-03": 5.551175594329834
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 2.6667779159997735
+  },
+  {
+   "round": 2,
+   "macro_f1": 0.20249507234210812,
+   "attack_recall_at_1pct_fpr": 0.6405500064859255,
+   "recall": {
+    "Benign": 0.419,
+    "DDoS": 0.999,
+    "DoS": 0.0,
+    "Recon": 0.8427501701837985,
+    "Web": 0.0501241815308196,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.49867719252155296,
+    "min": 0.4404190362198234,
+    "max": 0.6123890149988158
+   },
+   "update_distance": {
+    "site-01": 6.230165004730225,
+    "site-02": 7.051717758178711,
+    "site-03": 6.930264949798584
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.23581050200027676
+  },
+  {
+   "round": 3,
+   "macro_f1": 0.24804356759907586,
+   "attack_recall_at_1pct_fpr": 0.6408418731352964,
+   "recall": {
+    "Benign": 0.302,
+    "DDoS": 0.9989166666666667,
+    "DoS": 0.0,
+    "Recon": 0.5720444746993419,
+    "Web": 0.5412056897719576,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5455108284916087,
+    "min": 0.46492402693759677,
+    "max": 0.653217682798571
+   },
+   "update_distance": {
+    "site-01": 6.298676013946533,
+    "site-02": 6.831932544708252,
+    "site-03": 7.190938472747803
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2090004010001394
+  },
+  {
+   "round": 4,
+   "macro_f1": 0.25044792008788086,
+   "attack_recall_at_1pct_fpr": 0.6430470878194319,
+   "recall": {
+    "Benign": 0.335,
+    "DDoS": 0.9989166666666667,
+    "DoS": 0.0,
+    "Recon": 0.5352847742228273,
+    "Web": 0.5728155339805825,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5463650382846502,
+    "min": 0.4643061656927117,
+    "max": 0.6550214951924491
+   },
+   "update_distance": {
+    "site-01": 6.385257244110107,
+    "site-02": 6.046780586242676,
+    "site-03": 7.342072486877441
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.18001110099976358
+  },
+  {
+   "round": 5,
+   "macro_f1": 0.24898057516582317,
+   "attack_recall_at_1pct_fpr": 0.6431443767025554,
+   "recall": {
+    "Benign": 0.358,
+    "DDoS": 0.9983333333333333,
+    "DoS": 0.01375,
+    "Recon": 0.3796233265259814,
+    "Web": 0.6956423571912396,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.545943233084058,
+    "min": 0.4664465311030563,
+    "max": 0.6479779458819731
+   },
+   "update_distance": {
+    "site-01": 6.834801197052002,
+    "site-02": 5.931723117828369,
+    "site-03": 6.444240093231201
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.22351770100021895
+  },
+  {
+   "round": 6,
+   "macro_f1": 0.24943949593989398,
+   "attack_recall_at_1pct_fpr": 0.6435335322350499,
+   "recall": {
+    "Benign": 0.356,
+    "DDoS": 0.9983333333333333,
+    "DoS": 0.001,
+    "Recon": 0.3685046516904924,
+    "Web": 0.6909008805599458,
+    "BruteForce": 0.0,
+    "Spoofing": 0.022,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5415199081137535,
+    "min": 0.46082235910361047,
+    "max": 0.650263758455467
+   },
+   "update_distance": {
+    "site-01": 6.8967180252075195,
+    "site-02": 5.979196071624756,
+    "site-03": 6.297746181488037
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.23911040099983438
+  },
+  {
+   "round": 7,
+   "macro_f1": 0.22745471442747167,
+   "attack_recall_at_1pct_fpr": 0.6464197691010507,
+   "recall": {
+    "Benign": 0.251,
+    "DDoS": 0.9945833333333334,
+    "DoS": 0.01675,
+    "Recon": 0.855457227138643,
+    "Web": 0.17407992774892753,
+    "BruteForce": 0.0,
+    "Spoofing": 0.008,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5258588326445609,
+    "min": 0.46039424141128954,
+    "max": 0.6397477770737049
+   },
+   "update_distance": {
+    "site-01": 6.052833080291748,
+    "site-02": 5.649848937988281,
+    "site-03": 5.821302890777588
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2322496020001381
+  },
+  {
+   "round": 8,
+   "macro_f1": 0.2528129913492468,
+   "attack_recall_at_1pct_fpr": 0.6431119470748475,
+   "recall": {
+    "Benign": 0.399,
+    "DDoS": 0.9945833333333334,
+    "DoS": 0.01875,
+    "Recon": 0.3759927388245972,
+    "Web": 0.6615488823662227,
+    "BruteForce": 0.0,
+    "Spoofing": 0.02,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5384524116315165,
+    "min": 0.4590606822644441,
+    "max": 0.6469501030149984
+   },
+   "update_distance": {
+    "site-01": 5.6035590171813965,
+    "site-02": 5.708690166473389,
+    "site-03": 5.884713649749756
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.20235660100024688
+  },
+  {
+   "round": 9,
+   "macro_f1": 0.2592931887841067,
+   "attack_recall_at_1pct_fpr": 0.6527759761317941,
+   "recall": {
+    "Benign": 0.268,
+    "DDoS": 0.9940833333333333,
+    "DoS": 0.03575,
+    "Recon": 0.29339686861810754,
+    "Web": 0.8121472115601716,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0395,
+    "Mirai": 0.0
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5563982863384386,
+    "min": 0.47243417681024497,
+    "max": 0.6638935908524086
+   },
+   "update_distance": {
+    "site-01": 5.461879730224609,
+    "site-02": 5.344913005828857,
+    "site-03": 6.011812686920166
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.17083600100022522
+  },
+  {
+   "round": 10,
+   "macro_f1": 0.2686185185218945,
+   "attack_recall_at_1pct_fpr": 0.6505059021922428,
+   "recall": {
+    "Benign": 0.481,
+    "DDoS": 0.99525,
+    "DoS": 0.013,
+    "Recon": 0.39051508963013387,
+    "Web": 0.6172951004741477,
+    "BruteForce": 0.0,
+    "Spoofing": 0.085,
+    "Mirai": 0.001
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5360162604189096,
+    "min": 0.4595290785399215,
+    "max": 0.6482801094828293
+   },
+   "update_distance": {
+    "site-01": 5.692508220672607,
+    "site-02": 5.382026672363281,
+    "site-03": 5.397417068481445
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.21819070199990165
+  },
+  {
+   "round": 11,
+   "macro_f1": 0.26542204286341453,
+   "attack_recall_at_1pct_fpr": 0.6547541834219743,
+   "recall": {
+    "Benign": 0.452,
+    "DDoS": 0.99475,
+    "DoS": 0.01425,
+    "Recon": 0.3691853868845019,
+    "Web": 0.6669677128019869,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0625,
+    "Mirai": 0.002
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5417294668259802,
+    "min": 0.46419682625290903,
+    "max": 0.6498106798582712
+   },
+   "update_distance": {
+    "site-01": 4.8201823234558105,
+    "site-02": 5.159029006958008,
+    "site-03": 5.303421497344971
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.21330420200001754
+  },
+  {
+   "round": 12,
+   "macro_f1": 0.2193786815763961,
+   "attack_recall_at_1pct_fpr": 0.6569918277338176,
+   "recall": {
+    "Benign": 0.908,
+    "DDoS": 0.99375,
+    "DoS": 0.0255,
+    "Recon": 0.3893805309734513,
+    "Web": 0.08354030255136599,
+    "BruteForce": 0.0,
+    "Spoofing": 0.085,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.44381741964940363,
+    "min": 0.38852625400710683,
+    "max": 0.5503560222215532
+   },
+   "update_distance": {
+    "site-01": 4.741117477416992,
+    "site-02": 5.223936557769775,
+    "site-03": 4.92512321472168
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2857951020000655
+  },
+  {
+   "round": 13,
+   "macro_f1": 0.2281213555595185,
+   "attack_recall_at_1pct_fpr": 0.6587430276300428,
+   "recall": {
+    "Benign": 0.85,
+    "DDoS": 0.9943333333333333,
+    "DoS": 0.015,
+    "Recon": 0.4817336056274109,
+    "Web": 0.09618424023481599,
+    "BruteForce": 0.0,
+    "Spoofing": 0.098,
+    "Mirai": 0.0026666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.45961291881778416,
+    "min": 0.40230701114170647,
+    "max": 0.5684578642965102
+   },
+   "update_distance": {
+    "site-01": 4.508267402648926,
+    "site-02": 5.061453342437744,
+    "site-03": 4.74609899520874
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.19967260200019155
+  },
+  {
+   "round": 14,
+   "macro_f1": 0.2283686257129616,
+   "attack_recall_at_1pct_fpr": 0.6589376053962901,
+   "recall": {
+    "Benign": 0.917,
+    "DDoS": 0.9938333333333333,
+    "DoS": 0.02625,
+    "Recon": 0.3183571590651237,
+    "Web": 0.10092571686610974,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1405,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.43978357513029165,
+    "min": 0.38497208651955855,
+    "max": 0.545312355100455
+   },
+   "update_distance": {
+    "site-01": 4.56280517578125,
+    "site-02": 4.975105285644531,
+    "site-03": 4.687972068786621
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2224149009998655
+  },
+  {
+   "round": 15,
+   "macro_f1": 0.24683774422654953,
+   "attack_recall_at_1pct_fpr": 0.6582565832144247,
+   "recall": {
+    "Benign": 0.756,
+    "DDoS": 0.9935,
+    "DoS": 0.02175,
+    "Recon": 0.5538915361924212,
+    "Web": 0.1201174079927749,
+    "BruteForce": 0.0,
+    "Spoofing": 0.141,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.4786453510823077,
+    "min": 0.4205487335877302,
+    "max": 0.5903194947304157
+   },
+   "update_distance": {
+    "site-01": 4.323862075805664,
+    "site-02": 4.7467451095581055,
+    "site-03": 4.523417949676514
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.22148140099989178
+  },
+  {
+   "round": 16,
+   "macro_f1": 0.2397060888134873,
+   "attack_recall_at_1pct_fpr": 0.6668828641847192,
+   "recall": {
+    "Benign": 0.754,
+    "DDoS": 0.9939166666666667,
+    "DoS": 0.01775,
+    "Recon": 0.6187882913546631,
+    "Web": 0.058026642582975844,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1565,
+    "Mirai": 0.003
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.47747816655923786,
+    "min": 0.413402995599945,
+    "max": 0.5909743596743365
+   },
+   "update_distance": {
+    "site-01": 4.074495792388916,
+    "site-02": 5.03178596496582,
+    "site-03": 4.603912353515625
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.20827790199973606
+  },
+  {
+   "round": 17,
+   "macro_f1": 0.25601282781068235,
+   "attack_recall_at_1pct_fpr": 0.6658451160980672,
+   "recall": {
+    "Benign": 0.53,
+    "DDoS": 0.9875,
+    "DoS": 0.07675,
+    "Recon": 0.7905604719764012,
+    "Web": 0.08354030255136599,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1125,
+    "Mirai": 0.0033333333333333335
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5109442351271556,
+    "min": 0.45420182064743425,
+    "max": 0.619970401915629
+   },
+   "update_distance": {
+    "site-01": 3.970533847808838,
+    "site-02": 4.670401096343994,
+    "site-03": 4.562967777252197
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.21767010199982906
+  },
+  {
+   "round": 18,
+   "macro_f1": 0.23887390967705766,
+   "attack_recall_at_1pct_fpr": 0.657932286937346,
+   "recall": {
+    "Benign": 0.958,
+    "DDoS": 0.9866666666666667,
+    "DoS": 0.108,
+    "Recon": 0.23190378942591333,
+    "Web": 0.11447279295552043,
+    "BruteForce": 0.0,
+    "Spoofing": 0.13,
+    "Mirai": 0.004
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.43641520189589356,
+    "min": 0.38806864491725135,
+    "max": 0.5311161849406708
+   },
+   "update_distance": {
+    "site-01": 4.292185306549072,
+    "site-02": 4.665190696716309,
+    "site-03": 4.532581329345703
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.20226170200021443
+  },
+  {
+   "round": 19,
+   "macro_f1": 0.2426857402626752,
+   "attack_recall_at_1pct_fpr": 0.6648073680114153,
+   "recall": {
+    "Benign": 0.905,
+    "DDoS": 0.9903333333333333,
+    "DoS": 0.043,
+    "Recon": 0.3306103925572952,
+    "Web": 0.1763377737638293,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1085,
+    "Mirai": 0.004333333333333333
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.45541292084278445,
+    "min": 0.3986371468289706,
+    "max": 0.558768564543454
+   },
+   "update_distance": {
+    "site-01": 3.689901828765869,
+    "site-02": 4.711628437042236,
+    "site-03": 4.362431049346924
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2194764020000548
+  },
+  {
+   "round": 20,
+   "macro_f1": 0.2531240299468335,
+   "attack_recall_at_1pct_fpr": 0.6660721234920223,
+   "recall": {
+    "Benign": 0.692,
+    "DDoS": 0.99475,
+    "DoS": 0.02125,
+    "Recon": 0.6768776945768096,
+    "Web": 0.09889365545269813,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1565,
+    "Mirai": 0.0033333333333333335
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.495279350727669,
+    "min": 0.43515903950274987,
+    "max": 0.6097145473588115
+   },
+   "update_distance": {
+    "site-01": 3.8906898498535156,
+    "site-02": 4.5870561599731445,
+    "site-03": 4.37994909286499
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2860345030003373
+  },
+  {
+   "round": 21,
+   "macro_f1": 0.2488951069979328,
+   "attack_recall_at_1pct_fpr": 0.6677908937605397,
+   "recall": {
+    "Benign": 0.667,
+    "DDoS": 0.9931666666666666,
+    "DoS": 0.02075,
+    "Recon": 0.695257544815067,
+    "Web": 0.10476405509144276,
+    "BruteForce": 0.0,
+    "Spoofing": 0.127,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.4966072023839268,
+    "min": 0.4378917883445462,
+    "max": 0.609713793167281
+   },
+   "update_distance": {
+    "site-01": 3.736348867416382,
+    "site-02": 4.521705150604248,
+    "site-03": 4.365135669708252
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.21755370100026994
+  },
+  {
+   "round": 22,
+   "macro_f1": 0.24252816335958238,
+   "attack_recall_at_1pct_fpr": 0.6639641976910106,
+   "recall": {
+    "Benign": 0.781,
+    "DDoS": 0.9899166666666667,
+    "DoS": 0.05025,
+    "Recon": 0.5541184479237576,
+    "Web": 0.0907654097990517,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1125,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.474581060623378,
+    "min": 0.4204874545235333,
+    "max": 0.5819199608862583
+   },
+   "update_distance": {
+    "site-01": 3.7690985202789307,
+    "site-02": 4.562253952026367,
+    "site-03": 4.070831775665283
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2327470030004406
+  },
+  {
+   "round": 23,
+   "macro_f1": 0.23255135207680755,
+   "attack_recall_at_1pct_fpr": 0.6657478272149435,
+   "recall": {
+    "Benign": 0.729,
+    "DDoS": 0.9928333333333333,
+    "DoS": 0.03125,
+    "Recon": 0.6101656455638756,
+    "Web": 0.1501467599909686,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0225,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.4871072777838319,
+    "min": 0.42693908360907123,
+    "max": 0.5946484543905582
+   },
+   "update_distance": {
+    "site-01": 3.862863063812256,
+    "site-02": 4.506492614746094,
+    "site-03": 4.716850280761719
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.516849505999744
+  },
+  {
+   "round": 24,
+   "macro_f1": 0.246355907959009,
+   "attack_recall_at_1pct_fpr": 0.6639317680633027,
+   "recall": {
+    "Benign": 0.785,
+    "DDoS": 0.9820833333333333,
+    "DoS": 0.132,
+    "Recon": 0.5461765373269798,
+    "Web": 0.10160307067058026,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0425,
+    "Mirai": 0.004333333333333333
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.47801928216132633,
+    "min": 0.42586276777477877,
+    "max": 0.5760673912177615
+   },
+   "update_distance": {
+    "site-01": 3.684323310852051,
+    "site-02": 4.295281410217285,
+    "site-03": 4.272491455078125
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.3057939029999943
+  },
+  {
+   "round": 25,
+   "macro_f1": 0.2459856418874929,
+   "attack_recall_at_1pct_fpr": 0.6635101829031003,
+   "recall": {
+    "Benign": 0.716,
+    "DDoS": 0.9893333333333333,
+    "DoS": 0.0505,
+    "Recon": 0.627637848876787,
+    "Web": 0.1630164822759088,
+    "BruteForce": 0.0,
+    "Spoofing": 0.046,
+    "Mirai": 0.003
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.49409631877836874,
+    "min": 0.43469043539542107,
+    "max": 0.6009862297632232
+   },
+   "update_distance": {
+    "site-01": 3.5766046047210693,
+    "site-02": 4.589256763458252,
+    "site-03": 4.159404277801514
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.202572501999839
+  },
+  {
+   "round": 26,
+   "macro_f1": 0.24829564915809024,
+   "attack_recall_at_1pct_fpr": 0.6631858866260215,
+   "recall": {
+    "Benign": 0.839,
+    "DDoS": 0.9841666666666666,
+    "DoS": 0.1085,
+    "Recon": 0.48264125255275697,
+    "Web": 0.1054414088959133,
+    "BruteForce": 0.0,
+    "Spoofing": 0.085,
+    "Mirai": 0.0036666666666666666
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.4692317003332005,
+    "min": 0.41806756102049625,
+    "max": 0.5704588380280161
+   },
+   "update_distance": {
+    "site-01": 3.836202621459961,
+    "site-02": 4.25778865814209,
+    "site-03": 4.124608516693115
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.21556530299994847
+  },
+  {
+   "round": 27,
+   "macro_f1": 0.24104718890905405,
+   "attack_recall_at_1pct_fpr": 0.6647749383837074,
+   "recall": {
+    "Benign": 0.761,
+    "DDoS": 0.9828333333333333,
+    "DoS": 0.0865,
+    "Recon": 0.5477649194463354,
+    "Web": 0.12079476179724542,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0505,
+    "Mirai": 0.004
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.47751229565886916,
+    "min": 0.42130733260717806,
+    "max": 0.5802909796425013
+   },
+   "update_distance": {
+    "site-01": 3.878941297531128,
+    "site-02": 4.222086429595947,
+    "site-03": 3.9755942821502686
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2533376030000909
+  },
+  {
+   "round": 28,
+   "macro_f1": 0.25097693697082546,
+   "attack_recall_at_1pct_fpr": 0.6653262420547412,
+   "recall": {
+    "Benign": 0.714,
+    "DDoS": 0.9908333333333333,
+    "DoS": 0.05325,
+    "Recon": 0.6439754935330156,
+    "Web": 0.08083088733348386,
+    "BruteForce": 0.0,
+    "Spoofing": 0.138,
+    "Mirai": 0.0033333333333333335
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.4874285600073171,
+    "min": 0.42889506723580556,
+    "max": 0.5974195886889782
+   },
+   "update_distance": {
+    "site-01": 3.242649793624878,
+    "site-02": 4.353034973144531,
+    "site-03": 4.050440788269043
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.2259677020001618
+  },
+  {
+   "round": 29,
+   "macro_f1": 0.25643920339212894,
+   "attack_recall_at_1pct_fpr": 0.6636723310416397,
+   "recall": {
+    "Benign": 0.62,
+    "DDoS": 0.9876666666666667,
+    "DoS": 0.0875,
+    "Recon": 0.718856364874064,
+    "Web": 0.08399187175434636,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1115,
+    "Mirai": 0.004333333333333333
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.5010117066599183,
+    "min": 0.4453103562347284,
+    "max": 0.6084336781802904
+   },
+   "update_distance": {
+    "site-01": 3.4616549015045166,
+    "site-02": 4.334987640380859,
+    "site-03": 4.371860504150391
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.22338910200005557
+  },
+  {
+   "round": 30,
+   "macro_f1": 0.2440682479544068,
+   "attack_recall_at_1pct_fpr": 0.6533597094305358,
+   "recall": {
+    "Benign": 0.657,
+    "DDoS": 0.9823333333333333,
+    "DoS": 0.11,
+    "Recon": 0.6684819605173588,
+    "Web": 0.08083088733348386,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0545,
+    "Mirai": 0.004
+   },
+   "unseen_family_recall": {
+    "clients": 3,
+    "mean": 0.48990020087555436,
+    "min": 0.437033394650563,
+    "max": 0.5945768932515222
+   },
+   "update_distance": {
+    "site-01": 3.6885623931884766,
+    "site-02": 4.247570514678955,
+    "site-03": 4.330678462982178
+   },
+   "bytes_global": 46713,
+   "bytes_updates": 36447,
+   "seconds": 0.19893330200011405
+  }
+ ]
+}

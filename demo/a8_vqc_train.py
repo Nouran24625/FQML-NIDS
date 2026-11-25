@@ -115,7 +115,7 @@ def main():
     X, y, Xt, yt = T(Ztr), T(ytr, torch.long), T(Zte), T(yte, torch.long)
     vqc = TorchVQC(n_qubits=8, n_classes=8, n_layers=3, seed=a.seed, entangler="chain", version=2)
     n_v = sum(p.numel() for p in vqc.parameters())
-    mlp = MatchedMLP(8, 8, target_params=n_v)
+    mlp = MatchedMLP(8, 8, target_params=n_v, seed=a.seed)
     n_m = sum(p.numel() for p in mlp.parameters())
     print(f"models: VQC 8 qubits x 3 layers, CNOT chain, our GPU simulator: {n_v} parameters | "
           f"classical twin MLP 8-{mlp.hidden}-8: {n_m} parameters")

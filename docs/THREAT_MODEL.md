@@ -39,9 +39,12 @@ explains why this case is the expected one under the sites split.
 **Why federate at all?** Two reasons, both measured, never assumed.
 1. *Sites see only some attacks.* In the sites split (fold 0, 10 sites × 8 attack types) every site misses 25 of
    the 33 attack types and 2–3 of the 7 attack families; DictionaryBruteForce is held by 1 site of 10. A site
-   training alone (local-only, FED-7) can only learn what it saw. Checkpoint 1 showed a centralised model still
-   detects types unseen **inside a known family** (98.7% at 1% FPR, protocol B), so the expected gap is on whole
-   **families** a site never saw; the family-level sites split (3 families per site, 4 missing) tests exactly that.
+   training alone (local-only, FED-7) can only learn what it saw. Checkpoint 1 first reported that a centralised
+   model detects types unseen **inside a known family** as well as seen ones (98.7% at 1% FPR, protocol B); that
+   figure came mostly from the `Number` shortcut, and without it 51.9% are caught (`results/checkpoint1_no_number.json`,
+   D9 addition, 24 Nov). The federated protocol B run (`results/FED_FIRST_PASS.md` §1b) finds detection of a
+   never-seen type about the same federated, alone or pooled, and the gain of federation in naming its family; the
+   family-level sites split (3 families per site, 4 missing) tests whole families a site never saw.
    The metric is each client's recall on the attack types it never held (FED-7). Federation earns its place only
    if it raises that recall over local-only, at a cost against centralised training that is reported.
 2. *Two labs.* CICIoT2023 and CICIoMT2024 are separate campaigns (the second in a medical-IoT testbed). FED-8
