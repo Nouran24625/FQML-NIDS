@@ -156,3 +156,69 @@ def test_input_features_drop_iat_and_number_by_default():
     assert exclude_tag(("IAT",)) == "" and exclude_tag(("IAT", "Number")) == "_xNumber"
     with pytest.raises(SystemExit):
         input_features(report, ("Nmber",))
+
+
+# --- model inputs: DATA-6 when present, the stand-in otherwise -------------------------------------------------
+
+def _fake_preprocess(monkeypatch, calls):
+    """A stand-in for fqml.data.preprocess with the API of docs/specs/DATA-6_preprocessing.md §4."""
+    import sys
+    import types
+
+    class Pre:
+        top8 = ["b", "c", "d", "e", "f", "g", "h", "a"]
+
+        def transform(self, df, feature_set="top8"):
+            calls.append(("transform", list(df.columns), feature_set))
+            return np.full((len(df), 8), 1.0, dtype=np.float32)
+
+        @classmethod
+        def from_json(cls, path):
+            calls.append(("from_json", str(path)))
+            return cls()
+
+    def fit(df, y, features, exclude, **kw):
+        calls.append(("fit", list(df.columns), tuple(exclude)))
+        return Pre()
+
+    import importlib.machinery
+    mod = types.ModuleType("fqml.data.preprocess")
+    mod.__spec__ = importlib.machinery.ModuleSpec("fqml.data.preprocess", None)
+    mod.fit, mod.Preprocessor = fit, Pre
+    monkeypatch.setitem(sys.modules, "fqml.data.preprocess", mod)
+
+
+def test_prepare_inputs_falls_back_to_the_stand_in(monkeypatch):
+    import importlib.util
+
+    from experiments import fed6_zero_attacker as f6
+    real = importlib.util.find_spec
+    monkeypatch.setattr(importlib.util, "find_spec", lambda n, *a: None if n == "fqml.data.preprocess" else real(n, *a))
+    rng = np.random.default_rng(0)
+    F, y = rng.random((300, 10)), rng.integers(0, 3, 300)
+    names, tf, src = f6.prepare_inputs(None, 0, None, {"features": []}, [f"f{i}" for i in range(10)], ("IAT",), F, y,
+                                       protocol="A")
+    assert src.startswith("stand-in") and len(names) == 8
+    X = tf(F)
+    assert X.shape == (300, 8) and X.min() >= 0 and X.max() <= np.pi + 1e-9
+    with pytest.raises(SystemExit):
+        f6.prepare_inputs(None, 0, None, {"features": []}, [], (), F, y, protocol="A", source="data6")
+
+
+def test_prepare_inputs_uses_saved_data6_settings(monkeypatch, tmp_path):
+    from experiments import fed6_zero_attacker as f6
+    calls = []
+    _fake_preprocess(monkeypatch, calls)
+    monkeypatch.setattr(f6, "preprocess_path", lambda p, k: tmp_path / f"ciciot2023_{p}_f{k}.json")
+    (tmp_path / "ciciot2023_B_f2.json").write_text("{}")
+    monkeypatch.setattr(f6, "ROOT", tmp_path)
+    report = {"features": ["a", "b", "IAT", "c", "Number", "d", "e", "f", "g", "h"]}
+    feats = f6.input_features(report)
+    names, tf, src = f6.prepare_inputs(None, 2, None, report, feats, ("IAT", "Number"), None, None, protocol="B")
+    assert names == ["b", "c", "d", "e", "f", "g", "h", "a"] and src.startswith("DATA-6")
+    assert calls[0] == ("from_json", str(tmp_path / "ciciot2023_B_f2.json"))
+    X = tf(np.zeros((5, len(feats))))
+    assert X.shape == (5, 8) and X.dtype == np.float64
+    assert calls[-1] == ("transform", report["features"], "top8")      # every column, in the report's order
+    assert f6.run_tag(0.01, src) == "_d6" and f6.run_tag(0.003, "stand-in") == "_lr0.003"
+    assert f6.run_tag(f6.LR, "stand-in (DATA-6 pending)") == ""

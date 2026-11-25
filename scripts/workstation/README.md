@@ -1,36 +1,52 @@
 # Running the federated grid on the university workstation (Kareem)
 
-**Machine:** 2 GPUs, 64 CPU cores, 64 GB RAM, home quota 100 GB, scratch 200 GB; reached over the university VPN,
-so the data stays at the university. Chosen over Kaggle (1 GPU, 30 GPU-hours a week, 12-hour sessions, data
-uploaded to a third party) and Colab (sessions drop) because the grid is hundreds of small runs that need many
-cores at once (decision D2: one thread per run, runs in parallel) plus GPU time for the VQC.
+**Machine:** the CSIT compute pool, reached over the university VPN, so the data stays at the university. Jobs go
+through **Slurm**. The limits that actually apply (student QOS, checked 24 Nov) are **16 CPU threads and 1 GPU
+per user at a time, 2 days per job**. Docker isn't available; the project image runs under Singularity, through
+the `fqml` wrapper in the account's `~/bin`. The wrapper also copies the 1.5 GB parquet to each node's local disk
+on first use (the network file system reads at about 14 MB/s).
 
-## One-time setup (agree points 2 and 3 with Sheghaf, D14 owns the run environment)
-
-1. Clone the repository into scratch (not home: results and logs grow).
-2. Environment: the Docker image (`docker compose -f docker/compose.yml build dev`) if Docker is installed;
-   otherwise a Python 3.11 environment with `pip install -r requirements/lock.txt`. Never edit the lock file.
-3. GPUs: the lock file pins the **CPU build** of torch. For the VQC jobs on the GPUs, install the CUDA build of the
-   *same* torch version in the workstation environment and record it as the run's environment tag (D14).
-   Check: `python -c "import torch; print(torch.__version__, torch.cuda.device_count())"` shows 2.
-4. Data: copy `data/interim/ciciot2023_v1/ciciot2023_clean_v1.parquet` (1.5 GB) into the clone and check it against
-   `data/checksums.json` before the first run.
-
-## Run
+## Run (from the repository root on the login node)
 
 ```bash
-bash scripts/workstation/run_fed_grid.sh                 # 5 folds x 3 seeds x (mlp_p3000, mlp, vqc), 100 rounds
-CPU_JOBS=48 MODELS="mlp_p3000" bash scripts/workstation/run_fed_grid.sh   # MLP only, more parallel jobs
+git pull                                              # the repository is publicly readable
+bash scripts/workstation/make_fed_tasks.sh            # writes results/fed_tasks.txt, skips finished results
+mkdir -p results/fed_grid_logs
+sbatch --array=0-<N-1>%8 scripts/workstation/fed_grid.sbatch   # N = tasks; the script prints this line
+squeue -u $USER                                       # progress; logs in results/fed_grid_logs/
 ```
 
-Use `tmux` or `nohup` so a dropped VPN does not stop it. Finished jobs are skipped on a re-run. Each job writes
-`results/fed2/attacks_A_f<fold>_<model>_s<seed>.json` and a log in `results/fed2/logs/`.
+Defaults: protocols A and B, 5 folds, 3 seeds:
+- FED-2 attack grid: `mlp_p3000`.
+- FED-6 zero-attacker control: `mlp`, `mlp_p3000`.
+- FED-4 federated against local-only against centralised: `mlp_p3000,mlp`.
 
-Size: 3 models x 5 folds x 3 seeds = 45 jobs, each 36 runs (3 splits x 4 attack settings x 3 aggregators) =
-1,620 federated runs. On a laptop CPU the VQC part alone is over 100 hours; on the workstation the MLP jobs run 32 at
-a time and the VQC jobs share the two GPUs.
+All of these at learning rate 0.01. Options are environment variables, for example:
+
+```bash
+PROTOCOLS="B" FOLDS="0 1" bash scripts/workstation/make_fed_tasks.sh
+LR=0.003 MODELS_FED2="" MODELS_FED6="" MODELS_FED4="vqc" bash scripts/workstation/make_fed_tasks.sh   # VQC, tuned lr
+```
+
+- **`%8`** fills the 16-thread cap, since each task uses 2 threads. Use a lower number when someone else is
+  running jobs on the same account.
+- **Inputs:** DATA-6 (`fqml/data/preprocess.py`) is used as soon as it is in the checkout, and result files then
+  get `_d6` in their names. Until then the stand-in top-8 is used, with `Number` and `IAT` excluded.
+- **VQC learning rate:** the VQC must not run at the fixed 0.01. Protocol B showed it collapses
+  (`results/FED_FIRST_PASS.md` 1b), so VQC jobs use the learning rate from D11 part 2's tuning.
+
+Copy results back with `scp` (only the JSON files are small enough to bother; the laptop link runs at about
+2 MB/s).
+
+## Older runner
+
+`run_fed_grid.sh` runs the same experiments with `xargs` on a machine with Docker and no scheduler (the plan
+before the workstation was set up). It still works there; on the workstation use the Slurm path above.
 
 ## Before results are reported
-The runs above use the stand-in top-8 features and score on the validation block. Reported results need DATA-6
-(per-fold features, Ganna), EVAL-1 (shared metrics, Sheghaf) and thresholds from validation applied once to the
-test block by the runner (EXP-0); then the same grid is re-run with them.
+The grid scores on the validation block. Reported results also need:
+- EVAL-1 (shared metrics, Sheghaf);
+- thresholds from validation, applied once to the test block by the runner (EXP-0);
+- DATA-6 inputs (Ganna).
+
+The grid is re-run once those are in. Finished tasks are skipped, and `_d6` names keep the two sets apart.
