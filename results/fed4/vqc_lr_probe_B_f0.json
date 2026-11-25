@@ -1,0 +1,91 @@
+[
+ {
+  "lr": 0.01,
+  "log": false,
+  "features": [
+   "Header_Length",
+   "ack_count",
+   "Tot sum",
+   "Max",
+   "AVG",
+   "Std",
+   "Tot size",
+   "Variance"
+  ],
+  "log_applied": null,
+  "macro_f1": 0.22865818706168972,
+  "attack_recall_at_1pct_fpr": 0.11566666666666667
+ },
+ {
+  "lr": 0.003,
+  "log": false,
+  "features": [
+   "Header_Length",
+   "ack_count",
+   "Tot sum",
+   "Max",
+   "AVG",
+   "Std",
+   "Tot size",
+   "Variance"
+  ],
+  "log_applied": null,
+  "macro_f1": 0.2817479725382477,
+  "attack_recall_at_1pct_fpr": 0.4048888888888889
+ },
+ {
+  "lr": 0.001,
+  "log": false,
+  "features": [
+   "Header_Length",
+   "ack_count",
+   "Tot sum",
+   "Max",
+   "AVG",
+   "Std",
+   "Tot size",
+   "Variance"
+  ],
+  "log_applied": null,
+  "macro_f1": 0.2513439820091528,
+  "attack_recall_at_1pct_fpr": 0.3382222222222222
+ },
+ {
+  "lr": 0.01,
+  "log": true,
+  "features": [
+   "Header_Length",
+   "ack_count",
+   "Tot sum",
+   "Max",
+   "AVG",
+   "Std",
+   "Tot size",
+   "Variance"
+  ],
+  "log_applied": [
+   "Variance"
+  ],
+  "macro_f1": 0.3043246724104198,
+  "attack_recall_at_1pct_fpr": 0.35344444444444445
+ },
+ {
+  "lr": 0.003,
+  "log": true,
+  "features": [
+   "Header_Length",
+   "ack_count",
+   "Tot sum",
+   "Max",
+   "AVG",
+   "Std",
+   "Tot size",
+   "Variance"
+  ],
+  "log_applied": [
+   "Variance"
+  ],
+  "macro_f1": 0.29961252305696573,
+  "attack_recall_at_1pct_fpr": 0.42866666666666664
+ }
+]
