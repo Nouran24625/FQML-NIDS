@@ -13,7 +13,8 @@ A pipeline check on protocol A fold 0, not a reported result:
   - aggregators: fedavg, median, trimmed_mean (beta 0.2)
   - scores on the validation block: macro-F1 and recall per family (8 classes); class weights 1/sqrt(count)
 
-Writes results/fed6/zero_attacker_<protocol>_f<fold>_<model>_r<rounds>.json.
+Writes results/fed6/zero_attacker_<protocol>_f<fold>_<model>_r<rounds>[_s<seed>][_xNumber].json
+(_xNumber: Number excluded, the default since 24 Nov; files without it kept Number as a candidate input).
 
     python -m experiments.fed6_zero_attacker --fold 0 --rounds 20
 """
@@ -36,13 +37,34 @@ from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import sqrt_class_weights
 from fqml.fl.partition import dirichlet_partition, iid_partition, sites_partition
 from fqml.fl.robust import get_aggregator
-from fqml.models.mlp import MatchedMLP
-from fqml.quantum.torch_sim import TorchVQC
+from fqml.models.classical import build, is_torch
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data/interim/ciciot2023_v1/ciciot2023_clean_v1.parquet"
 AGGREGATORS = ("fedavg", "median", "trimmed_mean")
 SPLITS = ("iid", "dir0.5", "sites", "sitesfam")
+# D9 (IAT, accepted) and its proposed addition (Number: the packet-window size, a recording setting that is a
+# shortcut under protocol B, results/checkpoint1_no_number.json). Same default as the DATA-6 spec's `exclude`.
+EXCLUDE = ("IAT", "Number")
+
+
+def input_features(report, exclude=EXCLUDE):
+    """Candidate input columns: the cleaner's features minus the excluded ones (IAT is always excluded, D9)."""
+    drop = {"IAT", *exclude}
+    unknown = drop - set(report["features"])
+    if unknown:
+        raise SystemExit(f"--exclude names unknown features: {sorted(unknown)}")
+    return [c for c in report["features"] if c not in drop]
+
+
+def exclude_tag(exclude):
+    """File-name tag: empty for IAT only (the first runs' names), '_xNumber' when Number is dropped too."""
+    extra = sorted(set(exclude) - {"IAT"})
+    return "".join(f"_x{c.replace(' ', '')}" for c in extra)
+
+
+def parse_exclude(text):
+    return tuple(c.strip() for c in text.split(",") if c.strip())
 
 
 def load_block(m, fold, role, ranges, cap, feats):
@@ -73,14 +95,19 @@ def splits(native, y, seed):
                                         groups={t: fam_of[t] for t in fam_of if t != "BenignTraffic"})[0]}
 
 
-def make_model(kind, n_classes):
-    if kind == "mlp":
-        return MatchedMLP(8, n_classes, target_params=64, seed=0)
-    if kind == "vqc":
-        return TorchVQC(8, n_classes, 3, seed=0)
-    if kind.startswith("mlp_p"):                       # MLP size ladder, e.g. mlp_p3000
-        return MatchedMLP(8, n_classes, target_params=int(kind[5:]), seed=0)
-    raise SystemExit(f"unknown model {kind}")
+# Names the federated runs accept besides the E0 names: "mlp" is the VQC-sized MLP of the first runs (= mlp_p64).
+ALIASES = {"mlp": "mlp_p64"}
+
+
+def make_model(kind, n_classes, **settings):
+    """Every federated model is built by the E0 model factory (fqml.models.classical.build, CLS-1), so a federated
+    `vqc` or `mlp_p64` is exactly the model E0 trains centrally: vqc, vqc_lin, vqc_noent, mlp_p<N>, mlp_large, rff,
+    logreg. Tree and scikit-learn models (lr, rf, xgb) have no weights to average: FED-5 (D12) handles them."""
+    name = ALIASES.get(kind, kind)
+    if not is_torch(name):
+        raise SystemExit(f"unknown or non-PyTorch model {kind!r} (federated models: vqc, vqc_lin, vqc_noent, "
+                         "mlp_p<N>, mlp_large, rff, logreg; trees: experiments/fed5_trees.py)")
+    return build(name, n_in=8, n_classes=n_classes, seed=0, **settings)
 
 
 def main():
@@ -89,19 +116,21 @@ def main():
     ap.add_argument("--protocol", default="A")
     ap.add_argument("--cap", type=int, default=5000, help="rows per attack type in the training sample")
     ap.add_argument("--val-cap", type=int, default=1000)
-    ap.add_argument("--model", default="mlp", help="mlp (64 parameters), mlp_p<N> e.g. mlp_p3000, vqc")
+    ap.add_argument("--model", default="mlp", help="vqc, vqc_lin, vqc_noent, mlp (= mlp_p64), mlp_p<N>, rff, logreg")
     ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--local-steps", type=int, default=50)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--splits", default=",".join(SPLITS))
     ap.add_argument("--aggregators", default=",".join(AGGREGATORS))
+    ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
     a = ap.parse_args()
+    exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
 
     t0 = time.perf_counter()
     report = json.loads(REPORT.read_text())
     families = report["families"]
-    feats = [c for c in report["features"] if c != "IAT"]            # D9
+    feats = input_features(report, exclude)                          # D9 and its Number addition
     ranges = label_ranges_from_report(report)
     path = manifest_path("ciciot2023", a.protocol)
     if path.exists():
@@ -164,12 +193,12 @@ def main():
               " ".join(f"{d[f]:+7.2f}" for f in families))
 
     seed_tag = f"_s{a.seed}" if a.seed else ""          # seed 0 keeps the first runs' file names
-    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}.json"
+    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}{exclude_tag(exclude)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"task": "FED-6 zero-attacker control", "protocol": a.protocol, "fold": a.fold,
                                "model": a.model, "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds,
                                "local_steps": a.local_steps, "seed": a.seed, "families": families,
-                               "features": [feats[i] for i in top], "runs": runs}, indent=1))
+                               "exclude": sorted({"IAT", *exclude}), "features": [feats[i] for i in top], "runs": runs}, indent=1))
     print(f"\nwrote {out.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
 
 

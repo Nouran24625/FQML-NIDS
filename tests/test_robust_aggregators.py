@@ -143,3 +143,16 @@ def test_hooks_are_refused_where_they_do_not_apply():
         _run(attack=lambda s, c, m: s)                      # no malicious mask
     with pytest.raises(ValueError):
         _run(malicious=np.zeros(3, dtype=bool))             # wrong length
+
+
+# --- input features (D9 and its Number addition) ----------------------------------------------------------------
+
+def test_input_features_drop_iat_and_number_by_default():
+    from experiments.fed6_zero_attacker import exclude_tag, input_features, parse_exclude
+    report = {"features": ["Header_Length", "IAT", "Number", "Tot sum"]}
+    assert input_features(report) == ["Header_Length", "Tot sum"]
+    assert input_features(report, parse_exclude("IAT")) == ["Header_Length", "Number", "Tot sum"]
+    assert input_features(report, ()) == ["Header_Length", "Number", "Tot sum"]      # IAT is always out
+    assert exclude_tag(("IAT",)) == "" and exclude_tag(("IAT", "Number")) == "_xNumber"
+    with pytest.raises(SystemExit):
+        input_features(report, ("Nmber",))
