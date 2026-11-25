@@ -257,7 +257,7 @@ function sites(st){
 function render(st){
   const s = st.settings || {};
   $('sub').textContent = `${s.model || ''}${st.n_params ? ' (' + st.n_params.toLocaleString() + ' parameters)' : ''} · split: ${s.split || ''} · ` +
-    `aggregator: ${s.aggregator || ''} · ${st.channel || ''}`;
+    `aggregator: ${s.aggregator || ''} · inputs: ${st.inputs || '-'} · ${st.channel || ''}`;
   const live = st.phase === 'training';
   $('phase').classList.toggle('live', live);
   $('phaseText').textContent = st.phase;

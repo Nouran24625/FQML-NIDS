@@ -61,8 +61,14 @@ def load_sample(fold: int, cap: int, val_cap: int):
     m = load_manifest(path) if path.exists() else build_time_blocked(ranges, dataset="ciciot2023", n_folds=5, gap=GAP)
     Ftr, native_tr, ytr = load_block(m, fold, "train", ranges, cap, feats)
     Fva, native_va, yva = load_block(m, fold, "val", ranges, val_cap, feats)
-    top, transform = fit_inputs(Ftr, ytr)                                      # stand-in for DATA-6
-    return {"families": report["families"], "features": [feats[i] for i in top],
+    try:                                       # DATA-6 when it is in the checkout (same switch as the experiments)
+        from experiments.fed6_zero_attacker import prepare_inputs
+        names, transform, source = prepare_inputs(m, fold, ranges, report, feats, ("IAT", "Number"), Ftr, ytr,
+                                                  protocol="A")
+    except ImportError:                        # experiments without the switch (before #48)
+        top, transform = fit_inputs(Ftr, ytr)
+        names, source = [feats[i] for i in top], "stand-in (DATA-6 pending)"
+    return {"families": report["families"], "features": names, "features_source": source,
             "Xtr": transform(Ftr), "ytr": ytr, "native_tr": native_tr,
             "Xva": transform(Fva), "yva": yva, "native_va": native_va}
 
@@ -227,6 +233,8 @@ def cmd_server(a):
     print("[server] loading the validation block for the scores (demo shortcut: the stand-in features are fitted on "
           "the shared training sample) ...", flush=True)
     data = load_sample(a.fold, a.cap, a.val_cap)
+    print(f"[server] inputs: {', '.join(data['features'])} [{data['features_source']}]", flush=True)
+    live.update(inputs=data["features_source"])
     fams = data["families"]
     C = len(fams)
     Xva = torch.as_tensor(data["Xva"], dtype=torch.float32)

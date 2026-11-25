@@ -93,8 +93,9 @@ with `Number` as an input, before it was excluded):
 ## What to say about its limits
 
 - Demo shortcuts: every site reads the shared training sample and keeps only its own rows; sites tell the server
-  which attack types they hold so it can score unseen types (a real site would not); features are the stand-in
-  top-8 until DATA-6; scores are on the validation block, one fold, one seed.
+  which attack types they hold so it can score unseen types (a real site would not); inputs are DATA-6's top-8 as
+  soon as `fqml/data/preprocess.py` is in the checkout, the stand-in top-8 until then (the dashboard's subtitle and
+  the server window say which); scores are on the validation block, one fold, one seed.
 - The numbers are a demonstration, not results. The measured results come from the experiment scripts
   (`experiments/fed4_trial.py`, `fed6_zero_attacker.py`, `fed5_trees.py`) over folds and seeds.
 - The training code is the same reference step the experiments use (`fqml.fl.batched._local_sequential`), and the
