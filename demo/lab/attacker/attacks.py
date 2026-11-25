@@ -8,6 +8,8 @@ stable on camera.
 
     # one attack, to check it in the live view:
     python3 attacks.py one DoS --seconds 20
+    # same, but print the tool's own output so the attack is visible on screen (video):
+    python3 attacks.py one Recon --seconds 20 --show
     # a full labelled run: normal gap, then every attack with a gap between, logged:
     python3 attacks.py run --log /work/attack_log.jsonl --repeat 1
 
@@ -69,7 +71,7 @@ def brute_cmd(seconds: float, rng: random.Random, wordlist: str) -> list[str]:
     return ["hydra", "-l", "admin", "-P", wordlist, "-t", "4", "-I", f"ssh://{CAMERA}"]
 
 
-def modbus_write_burst(seconds: float, rng: random.Random, log, label_runner) -> dict:
+def modbus_write_burst(seconds: float, rng: random.Random, log, label_runner, show: bool = False) -> dict:
     """Burst of writes to the PLC setpoint register (function 6), ~3/s -- an attacker fiddling with the
     process. Uses our own Modbus client (no external tool). Logged as one run."""
     sys.path.insert(0, "/workspace")                   # repo is mounted here; fall back to vendored copy
@@ -83,8 +85,11 @@ def modbus_write_burst(seconds: float, rng: random.Random, log, label_runner) ->
     n = 0
     while time.time() - start < seconds:
         try:
-            c.write_register(1, rng.randint(200, 800))  # setpoint
+            value = rng.randint(200, 800)
+            c.write_register(1, value)                  # setpoint
             n += 1
+            if show:
+                print(f"{time.strftime('%H:%M:%S')}  write PLC {PLC} setpoint -> {value / 10:.1f} %", flush=True)
         except OSError:
             c.close()
         time.sleep(1 / 3)
@@ -95,18 +100,20 @@ def modbus_write_burst(seconds: float, rng: random.Random, log, label_runner) ->
     return entry
 
 
-def run_logged(label: str, cmd: list[str], seconds: float, log, label_runner, timeout_pad: float = 20) -> dict:
+def run_logged(label: str, cmd: list[str], seconds: float, log, label_runner, timeout_pad: float = 20,
+               show: bool = False) -> dict:
     """Run a tool, repeating it until `seconds` have passed, and append ONE log line spanning the whole
     run. Repeating matters for scans and brute force: a single pass finishes in a second or two on this
     small lab, which is too few windows to learn from; repeating gives steady, multi-window attack
-    traffic for the requested duration. One pass per run for a tool that already runs long enough."""
+    traffic for the requested duration. One pass per run for a tool that already runs long enough.
+    show=True prints the tool's own output instead of hiding it; the traffic is the same either way."""
+    out = None if show else subprocess.DEVNULL
     start = time.time()
     passes = 0
     while True:
         try:
             left = seconds - (time.time() - start)
-            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           timeout=max(left, 0) + timeout_pad)
+            subprocess.run(cmd, stdout=out, stderr=out, timeout=max(left, 0) + timeout_pad)
             passes += 1
         except subprocess.TimeoutExpired:
             passes += 1
@@ -132,6 +139,7 @@ def main(argv=None):
     one.add_argument("--log", default="/workspace/runs/lab/attack_log.jsonl")
     one.add_argument("--wordlist", default="/app/wordlist.txt")
     one.add_argument("--seed", type=int, default=0)
+    one.add_argument("--show", action="store_true", help="print the tool's output (for the video)")
 
     full = sub.add_parser("run", help="normal gap + every attack with gaps, all logged")
     full.add_argument("--log", default="/workspace/runs/lab/attack_log.jsonl")
@@ -147,15 +155,17 @@ def main(argv=None):
     from fqml.live.attack_log import append
     os.makedirs(os.path.dirname(a.log) or ".", exist_ok=True)
 
+    show = getattr(a, "show", False)
+
     def do(label: str, seconds: float, rng: random.Random) -> dict:
         if label == "DoS":
-            return run_logged("DoS", dos_cmd(seconds, rng), seconds, a.log, append)
+            return run_logged("DoS", dos_cmd(seconds, rng), seconds, a.log, append, show=show)
         if label == "Recon":
-            return run_logged("Recon", recon_cmd(seconds, rng), seconds, a.log, append)
+            return run_logged("Recon", recon_cmd(seconds, rng), seconds, a.log, append, show=show)
         if label == "BruteForce":
-            return run_logged("BruteForce", brute_cmd(seconds, rng, a.wordlist), seconds, a.log, append)
+            return run_logged("BruteForce", brute_cmd(seconds, rng, a.wordlist), seconds, a.log, append, show=show)
         if label == "ModbusWrite":
-            return modbus_write_burst(seconds, rng, a.log, append)
+            return modbus_write_burst(seconds, rng, a.log, append, show=show)
         raise ValueError(label)
 
     rng = random.Random(a.seed)

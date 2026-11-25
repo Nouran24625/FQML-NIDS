@@ -44,8 +44,9 @@ services:
   camera:
     <<: *node
     container_name: lab-camera
-    # start sshd (for the login brute-force demo) and the camera web server together
-    command: ["sh", "-c", "/usr/sbin/sshd && exec python camera.py"]
+    # start sshd (for the login brute-force demo) and the camera web server together. sshd runs in the
+    # foreground with -e so every login attempt shows in `docker logs lab-camera`.
+    command: ["sh", "-c", "/usr/sbin/sshd -D -e & exec python camera.py"]
     networks:
       lab: {ipv4_address: 10.10.0.11}
 
