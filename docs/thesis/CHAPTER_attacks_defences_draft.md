@@ -2,9 +2,10 @@
 
 **Status:** draft of sections 1–4, 25 Nov 2026. It follows `docs/thesis/OUTLINE_attacks_defences.md`.
 - **Background and method text** is meant to stay.
-- **Numbers** come from the first pass (protocol A fold 0, validation block, stand-in features, `Number` excluded;
-  `results/FED_FIRST_PASS.md`). They are marked *[first pass]* and are replaced by the 5-fold, 3-seed results on
-  DATA-6 inputs, scored on the test block, before submission.
+- **Numbers** come from the grid over 5 folds and 3 seeds (protocol A; validation block; stand-in features,
+  `Number` excluded; `results/FED_FIRST_PASS.md` §0, `results/fedgrid_25nov/`). They are marked *[grid, stand-in]*
+  and are replaced by the same grid on DATA-6 inputs, scored on the test block, before submission. A few numbers
+  that exist only for fold 0 are marked *[fold 0]*.
 - Sections 5–8 stay as in the outline until their results exist.
 
 ---
@@ -39,16 +40,16 @@ of a round at once with vectorised operations. It is checked against the one-cli
 traffic: 8 of 8 cases agree to within 1.1e-10, and every experiment repeats the check on its own data before round
 1 (Phase 0 amendment 8). Batching therefore changes the running time, never the result.
 
-*[first pass]* With the 3,000-parameter MLP, FedAvg gives a site the right family for attack types it never held
-in 49% of cases on the sites split, against 33% when the site trains alone. On whole-family sites the figures are
-34% against 0% (`results/FED_FIRST_PASS.md` §1). Detection of those types as *attacks* is about the same either
-way (59% at 1% false alarms). What a site gains from the federation is the ability to **name** the attack, not to
-**notice** it.
+*[grid, stand-in]* With the 3,000-parameter MLP, FedAvg gives a site the right family for attack types it never
+held in 53% of cases on the sites split, against 35% when the site trains alone. On whole-family sites the figures
+are 38% against 0%. FedAvg is higher in all 5 folds in both settings, and the 59-parameter MLP shows the same
+(51% against 33%; 37% against 0%). Detection of those types as *attacks* is about the same either way (55–63% at
+1% false alarms). What a site gains from the federation is the ability to **name** the attack, not to **notice** it.
 
-Under protocol B, where a type is missing from *every* site, the same holds: detection is about two-thirds
-federated, alone or pooled. With the 3,000-parameter model, FedAvg still names the family better than a site alone
-(58% against 45%), most likely because related types of the same family are held elsewhere. At the VQC's size
-(59–64 parameters) the gain mostly disappears: **the benefit of federation depends on model capacity**.
+Under protocol B, where a type is missing from *every* site, detection is again the same federated, alone or pooled
+(57–65%). The gain in naming the family mostly disappears: 45% against 39% with the 3,000-parameter model (higher
+in 4 of 5 folds), and none with the 59-parameter model. Federation passes on what *some* site has seen; it does not
+create knowledge of attack types *no* site has seen.
 
 ## 2. Threat model
 
@@ -88,8 +89,8 @@ among sites that hold the target family). They behave identically in every round
 clients are malicious, and the class weights are computed from the clean label counts, so the attacker cannot
 shift them.
 
-*[first pass]* Class suppression of Web under FedAvg cuts Web recall from 0.53 to 0.24 on IID sites and to 0.03 on
-the sites split, while macro-F1 moves by only 0.01–0.08 (`results/FED_FIRST_PASS.md` §2). The attack is nearly
+*[grid, stand-in]* Class suppression of Web under FedAvg cuts Web recall from 0.51 to 0.12 on IID sites and from
+0.44 to 0.07 on the sites split (15 runs each), while macro-F1 moves by only a few hundredths. The attack is nearly
 invisible in the headline number. This is why every result in this chapter is reported per family, never as
 macro-F1 alone.
 
@@ -110,20 +111,24 @@ discard what only that site knows. A defence is therefore judged by two numbers,
 1. what it **costs with no attacker** (the zero-attacker control);
 2. what it **saves under attack**.
 
-*[first pass]* With no attacker, median and trimmed mean cost nothing on IID sites (within 0.006 macro-F1 in all 4
-runs). On whole-family sites, median scores below FedAvg in 3 of 4 runs, and which family it loses changes from
-seed to seed (`results/FED_FIRST_PASS.md` §3). Under attack:
-- On IID sites, both robust rules stop Web suppression (Web recall 0.53 and 0.48 against 0.24 with FedAvg) and
-  label flipping (macro-F1 change −0.002 and +0.004 against −0.030).
-- On the sites split, where each site holds different attack types, **none of the three protects Web** (0.03, 0.00
-  and 0.00).
+*[grid, stand-in]* With no attacker, median and trimmed mean cost nothing on IID sites (lower than FedAvg in 0 of 30
+runs). On whole-family sites, median scores below FedAvg in 21 of 30 runs (mean −0.06 macro-F1 for the 59-parameter
+MLP, −0.03 for the 3,000-parameter one), and which family it loses changes from run to run. Under attack:
+- On IID sites, both robust rules stop Web suppression in every run (Web recall 0.39 with median and 0.29 with
+  trimmed mean, against 0.12 with FedAvg) and label flipping (macro-F1 change 0.00 and −0.02 against −0.07).
+- On the sites split, where each site holds different attack types, **none of the three protects Web** (0.07, 0.10
+  and 0.08; median better than FedAvg in 5 of 15 runs and worse in 4).
 
 The defences that work when sites look alike fail in the setting federation is meant for. The attacker's site is
 the only one that holds Web, and its poisoned update is indistinguishable from an honest site that never saw Web.
 This is the hypothesis of `docs/THREAT_MODEL.md` §3, measured.
 
-*To be added from the 5-fold, 3-seed grid (workstation):* the same tables with means and spread over folds and
-seeds; whether the whole-family cost of median holds; protocol B for the attack grid.
+**A note on reproducibility.** The same run with the same seed differs by up to 0.06 macro-F1 between the laptop and
+the workstation for the 3,000-parameter MLP (0.002 for the 59-parameter one): small floating-point differences
+between processors grow over 100 rounds of training. No single run is therefore used as evidence; every number in
+this chapter is a mean over folds and seeds, with its spread.
+
+*Still to add:* the attack grid under protocol B, and the VQC with a tuned learning rate.
 
 ---
 
