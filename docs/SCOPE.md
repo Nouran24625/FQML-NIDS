@@ -14,8 +14,8 @@ request all four approve.
 the same size; which MLP size does it equal; how far is it from XGBoost; does entanglement help
 (`vqc_lin` vs `vqc_noent`)?
 
-- **Data:** CICIoT2023 cleaned with cleaner v1 (D8); IAT dropped (D9); `Number` screened before the top-8
-  features are fixed (DATA-4, DATA-6).
+- **Data:** CICIoT2023 cleaned with cleaner v1 (D8); IAT dropped (D9); `Number` dropped too (found by DATA-4 to be
+  the packet-window size, a shortcut; D9 addition, approval at SYNC-2 on 26 Nov); top-8 features from DATA-6.
 - **Protocols:** A, time-blocked, gap 100 (primary, D8a); B, unseen attack type. Random split only as a leakage
   reference.
 - **Models (E0):** `vqc`, `vqc_lin`, `vqc_noent`, RFF, MatchedMLP, the MLP size ladder, XGBoost; LR, Random Forest
