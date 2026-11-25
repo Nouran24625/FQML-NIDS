@@ -4,13 +4,14 @@
 #   powershell -ExecutionPolicy Bypass -File demo\federated_live.ps1 -Sites 5 -Rounds 20 -Aggregator median -Split sitesfam
 #   powershell -ExecutionPolicy Bypass -File demo\federated_live.ps1 -Attacker 2 -Attack class_suppression -Target Web
 #   powershell -ExecutionPolicy Bypass -File demo\federated_live.ps1 -Scenario attack     (honest, attack, defence,
-#                                                                                         defence-cost, quantum)
+#                                                            defence-cost, quantum, quantum-shots, rff)
 # Every process runs in one container ("fqml-fed-demo"), so they talk over localhost through the PQ channel.
 # Stop: close the windows, then  docker rm -f fqml-fed-demo
 param(
     [int]$Sites = 3,
     [int]$Rounds = 30,
-    [string]$Model = "mlp_p3000",    # mlp_p3000, mlp_p512, mlp (VQC-sized), vqc, vqc_lin, vqc_noent
+    [string]$Model = "mlp_p3000",    # mlp_p3000, mlp_p512, mlp (= mlp_p64, VQC-sized), vqc, vqc_lin, vqc_noent, rff, logreg
+    [int]$Shots = 0,                 # VQC only: also score every round with this many shots (e.g. 1024)
     [string]$Split = "sites",        # iid, dir0.5, sites, sitesfam
     [string]$Aggregator = "fedavg",  # fedavg, median, trimmed_mean
     [string]$Config = "default",     # post-quantum settings: default, classical, none
@@ -20,7 +21,7 @@ param(
     [int]$AttackFrom = 10,           # the attacker behaves honestly until this round
     [double]$RoundDelay = 1.0,       # seconds between rounds, so the audience can follow the dashboard
     [string]$Data = "",              # folder holding ciciot2023_v1/ (default: data\interim of this repo or D:\FQML-NIDS)
-    [string]$Scenario = ""           # one-word presets: honest, attack, defence, defence-cost, quantum (see below)
+    [string]$Scenario = ""           # one-word presets: honest, attack, defence, defence-cost, quantum, quantum-shots, rff
 )
 $ErrorActionPreference = "Stop"
 
@@ -32,7 +33,9 @@ switch ($Scenario) {
     "defence"      { $Attacker = 2; $Attack = "class_suppression"; $Target = "Web"; $AttackFrom = 12; $Aggregator = "median" }
     "defence-cost" { $Attacker = 0; $Aggregator = "median"; $Split = "sitesfam" }      # median with no attacker
     "quantum"      { $Attacker = 0; $Model = "vqc"; $Rounds = 20 }                     # the 64-parameter VQC
-    default        { throw "unknown scenario '$Scenario': honest, attack, defence, defence-cost, quantum" }
+    "quantum-shots" { $Attacker = 0; $Model = "vqc"; $Rounds = 20; $Shots = 1024 }     # ... also measured with 1,024 shots
+    "rff"          { $Attacker = 0; $Model = "rff"; $Rounds = 20 }                     # the VQC's classical rival (Q-3)
+    default        { throw "unknown scenario '$Scenario': honest, attack, defence, defence-cost, quantum, quantum-shots, rff" }
 }
 if ($Scenario -ne "") { Write-Host "Scenario: $Scenario" -ForegroundColor Cyan }
 $repo = Split-Path -Parent $PSScriptRoot
@@ -47,7 +50,7 @@ docker rm -f fqml-fed-demo 2>$null | Out-Null
 docker compose -f docker/compose.yml run -d --name fqml-fed-demo -p 8050:8050 -p 9443:9443 -v "${Data}:/workspace/data/interim:ro" dev sleep infinity | Out-Null
 docker exec fqml-fed-demo python -m demo.federated_live keys --sites $Sites --config $Config
 
-$server = "docker exec fqml-fed-demo python -m demo.federated_live server --sites $Sites --rounds $Rounds --model $Model --split $Split --aggregator $Aggregator --config $Config --round-delay $RoundDelay --keep-open"
+$server = "docker exec fqml-fed-demo python -m demo.federated_live server --sites $Sites --rounds $Rounds --model $Model --split $Split --aggregator $Aggregator --config $Config --round-delay $RoundDelay --shots $Shots --keep-open"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$host.UI.RawUI.WindowTitle='FED SERVER'; $server"
 Start-Sleep -Seconds 3
 for ($k = 1; $k -le $Sites; $k++) {

@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 pytest.importorskip("torch")
-from demo.federated_live import label_attack, make_model, make_split  # noqa: E402
+from demo.federated_live import label_attack, make_model, make_split, shot_scorer  # noqa: E402
 
 FAMS = ["Benign", "DDoS", "DoS", "Recon", "Web", "BruteForce", "Spoofing", "Mirai"]
 
@@ -14,7 +14,7 @@ def test_size_ladder_models(kind, size):
     assert abs(sum(p.numel() for p in m.parameters()) - size) <= 0.1 * size
 
 
-@pytest.mark.parametrize("kind", ["vqc", "vqc_lin", "vqc_noent", "mlp"])
+@pytest.mark.parametrize("kind", ["vqc", "vqc_lin", "vqc_noent", "mlp", "rff", "logreg"])
 def test_project_models(kind):
     assert sum(p.numel() for p in make_model(kind, 8).parameters()) > 0
 
@@ -40,3 +40,20 @@ def test_label_attacks():
     assert list(flip) == [1, 2, 5, 5, 0]
     with pytest.raises(SystemExit):
         label_attack(y, "backdoor", FAMS, "Web")
+
+
+def test_shot_scores_are_probabilities_close_to_exact():
+    import torch
+
+    from fqml.fl.batched import predict_proba
+    exact = make_model("vqc", 8)
+    params = {n: p.detach().clone() for n, p in exact.named_parameters()}
+    X = torch.rand(400, 8) * np.pi
+    pe = predict_proba(exact, params, X)
+    with torch.no_grad():
+        ps = predict_proba(shot_scorer("vqc", 8, 1024, seed=0), params, X)
+    assert ps.shape == pe.shape and np.allclose(ps.sum(1), 1, atol=1e-5)
+    assert 0 < np.abs(ps - pe).mean() < 0.05                 # noisy, but 1,024 shots stay close
+    with torch.no_grad():                                    # fixed shot seed: the same scores every run
+        again = predict_proba(shot_scorer("vqc", 8, 1024, seed=0), params, X)
+    assert np.array_equal(ps, again)

@@ -20,6 +20,8 @@ One-word presets (`-Scenario`), in the order to show them:
 | `defence` | the same attack against median aggregation |
 | `defence-cost` | median with **no** attacker on whole-family sites: the defence itself can cost detection |
 | `quantum` | the 64-parameter VQC as the shared model (slower per round) |
+| `quantum-shots` | the same VQC, also **measured with 1,024 shots** every round, as a quantum computer would: a second, dashed line on the macro-F1 chart |
+| `rff` | random Fourier features (Q-3), the classical model of the VQC's own function class: its rival in E0 |
 
 Opens the **dashboard in the browser (http://localhost:8050)**, a server window and 3 site windows (defaults:
 3000-parameter MLP, sites split, FedAvg, 30 rounds, one second between rounds). The dashboard shows the server and
@@ -36,7 +38,8 @@ Options:
 | `-Attack class_suppression -Target Web` | or `label_flip`; any family | which attack |
 | `-Aggregator median` | `fedavg`, `median`, `trimmed_mean` | robust aggregation (FED-6) |
 | `-Split sitesfam` | `iid`, `dir0.5`, `sites`, `sitesfam` | how attack types are spread over sites (FED-3) |
-| `-Model vqc` | `mlp_p3000`, `mlp_p512`, `mlp`, `vqc`, `vqc_lin`, `vqc_noent` | quantum or classical model |
+| `-Model vqc` | `mlp_p3000`, `mlp_p512`, `mlp` (= `mlp_p64`), `vqc`, `vqc_lin`, `vqc_noent`, `rff`, `logreg` | quantum or classical model, built by the E0 model factory (`fqml.models.classical.build`), so it is the same model E0 trains |
+| `-Shots 1024` | VQC models only (0 = off) | also score every round with that many measurements per circuit (Q-1); training stays exact (E5) |
 | `-Config classical` | `default`, `classical`, `none` | post-quantum, today's crypto, or none |
 
 Sites on other laptops (same network): on the server laptop run the server with the default `--host 0.0.0.0`; on each
@@ -74,6 +77,18 @@ with `Number` as an input, before it was excluded):
 | Web recall | 0.64 | 0.12 |
 | Benign recall | 0.39 | 0.75 (Web now called Benign) |
 | Macro-F1 | 0.279 | 0.216 |
+
+4. **The quantum model** (`-Scenario quantum-shots`). The 64-parameter VQC is trained exactly (state-vector
+   simulation, as E0 does, E5) and scored twice each round: exactly, and as hardware would measure it with 1,024
+   shots per circuit. Measured on 25 Nov (3 sites, sites split, 10 rounds): macro-F1 with shots stays within 0.005
+   of the exact value every round (0.222 exact, 0.225 with shots at round 10), so the two lines overlap; attacks
+   caught at 1% false alarms lose up to 6 points with shots (0.47 against 0.41 at round 8), because shot noise
+   widens the tail of the benign scores that sets the alarm threshold. Then `-Scenario rff`: the classical model
+   that builds the same kind of function as the circuit. If the VQC cannot beat it, the circuit adds nothing a cheap
+   classical model cannot do; that comparison is E0's (Nouran), not the demo's. Measured on 25 Nov (same setting, 10 rounds): RFF reaches
+   macro-F1 0.46 and catches 64% of attacks at 1% false alarms, against 0.22 and 55% for the VQC. RFF has 4,104
+   trainable weights (256 frequency pairs x 8 classes + 8) against the VQC's 64, so this is not a same-size
+   comparison: say "the VQC's function class, built classically", not "RFF beats the VQC".
 
 ## What to say about its limits
 

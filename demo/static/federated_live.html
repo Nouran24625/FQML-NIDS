@@ -9,7 +9,7 @@
   color-scheme:dark;
   --bg:#121211; --surface-1:#1a1a19; --surface-2:#222220; --grid:#2c2c2a; --border:rgba(255,255,255,0.10);
   --text-primary:#f0efec; --text-secondary:#c3c2b7; --muted:#898781;
-  --series-1:#3987e5; --good:#0ca30c; --warning:#fab219; --critical:#d03b3b;
+  --series-1:#3987e5; --series-2:#e08a2c; --good:#0ca30c; --warning:#fab219; --critical:#d03b3b;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text-primary);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
@@ -86,7 +86,7 @@ th{color:var(--muted);font-weight:600}
   <div class="kpis">
     <div class="kpi"><div class="l">Round</div><div class="v" id="kRound">0</div><div class="n" id="kRoundN">&nbsp;</div></div>
     <div class="kpi"><div class="l">Macro-F1, 8 families</div><div class="v" id="kF1">-</div><div class="n" id="kF1N">&nbsp;</div></div>
-    <div class="kpi"><div class="l">Attacks caught at 1% false alarms</div><div class="v" id="kAtt">-</div><div class="n">share of attack rows flagged</div></div>
+    <div class="kpi"><div class="l">Attacks caught at 1% false alarms</div><div class="v" id="kAtt">-</div><div class="n" id="kAttN">share of attack rows flagged</div></div>
     <div class="kpi"><div class="l">Unseen attack types, right family</div><div class="v" id="kUn">-</div><div class="n">types a site never had in its data</div></div>
     <div class="kpi"><div class="l">Encrypted data on the wire</div><div class="v" id="kBytes">0</div><div class="n" id="kBytesN">every model signed and encrypted</div></div>
   </div>
@@ -100,6 +100,8 @@ th{color:var(--muted);font-weight:600}
     <div class="card">
       <h2>Macro-F1 of the shared model</h2>
       <div class="hint">Validation block, after each round's aggregation. Hover for values.</div>
+      <div class="hint" id="f1legend" style="display:none"><span style="color:var(--series-1)">&#9473;&#9473;</span> exact simulation
+        &nbsp; <span style="color:var(--series-2)">&#9476;&#9476;</span> <span id="f1legendShots"></span></div>
       <svg id="f1chart" viewBox="0 0 460 230" width="100%" role="img" aria-label="Macro-F1 over rounds"></svg>
     </div>
   </div>
@@ -157,6 +159,11 @@ function lineChart(svg, values, rounds, opts){
     const step = Math.max(1, Math.ceil(n / 6));
     for (let i = 0; i < n; i += step) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${i + 1}</text>`;
   }
+  const v2 = opts.values2 || [];
+  if (v2.length){
+    const d2 = v2.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+    g += `<path d="${d2}" fill="none" stroke="var(--series-2)" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round"/>`;
+  }
   if (values.length){
     const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
     g += `<path d="${d}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
@@ -175,7 +182,8 @@ function lineChart(svg, values, rounds, opts){
     const i = Math.max(0, Math.min(values.length - 1, Math.round((q.x - L) / (W - L - R) * (n - 1))));
     xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
     xd.setAttribute('cx', x(i)); xd.setAttribute('cy', y(values[i])); xd.setAttribute('visibility', 'visible');
-    showTip(e, `${opts.label}: round ${i + 1}<br><b>${fmt(values[i])}</b>`);
+    showTip(e, `${opts.label}: round ${i + 1}<br><b>${fmt(values[i])}</b>` +
+      (v2[i] !== undefined ? `<br>${opts.label2}: <b>${fmt(v2[i])}</b>` : ''));
   };
   hit.onmouseleave = () => { xh.setAttribute('visibility', 'hidden'); xd.setAttribute('visibility', 'hidden'); hideTip(); };
 }
@@ -257,21 +265,29 @@ function render(st){
   $('kRound').textContent = `${st.round || 0} / ${st.rounds || 0}`;
   $('kRoundN').textContent = `${Object.keys(st.sites).length} sites connected`;
   $('kF1').textContent = last ? fmt(last.macro_f1) : '-';
-  $('kF1N').textContent = h.length > 1 ? `best so far ${fmt(Math.max(...h.map(e => e.macro_f1)))}` : ' ';
+  $('kF1N').textContent = last && last.shots ? `with ${last.shots.n.toLocaleString()} shots: ${fmt(last.shots.macro_f1)}` :
+    (h.length > 1 ? `best so far ${fmt(Math.max(...h.map(e => e.macro_f1)))}` : ' ');
   $('kAtt').textContent = last ? pct(last.attack_recall_at_1pct_fpr) : '-';
+  $('kAttN').textContent = last && last.shots ? `with ${last.shots.n.toLocaleString()} shots: ${pct(last.shots.attack_recall_at_1pct_fpr)}` :
+    'share of attack rows flagged';
   $('kUn').textContent = last ? pct(last.unseen_family_recall.mean) : '-';
   const bytes = Object.values(st.sites).reduce((a, x) => a + (x.bytes_in || 0) + (x.bytes_out || 0), 0);
   $('kBytes').textContent = kb(bytes);
   network(st);
-  lineChart($('f1chart'), h.map(e => e.macro_f1), st.rounds, {w: 460, h: 230, label: 'Macro-F1'});
+  const shotVals = h.filter(e => e.shots).map(e => e.shots.macro_f1);
+  $('f1legend').style.display = st.shots ? 'block' : 'none';
+  if (st.shots) $('f1legendShots').textContent = `measured with ${st.shots.toLocaleString()} shots, as a quantum computer would`;
+  lineChart($('f1chart'), h.map(e => e.macro_f1), st.rounds, {w: 460, h: 230, label: 'Macro-F1 (exact)',
+    values2: shotVals, label2: `with ${(st.shots || 0).toLocaleString()} shots`});
   families(st);
   sites(st);
   $('log').innerHTML = st.events.slice().reverse().map(e =>
     `<div><time>${new Date(e.t * 1000).toLocaleTimeString()}</time>${esc(e.text)}</div>`).join('');
   if ($('table').closest('details').open || !$('table').innerHTML){
     const fams = st.families;
-    $('table').innerHTML = `<table><tr><th>Round</th><th>Macro-F1</th><th>Caught @1%</th>${fams.map(f => `<th>${esc(f)}</th>`).join('')}</tr>` +
-      h.map(e => `<tr><td>${e.round}</td><td>${fmt(e.macro_f1)}</td><td>${pct(e.attack_recall_at_1pct_fpr)}</td>` +
+    const sh = st.shots ? '<th>Macro-F1, shots</th>' : '';
+    $('table').innerHTML = `<table><tr><th>Round</th><th>Macro-F1</th>${sh}<th>Caught @1%</th>${fams.map(f => `<th>${esc(f)}</th>`).join('')}</tr>` +
+      h.map(e => `<tr><td>${e.round}</td><td>${fmt(e.macro_f1)}</td>${st.shots ? `<td>${fmt(e.shots && e.shots.macro_f1)}</td>` : ''}<td>${pct(e.attack_recall_at_1pct_fpr)}</td>` +
         fams.map(f => `<td>${pct(e.recall[f])}</td>`).join('') + '</tr>').join('') + '</table>';
   }
 }

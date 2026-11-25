@@ -67,17 +67,23 @@ def load_sample(fold: int, cap: int, val_cap: int):
             "Xva": transform(Fva), "yva": yva, "native_va": native_va}
 
 
-def make_model(kind: str, n_classes: int):
-    from experiments.fed4_trial import make_model as fed4_model
-    from fqml.quantum.torch_sim import TorchVQC
-    if kind == "vqc_lin":
-        return TorchVQC(8, n_classes, 3, seed=0, readout="linear")
-    if kind == "vqc_noent":
-        return TorchVQC(8, n_classes, 3, seed=0, entangler="none", readout="linear")
-    if kind.startswith("mlp_p"):                                               # size ladder, e.g. mlp_p512, mlp_p3000
-        from fqml.models.mlp import MatchedMLP
-        return MatchedMLP(8, n_classes, target_params=int(kind[5:]), seed=0)
-    return fed4_model(kind, n_classes)                                         # "vqc", "mlp" (VQC-sized)
+def make_model(kind: str, n_classes: int, **settings):
+    """The E0 model factory (fqml.models.classical.build, CLS-1) through the federated runs' make_model: vqc, vqc_lin,
+    vqc_noent, mlp_p<N> (mlp = mlp_p64, the VQC's size), mlp_large, rff (the VQC's classical rival), logreg."""
+    from experiments.fed6_zero_attacker import make_model as fed_model
+    return fed_model(kind, n_classes, **settings)
+
+
+def is_vqc(kind: str) -> bool:
+    return kind in ("vqc", "vqc_lin", "vqc_noent")
+
+
+def shot_scorer(kind: str, n_classes: int, shots: int, seed: int):
+    """Scores the global VQC as a quantum computer would: every <Z> estimated from `shots` measurements (Q-1,
+    INTERFACES 2.4.0). Training stays exact (E5); only the scores are measured with shots. Fixed shot seed per run."""
+    model = make_model(kind, n_classes, shots=shots).eval()
+    model.shot_generator = torch.Generator().manual_seed(10_000 + seed)
+    return model
 
 
 def make_split(name: str, native, y, n_sites: int, seed: int):
@@ -228,9 +234,13 @@ def cmd_server(a):
     model = make_model(a.model, C)
     gparams = {n: p.detach().clone() for n, p in model.named_parameters()}
     n_par = sum(v.numel() for v in gparams.values())
+    if a.shots and not is_vqc(a.model):
+        raise SystemExit(f"--shots applies to the VQC models (vqc, vqc_lin, vqc_noent), not {a.model}")
+    shot_model = shot_scorer(a.model, C, a.shots, a.seed) if a.shots else None
     print(f"[server] model {a.model} ({n_par} parameters), split {a.split}, aggregator {a.aggregator}, "
-          f"{a.rounds} rounds x {a.local_steps} local steps", flush=True)
-    live.update(phase=f"waiting for {a.sites} sites", families=fams, n_params=n_par)
+          f"{a.rounds} rounds x {a.local_steps} local steps"
+          + (f"; also scored with {a.shots:,} shots per circuit each round" if a.shots else ""), flush=True)
+    live.update(phase=f"waiting for {a.sites} sites", families=fams, n_params=n_par, shots=a.shots or 0)
 
     links = []
     with Listener(cfg, me, trust, a.host, a.port, timeout=TIMEOUT) as lst:
@@ -304,6 +314,13 @@ def cmd_server(a):
                  "update_distance": dict(zip([l.peer for l in links], dist)),
                  "bytes_global": int(sum(sent)), "bytes_updates": int(sum(m.encoded_bytes for m in msgs)),
                  "seconds": time.perf_counter() - t0}
+        if shot_model is not None:                     # the same weights, measured as on hardware
+            with torch.no_grad():
+                sp = predict_proba(shot_model, gparams, Xva)
+            satt = 1 - sp[:, 0]
+            sthr = float(np.quantile(satt[yva == 0], 0.99))
+            entry["shots"] = {"n": a.shots, "macro_f1": float(f1_score(yva, sp.argmax(1), average="macro")),
+                              "attack_recall_at_1pct_fpr": float((satt[yva != 0] > sthr).mean())}
         history.append(entry)
         for link, d in zip(links, dist):
             live.site(link.peer, distance=d)
@@ -315,6 +332,9 @@ def cmd_server(a):
               f"   unseen-type family {unseen['mean']:.2f} | update distance " +
               " ".join(f"{l.peer[-2:]}:{d:.2f}" for l, d in zip(links, dist)) +
               f" | {entry['bytes_global'] + entry['bytes_updates']:,} B, {entry['seconds']:.1f}s", flush=True)
+        if "shots" in entry:
+            print(f"      with {a.shots:,} shots: macro-F1 {entry['shots']['macro_f1']:.3f} "
+                  f"(exact {f1:.3f}), caught @1% {entry['shots']['attack_recall_at_1pct_fpr']:.2f}", flush=True)
         live.event(f"Round {r + 1}: {len(msgs)} signed updates verified and combined ({a.aggregator}); "
                    f"macro-F1 {f1:.3f}")
         if a.round_delay:
@@ -434,7 +454,10 @@ def main(argv=None):
     s = sub.choices["server"]
     s.add_argument("--host", default="0.0.0.0", help="0.0.0.0 accepts sites from other machines")
     s.add_argument("--rounds", type=int, default=10)
-    s.add_argument("--model", default="mlp", help="mlp (VQC-sized), mlp_p512, mlp_p3000, vqc, vqc_lin, vqc_noent")
+    s.add_argument("--model", default="mlp", help="mlp (= mlp_p64, VQC-sized), mlp_p<N> e.g. mlp_p3000, vqc, vqc_lin, "
+                   "vqc_noent, rff (the VQC's classical rival), logreg, mlp_large")
+    s.add_argument("--shots", type=int, default=0, help="VQC only: also score each round with this many shots per "
+                   "circuit, as a quantum computer measures (0: exact only); e.g. 1024")
     s.add_argument("--split", default="sites", help="iid, dir0.5, sites, sitesfam")
     s.add_argument("--aggregator", default="fedavg", help="fedavg, median, trimmed_mean, trimmed_mean0.1")
     s.add_argument("--local-steps", type=int, default=50)
