@@ -1,0 +1,1004 @@
+{
+ "task": "FED-4 federated trial run (pipeline check)",
+ "protocol": "B",
+ "fold": 4,
+ "cap": 5000,
+ "val_cap": 1000,
+ "rounds": 100,
+ "local_steps": 50,
+ "seed": 0,
+ "families": [
+  "Benign",
+  "DDoS",
+  "DoS",
+  "Recon",
+  "Web",
+  "BruteForce",
+  "Spoofing",
+  "Mirai"
+ ],
+ "exclude": [
+  "IAT",
+  "Number"
+ ],
+ "features": [
+  "Header_Length",
+  "ack_flag_number",
+  "ack_count",
+  "TCP",
+  "Tot sum",
+  "Max",
+  "AVG",
+  "Tot size"
+ ],
+ "features_source": "stand-in (DATA-6 pending)",
+ "eval1": false,
+ "runs": [
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "iid",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.3772631333286006,
+    "recall": {
+     "Benign": 0.401,
+     "DDoS": 0.5046666666666667,
+     "DoS": 0.002,
+     "Recon": 0.077,
+     "Web": 0.6525,
+     "BruteForce": 0.088,
+     "Spoofing": 0.431,
+     "Mirai": 0.993
+    },
+    "attack_recall_at_1pct_fpr": 0.5514,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6065555555555556,
+      "min": 0.6065555555555556,
+      "max": 0.6065555555555556
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.4802222222222221,
+      "min": 0.4802222222222221,
+      "max": 0.4802222222222221
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6065555555555556,
+      "min": 0.6065555555555556,
+      "max": 0.6065555555555556
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.4802222222222221,
+      "min": 0.4802222222222221,
+      "max": 0.4802222222222221
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 21.83735263394192
+   },
+   "local": {
+    "macro_f1_mean": 0.34516660458275483,
+    "macro_f1_min": 0.2720188078758093,
+    "macro_f1_max": 0.4074142852222492,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5542755555555554,
+      "min": 0.0,
+      "max": 0.6104444444444445
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.43040444444444437,
+      "min": 0.31722222222222224,
+      "max": 0.5912222222222223
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5542755555555554,
+      "min": 0.0,
+      "max": 0.6104444444444445
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.43040444444444437,
+      "min": 0.31722222222222224,
+      "max": 0.5912222222222223
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 38.19436268508434
+   },
+   "central": {
+    "macro_f1": 0.3638807320045975,
+    "recall": {
+     "Benign": 0.348,
+     "DDoS": 0.513,
+     "DoS": 0.002,
+     "Recon": 0.102,
+     "Web": 0.714,
+     "BruteForce": 0.031,
+     "Spoofing": 0.345,
+     "Mirai": 0.991
+    },
+    "attack_recall_at_1pct_fpr": 0.5496,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6032222222222221,
+      "min": 0.6032222222222222,
+      "max": 0.6032222222222222
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.4896666666666667,
+      "min": 0.4896666666666667,
+      "max": 0.4896666666666667
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6032222222222221,
+      "min": 0.6032222222222222,
+      "max": 0.6032222222222222
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.4896666666666667,
+      "min": 0.4896666666666667,
+      "max": 0.4896666666666667
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 8.3427334621083
+   }
+  },
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "sites",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.3132617623770919,
+    "recall": {
+     "Benign": 0.8,
+     "DDoS": 0.4196666666666667,
+     "DoS": 0.001,
+     "Recon": 0.083,
+     "Web": 0.4705,
+     "BruteForce": 0.0,
+     "Spoofing": 0.052,
+     "Mirai": 0.986
+    },
+    "attack_recall_at_1pct_fpr": 0.5446,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5721333333333334,
+      "min": 0.5446,
+      "max": 0.5996666666666667
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.3506555555555555,
+      "min": 0.3322,
+      "max": 0.3691111111111111
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5996666666666667,
+      "min": 0.5996666666666667,
+      "max": 0.5996666666666667
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.3691111111111111,
+      "min": 0.3691111111111111,
+      "max": 0.3691111111111111
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 14.196082873037085
+   },
+   "local": {
+    "macro_f1_mean": 0.2113491134823741,
+    "macro_f1_min": 0.13199601377889278,
+    "macro_f1_max": 0.350858616463187,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5162699999999999,
+      "min": 0.3214,
+      "max": 0.5996666666666666
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.3204755555555555,
+      "min": 0.13922222222222222,
+      "max": 0.5152222222222221
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5390111111111111,
+      "min": 0.3552222222222222,
+      "max": 0.5996666666666666
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.3372111111111111,
+      "min": 0.13922222222222222,
+      "max": 0.5152222222222221
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 13.01470132614486
+   },
+   "central": {
+    "macro_f1": 0.3638807320045975,
+    "recall": {
+     "Benign": 0.348,
+     "DDoS": 0.513,
+     "DoS": 0.002,
+     "Recon": 0.102,
+     "Web": 0.714,
+     "BruteForce": 0.031,
+     "Spoofing": 0.345,
+     "Mirai": 0.991
+    },
+    "attack_recall_at_1pct_fpr": 0.5496,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5764111111111111,
+      "min": 0.5496,
+      "max": 0.6032222222222222
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.46673333333333344,
+      "min": 0.4438000000000001,
+      "max": 0.4896666666666667
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6032222222222223,
+      "min": 0.6032222222222222,
+      "max": 0.6032222222222222
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.48966666666666664,
+      "min": 0.4896666666666667,
+      "max": 0.4896666666666667
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 7.797302961116657
+   }
+  },
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "sitesfam",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.30359680518870424,
+    "recall": {
+     "Benign": 0.953,
+     "DDoS": 0.9456666666666667,
+     "DoS": 0.0,
+     "Recon": 0.02,
+     "Web": 0.0,
+     "BruteForce": 0.091,
+     "Spoofing": 0.172,
+     "Mirai": 0.996
+    },
+    "attack_recall_at_1pct_fpr": 0.5422,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5690999999999999,
+      "min": 0.5422,
+      "max": 0.5959999999999999
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.4294111111111111,
+      "min": 0.41159999999999997,
+      "max": 0.4472222222222222
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5959999999999999,
+      "min": 0.5959999999999999,
+      "max": 0.5959999999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.44722222222222213,
+      "min": 0.4472222222222222,
+      "max": 0.4472222222222222
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 14.228934499202296
+   },
+   "local": {
+    "macro_f1_mean": 0.19482152388384294,
+    "macro_f1_min": 0.11499369827274723,
+    "macro_f1_max": 0.30813150835826214,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5460933333333333,
+      "min": 0.5001111111111112,
+      "max": 0.5994444444444444
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.2941477777777778,
+      "min": 0.06322222222222224,
+      "max": 0.46749999999999997
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5725666666666667,
+      "min": 0.5001111111111112,
+      "max": 0.604
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.31305555555555553,
+      "min": 0.06322222222222224,
+      "max": 0.5194444444444444
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 13.208129388978705
+   },
+   "central": {
+    "macro_f1": 0.3638807320045975,
+    "recall": {
+     "Benign": 0.348,
+     "DDoS": 0.513,
+     "DoS": 0.002,
+     "Recon": 0.102,
+     "Web": 0.714,
+     "BruteForce": 0.031,
+     "Spoofing": 0.345,
+     "Mirai": 0.991
+    },
+    "attack_recall_at_1pct_fpr": 0.5496,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5764111111111111,
+      "min": 0.5496,
+      "max": 0.6032222222222222
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.46673333333333333,
+      "min": 0.4438000000000001,
+      "max": 0.4896666666666667
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6032222222222223,
+      "min": 0.6032222222222222,
+      "max": 0.6032222222222222
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.48966666666666664,
+      "min": 0.4896666666666667,
+      "max": 0.4896666666666667
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 7.825295827817172
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "iid",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 6.661338147750939e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.34124906047048836,
+    "recall": {
+     "Benign": 0.269,
+     "DDoS": 0.4633333333333333,
+     "DoS": 0.004,
+     "Recon": 0.26,
+     "Web": 0.6305,
+     "BruteForce": 0.0,
+     "Spoofing": 0.244,
+     "Mirai": 0.974
+    },
+    "attack_recall_at_1pct_fpr": 0.5487,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6027777777777779,
+      "min": 0.6027777777777779,
+      "max": 0.6027777777777779
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.4592222222222223,
+      "min": 0.4592222222222222,
+      "max": 0.4592222222222222
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6027777777777779,
+      "min": 0.6027777777777779,
+      "max": 0.6027777777777779
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.4592222222222223,
+      "min": 0.4592222222222222,
+      "max": 0.4592222222222222
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 11.379287904128432
+   },
+   "local": {
+    "macro_f1_mean": 0.30895999096592974,
+    "macro_f1_min": 0.20132351892078848,
+    "macro_f1_max": 0.38778138466410406,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5832866666666666,
+      "min": 0.36233333333333334,
+      "max": 0.6016666666666667
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.41586888888888884,
+      "min": 0.24655555555555553,
+      "max": 0.6008888888888888
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5832866666666666,
+      "min": 0.36233333333333334,
+      "max": 0.6016666666666667
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.41586888888888884,
+      "min": 0.24655555555555553,
+      "max": 0.6008888888888888
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 14.67204857384786
+   },
+   "central": {
+    "macro_f1": 0.3053840474580929,
+    "recall": {
+     "Benign": 0.254,
+     "DDoS": 0.49933333333333335,
+     "DoS": 0.003,
+     "Recon": 0.226,
+     "Web": 0.727,
+     "BruteForce": 0.0,
+     "Spoofing": 0.007,
+     "Mirai": 0.984
+    },
+    "attack_recall_at_1pct_fpr": 0.5363,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5893333333333333,
+      "min": 0.5893333333333333,
+      "max": 0.5893333333333333
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.46355555555555555,
+      "min": 0.4635555555555555,
+      "max": 0.4635555555555555
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5893333333333333,
+      "min": 0.5893333333333333,
+      "max": 0.5893333333333333
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.46355555555555555,
+      "min": 0.4635555555555555,
+      "max": 0.4635555555555555
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 7.086402158951387
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "sites",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 5.551115123125783e-17,
+    "max_logit_diff": 8.881784197001252e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.30646092132143776,
+    "recall": {
+     "Benign": 0.594,
+     "DDoS": 0.37466666666666665,
+     "DoS": 0.008,
+     "Recon": 0.408,
+     "Web": 0.369,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.957
+    },
+    "attack_recall_at_1pct_fpr": 0.5232,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5495444444444445,
+      "min": 0.5232,
+      "max": 0.575888888888889
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.34147222222222223,
+      "min": 0.32349999999999995,
+      "max": 0.35944444444444446
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5758888888888889,
+      "min": 0.575888888888889,
+      "max": 0.575888888888889
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.3594444444444445,
+      "min": 0.35944444444444446,
+      "max": 0.35944444444444446
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 9.084813110996038
+   },
+   "local": {
+    "macro_f1_mean": 0.19487442643688385,
+    "macro_f1_min": 0.04125161171486461,
+    "macro_f1_max": 0.32924192896955407,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.48532777777777786,
+      "min": 0.33059999999999995,
+      "max": 0.5892222222222222
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.33705,
+      "min": 0.11222222222222222,
+      "max": 0.5407777777777777
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5090888888888888,
+      "min": 0.34077777777777774,
+      "max": 0.5892222222222222
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.35375555555555555,
+      "min": 0.11222222222222222,
+      "max": 0.5407777777777777
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 8.724303844152018
+   },
+   "central": {
+    "macro_f1": 0.3053840474580929,
+    "recall": {
+     "Benign": 0.254,
+     "DDoS": 0.49933333333333335,
+     "DoS": 0.003,
+     "Recon": 0.226,
+     "Web": 0.727,
+     "BruteForce": 0.0,
+     "Spoofing": 0.007,
+     "Mirai": 0.984
+    },
+    "attack_recall_at_1pct_fpr": 0.5363,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5628166666666665,
+      "min": 0.5363,
+      "max": 0.5893333333333333
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.4403777777777777,
+      "min": 0.41719999999999996,
+      "max": 0.4635555555555555
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5893333333333333,
+      "min": 0.5893333333333333,
+      "max": 0.5893333333333333
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.46355555555555555,
+      "min": 0.4635555555555555,
+      "max": 0.4635555555555555
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 6.713828735984862
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "sitesfam",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 4.440892098500626e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.2615412667919822,
+    "recall": {
+     "Benign": 0.003,
+     "DDoS": 0.8003333333333333,
+     "DoS": 0.0,
+     "Recon": 0.011,
+     "Web": 0.0,
+     "BruteForce": 0.928,
+     "Spoofing": 0.043,
+     "Mirai": 0.962
+    },
+    "attack_recall_at_1pct_fpr": 0.5142,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5403222222222223,
+      "min": 0.5142,
+      "max": 0.5664444444444444
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.40708333333333335,
+      "min": 0.37966666666666665,
+      "max": 0.4345
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5664444444444444,
+      "min": 0.5664444444444444,
+      "max": 0.5664444444444444
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.37966666666666665,
+      "min": 0.37966666666666665,
+      "max": 0.37966666666666665
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 9.326179584953934
+   },
+   "local": {
+    "macro_f1_mean": 0.17011853977383115,
+    "macro_f1_min": 0.07864374888577474,
+    "macro_f1_max": 0.31144927038451536,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5174688888888889,
+      "min": 0.3499,
+      "max": 0.593111111111111
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.27642333333333335,
+      "min": 0.02422222222222222,
+      "max": 0.46040000000000003
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5406444444444445,
+      "min": 0.38266666666666665,
+      "max": 0.593111111111111
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.2949777777777778,
+      "min": 0.02422222222222222,
+      "max": 0.5115555555555555
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 8.551883149892092
+   },
+   "central": {
+    "macro_f1": 0.3053840474580929,
+    "recall": {
+     "Benign": 0.254,
+     "DDoS": 0.49933333333333335,
+     "DoS": 0.003,
+     "Recon": 0.226,
+     "Web": 0.727,
+     "BruteForce": 0.0,
+     "Spoofing": 0.007,
+     "Mirai": 0.984
+    },
+    "attack_recall_at_1pct_fpr": 0.5363,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5628166666666667,
+      "min": 0.5363,
+      "max": 0.5893333333333333
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.4403777777777778,
+      "min": 0.41719999999999996,
+      "max": 0.4635555555555555
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5893333333333333,
+      "min": 0.5893333333333333,
+      "max": 0.5893333333333333
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.46355555555555555,
+      "min": 0.4635555555555555,
+      "max": 0.4635555555555555
+     },
+     "nowhere_types": [
+      "BrowserHijacking",
+      "DDoS-HTTP_Flood",
+      "DDoS-ICMP_Flood",
+      "DDoS-RSTFINFlood",
+      "DoS-UDP_Flood",
+      "MITM-ArpSpoofing",
+      "Mirai-greeth_flood",
+      "Uploading_Attack",
+      "VulnerabilityScan"
+     ]
+    },
+    "seconds": 6.7809792761690915
+   }
+  }
+ ]
+}

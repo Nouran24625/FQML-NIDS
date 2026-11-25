@@ -1,0 +1,932 @@
+{
+ "task": "FED-4 federated trial run (pipeline check)",
+ "protocol": "B",
+ "fold": 2,
+ "cap": 5000,
+ "val_cap": 1000,
+ "rounds": 100,
+ "local_steps": 50,
+ "seed": 0,
+ "families": [
+  "Benign",
+  "DDoS",
+  "DoS",
+  "Recon",
+  "Web",
+  "BruteForce",
+  "Spoofing",
+  "Mirai"
+ ],
+ "exclude": [
+  "IAT",
+  "Number"
+ ],
+ "features": [
+  "Header_Length",
+  "Rate",
+  "ack_flag_number",
+  "ack_count",
+  "Tot sum",
+  "Max",
+  "AVG",
+  "Tot size"
+ ],
+ "features_source": "stand-in (DATA-6 pending)",
+ "eval1": false,
+ "runs": [
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "iid",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 6.406847274931238e-12,
+    "max_logit_diff": 1.439293129124053e-11,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.2663328791513555,
+    "recall": {
+     "Benign": 0.436,
+     "DDoS": 0.5045,
+     "DoS": 0.001,
+     "Recon": 0.489,
+     "Web": 0.574,
+     "BruteForce": 0.092,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5715,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6766000000000001,
+      "min": 0.6766000000000001,
+      "max": 0.6766000000000001
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.4145999999999999,
+      "min": 0.4145999999999999,
+      "max": 0.4145999999999999
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6766000000000001,
+      "min": 0.6766000000000001,
+      "max": 0.6766000000000001
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.4145999999999999,
+      "min": 0.4145999999999999,
+      "max": 0.4145999999999999
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 14.094158116029575
+   },
+   "local": {
+    "macro_f1_mean": 0.25199070652702704,
+    "macro_f1_min": 0.20528517084672104,
+    "macro_f1_max": 0.30681133032940916,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.647428,
+      "min": 0.5801999999999999,
+      "max": 0.6864
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.39648799999999995,
+      "min": 0.22119999999999998,
+      "max": 0.5938000000000001
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.647428,
+      "min": 0.5801999999999999,
+      "max": 0.6864
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.39648799999999995,
+      "min": 0.22119999999999998,
+      "max": 0.5938000000000001
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 29.430728188948706
+   },
+   "central": {
+    "macro_f1": 0.24678187388739736,
+    "recall": {
+     "Benign": 0.443,
+     "DDoS": 0.365,
+     "DoS": 0.012,
+     "Recon": 0.476,
+     "Web": 0.605,
+     "BruteForce": 0.059,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5733333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6805999999999999,
+      "min": 0.6806,
+      "max": 0.6806
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.3645999999999999,
+      "min": 0.3646,
+      "max": 0.3646
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6805999999999999,
+      "min": 0.6806,
+      "max": 0.6806
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.3645999999999999,
+      "min": 0.3646,
+      "max": 0.3646
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 8.264203396858647
+   }
+  },
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "sites",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.20660414427043364,
+    "recall": {
+     "Benign": 0.951,
+     "DDoS": 0.508,
+     "DoS": 0.001,
+     "Recon": 0.133,
+     "Web": 0.326,
+     "BruteForce": 0.011,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5616666666666666,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6146333333333333,
+      "min": 0.5616666666666666,
+      "max": 0.6676
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.2715166666666667,
+      "min": 0.24783333333333332,
+      "max": 0.2952
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6676,
+      "min": 0.6676,
+      "max": 0.6676
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.2952,
+      "min": 0.2952,
+      "max": 0.2952
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 10.88094099285081
+   },
+   "local": {
+    "macro_f1_mean": 0.19992153270010782,
+    "macro_f1_min": 0.11531684235446776,
+    "macro_f1_max": 0.2632600192460902,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6161466666666666,
+      "min": 0.5486666666666667,
+      "max": 0.6768
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.29377333333333333,
+      "min": 0.0988,
+      "max": 0.49866666666666665
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.66896,
+      "min": 0.654,
+      "max": 0.6940000000000001
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.3274,
+      "min": 0.0988,
+      "max": 0.5984
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 10.016745095839724
+   },
+   "central": {
+    "macro_f1": 0.24678187388739736,
+    "recall": {
+     "Benign": 0.443,
+     "DDoS": 0.365,
+     "DoS": 0.012,
+     "Recon": 0.476,
+     "Web": 0.605,
+     "BruteForce": 0.059,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5733333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6269666666666667,
+      "min": 0.5733333333333334,
+      "max": 0.6806
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.33913333333333334,
+      "min": 0.31366666666666665,
+      "max": 0.3646
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6806,
+      "min": 0.6806,
+      "max": 0.6806
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.3645999999999999,
+      "min": 0.3646,
+      "max": 0.3646
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 6.214593804907054
+   }
+  },
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "sitesfam",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.12558085001150376,
+    "recall": {
+     "Benign": 0.976,
+     "DDoS": 0.5045,
+     "DoS": 0.0,
+     "Recon": 0.0,
+     "Web": 0.0,
+     "BruteForce": 0.043,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5513333333333333,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6036666666666666,
+      "min": 0.5513333333333333,
+      "max": 0.656
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.18856666666666666,
+      "min": 0.1753333333333333,
+      "max": 0.20179999999999998
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6559999999999999,
+      "min": 0.656,
+      "max": 0.656
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.20179999999999998,
+      "min": 0.20179999999999998,
+      "max": 0.20179999999999998
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 10.99376286007464
+   },
+   "local": {
+    "macro_f1_mean": 0.15329616503084303,
+    "macro_f1_min": 0.0564056660338637,
+    "macro_f1_max": 0.23269295311184135,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6098666666666667,
+      "min": 0.5355,
+      "max": 0.6804
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.25077,
+      "min": 0.14733333333333334,
+      "max": 0.47866666666666663
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.66142,
+      "min": 0.6355999999999999,
+      "max": 0.6804
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.27734,
+      "min": 0.1768,
+      "max": 0.5744
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 9.966424364829436
+   },
+   "central": {
+    "macro_f1": 0.24678187388739736,
+    "recall": {
+     "Benign": 0.443,
+     "DDoS": 0.365,
+     "DoS": 0.012,
+     "Recon": 0.476,
+     "Web": 0.605,
+     "BruteForce": 0.059,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5733333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6269666666666667,
+      "min": 0.5733333333333334,
+      "max": 0.6806
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.3391333333333333,
+      "min": 0.31366666666666665,
+      "max": 0.3646
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6806,
+      "min": 0.6806,
+      "max": 0.6806
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.3645999999999999,
+      "min": 0.3646,
+      "max": 0.3646
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 10.315150600858033
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "iid",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.3877787807814457e-16,
+    "max_logit_diff": 4.440892098500626e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.1750262134852139,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.508,
+     "DoS": 0.047,
+     "Recon": 0.304,
+     "Web": 0.886,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5378333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6399999999999999,
+      "min": 0.6399999999999999,
+      "max": 0.6399999999999999
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.4506000000000001,
+      "min": 0.4506,
+      "max": 0.4506
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6399999999999999,
+      "min": 0.6399999999999999,
+      "max": 0.6399999999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.4506000000000001,
+      "min": 0.4506,
+      "max": 0.4506
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 7.99005848984234
+   },
+   "local": {
+    "macro_f1_mean": 0.17449636125723347,
+    "macro_f1_min": 0.14419136174313368,
+    "macro_f1_max": 0.22601235163698358,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6299040000000001,
+      "min": 0.6003999999999999,
+      "max": 0.6456000000000001
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.43473600000000007,
+      "min": 0.3662,
+      "max": 0.49079999999999996
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6299040000000001,
+      "min": 0.6003999999999999,
+      "max": 0.6456000000000001
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.43473600000000007,
+      "min": 0.3662,
+      "max": 0.49079999999999996
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 10.33136735507287
+   },
+   "central": {
+    "macro_f1": 0.1680811248842697,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.508,
+     "DoS": 0.038,
+     "Recon": 0.31,
+     "Web": 0.822,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5388333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6411999999999999,
+      "min": 0.6411999999999999,
+      "max": 0.6411999999999999
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.4372,
+      "min": 0.4372,
+      "max": 0.4372
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.6411999999999999,
+      "min": 0.6411999999999999,
+      "max": 0.6411999999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.4372,
+      "min": 0.4372,
+      "max": 0.4372
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 5.887462940067053
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "sites",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 4.440892098500626e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.13910614451319986,
+    "recall": {
+     "Benign": 0.981,
+     "DDoS": 0.5075,
+     "DoS": 0.0,
+     "Recon": 0.104,
+     "Web": 0.0,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.544,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5955999999999999,
+      "min": 0.5439999999999999,
+      "max": 0.6472
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.20515000000000003,
+      "min": 0.1865,
+      "max": 0.2238
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6472,
+      "min": 0.6472,
+      "max": 0.6472
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.22379999999999994,
+      "min": 0.2238,
+      "max": 0.2238
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 7.088766503846273
+   },
+   "local": {
+    "macro_f1_mean": 0.14793979381841843,
+    "macro_f1_min": 0.09425895345060466,
+    "macro_f1_max": 0.21962311677270918,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5860066666666666,
+      "min": 0.5269999999999999,
+      "max": 0.6514000000000001
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.29916,
+      "min": 0.1058,
+      "max": 0.5083333333333333
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6370199999999999,
+      "min": 0.6092000000000001,
+      "max": 0.6514000000000001
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.33474,
+      "min": 0.1058,
+      "max": 0.61
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 6.624311318155378
+   },
+   "central": {
+    "macro_f1": 0.1680811248842697,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.508,
+     "DoS": 0.038,
+     "Recon": 0.31,
+     "Web": 0.822,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5388333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5900166666666665,
+      "min": 0.5388333333333333,
+      "max": 0.6411999999999999
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.4007666666666666,
+      "min": 0.36433333333333334,
+      "max": 0.4372
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6411999999999998,
+      "min": 0.6411999999999999,
+      "max": 0.6411999999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.4372,
+      "min": 0.4372,
+      "max": 0.4372
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 5.711883374024183
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "sitesfam",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 1.3322676295501878e-15,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.12729778509675455,
+    "recall": {
+     "Benign": 0.917,
+     "DDoS": 0.507,
+     "DoS": 0.0,
+     "Recon": 0.062,
+     "Web": 0.0,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5295,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5807499999999999,
+      "min": 0.5295,
+      "max": 0.6319999999999999
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.1972666666666667,
+      "min": 0.17933333333333334,
+      "max": 0.2152
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6319999999999999,
+      "min": 0.6319999999999999,
+      "max": 0.6319999999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.2152,
+      "min": 0.2152,
+      "max": 0.2152
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 7.170470291050151
+   },
+   "local": {
+    "macro_f1_mean": 0.11435936211568203,
+    "macro_f1_min": 0.046479019526381386,
+    "macro_f1_max": 0.19021683675784848,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.56103,
+      "min": 0.3135,
+      "max": 0.655
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.22674,
+      "min": 0.14916666666666667,
+      "max": 0.4748333333333334
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6065400000000001,
+      "min": 0.37,
+      "max": 0.655
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.25196,
+      "min": 0.179,
+      "max": 0.5698000000000001
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 6.799777294974774
+   },
+   "central": {
+    "macro_f1": 0.1680811248842697,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.508,
+     "DoS": 0.038,
+     "Recon": 0.31,
+     "Web": 0.822,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.5388333333333334,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5900166666666665,
+      "min": 0.5388333333333333,
+      "max": 0.6411999999999999
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.4007666666666666,
+      "min": 0.36433333333333334,
+      "max": 0.4372
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.6411999999999998,
+      "min": 0.6411999999999999,
+      "max": 0.6411999999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.4372,
+      "min": 0.4372,
+      "max": 0.4372
+     },
+     "nowhere_types": [
+      "DDoS-PSHACK_Flood",
+      "DDoS-UDP_Fragmentation",
+      "DoS-HTTP_Flood",
+      "Recon-PortScan",
+      "XSS"
+     ]
+    },
+    "seconds": 5.754837010987103
+   }
+  }
+ ]
+}

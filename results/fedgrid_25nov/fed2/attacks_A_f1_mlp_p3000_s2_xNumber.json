@@ -1,0 +1,1030 @@
+{
+ "task": "FED-2 attack grid (first pass)",
+ "fold": 1,
+ "protocol": "A",
+ "cap": 5000,
+ "val_cap": 1000,
+ "rounds": 50,
+ "local_steps": 50,
+ "model": "mlp_p3000",
+ "device": "cpu",
+ "seed": 2,
+ "attack_seed": 100,
+ "frac": 0.2,
+ "splits": "iid,sites,sitesfam",
+ "attacks": "none,lf20,cs20web,cs20mirai",
+ "aggregators": "fedavg,median,trimmed_mean",
+ "exclude": "IAT,Number",
+ "families": [
+  "Benign",
+  "DDoS",
+  "DoS",
+  "Recon",
+  "Web",
+  "BruteForce",
+  "Spoofing",
+  "Mirai"
+ ],
+ "features": [
+  "Header_Length",
+  "Rate",
+  "ack_flag_number",
+  "ack_count",
+  "Tot sum",
+  "Max",
+  "AVG",
+  "Tot size"
+ ],
+ "runs": [
+  {
+   "split": "iid",
+   "attack": "none",
+   "aggregator": "fedavg",
+   "n_clients": 50,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.5544718015163952,
+   "recall": {
+    "Benign": 0.391,
+    "DDoS": 0.7645833333333333,
+    "DoS": 0.6955,
+    "Recon": 0.595508166969147,
+    "Web": 0.47234138631745315,
+    "BruteForce": 0.084,
+    "Spoofing": 0.574,
+    "Mirai": 0.9923333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.6618672374096053,
+   "seconds": 8.241878709988669
+  },
+  {
+   "split": "iid",
+   "attack": "none",
+   "aggregator": "median",
+   "n_clients": 50,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.5573257173330259,
+   "recall": {
+    "Benign": 0.424,
+    "DDoS": 0.7819166666666667,
+    "DoS": 0.663,
+    "Recon": 0.5923321234119783,
+    "Web": 0.4779860013547076,
+    "BruteForce": 0.091,
+    "Spoofing": 0.56,
+    "Mirai": 0.992
+   },
+   "attack_recall_at_1pct_fpr": 0.6670558095794014,
+   "seconds": 6.751419186126441
+  },
+  {
+   "split": "iid",
+   "attack": "none",
+   "aggregator": "trimmed_mean",
+   "n_clients": 50,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.55139630057083,
+   "recall": {
+    "Benign": 0.411,
+    "DDoS": 0.7790833333333333,
+    "DoS": 0.66925,
+    "Recon": 0.5930127041742287,
+    "Web": 0.4488597877624746,
+    "BruteForce": 0.061,
+    "Spoofing": 0.6145,
+    "Mirai": 0.993
+   },
+   "attack_recall_at_1pct_fpr": 0.6723092389013199,
+   "seconds": 6.865181403933093
+  },
+  {
+   "split": "iid",
+   "attack": "lf20",
+   "aggregator": "fedavg",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 30048,
+   "macro_f1": 0.48145359060221793,
+   "recall": {
+    "Benign": 0.14,
+    "DDoS": 0.46441666666666664,
+    "DoS": 0.981,
+    "Recon": 0.2735934664246824,
+    "Web": 0.7636035222397832,
+    "BruteForce": 0.026,
+    "Spoofing": 0.607,
+    "Mirai": 0.9856666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6260336608619516,
+   "seconds": 6.629805689910427,
+   "delta_macro_f1": -0.07301821091417726
+  },
+  {
+   "split": "iid",
+   "attack": "lf20",
+   "aggregator": "median",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 30048,
+   "macro_f1": 0.5545067691598811,
+   "recall": {
+    "Benign": 0.426,
+    "DDoS": 0.6989166666666666,
+    "DoS": 0.823,
+    "Recon": 0.49909255898366606,
+    "Web": 0.5843305486565816,
+    "BruteForce": 0.045,
+    "Spoofing": 0.592,
+    "Mirai": 0.9896666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6590459512922787,
+   "seconds": 6.899762067012489,
+   "delta_macro_f1": -0.002818948173144875
+  },
+  {
+   "split": "iid",
+   "attack": "lf20",
+   "aggregator": "trimmed_mean",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 30048,
+   "macro_f1": 0.5396925703097994,
+   "recall": {
+    "Benign": 0.402,
+    "DDoS": 0.676,
+    "DoS": 0.83425,
+    "Recon": 0.4337568058076225,
+    "Web": 0.6461955294648905,
+    "BruteForce": 0.008,
+    "Spoofing": 0.613,
+    "Mirai": 0.9863333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.6643642377663197,
+   "seconds": 6.679620919981971,
+   "delta_macro_f1": -0.011703730261030554
+  },
+  {
+   "split": "iid",
+   "attack": "cs20web",
+   "aggregator": "fedavg",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 2785,
+   "macro_f1": 0.5127001990589671,
+   "recall": {
+    "Benign": 0.441,
+    "DDoS": 0.74475,
+    "DoS": 0.733,
+    "Recon": 0.7123411978221416,
+    "Web": 0.13005193045834273,
+    "BruteForce": 0.071,
+    "Spoofing": 0.631,
+    "Mirai": 0.993
+   },
+   "attack_recall_at_1pct_fpr": 0.6797678113954017,
+   "seconds": 6.910908856196329,
+   "target": "Web",
+   "target_called_benign": 0.09911944005418831,
+   "delta_macro_f1": -0.04177160245742806,
+   "delta_target_recall": -0.3422894558591104
+  },
+  {
+   "split": "iid",
+   "attack": "cs20web",
+   "aggregator": "median",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 2785,
+   "macro_f1": 0.5476700186737313,
+   "recall": {
+    "Benign": 0.431,
+    "DDoS": 0.76275,
+    "DoS": 0.715,
+    "Recon": 0.6422413793103449,
+    "Web": 0.32106570331903367,
+    "BruteForce": 0.112,
+    "Spoofing": 0.6045,
+    "Mirai": 0.992
+   },
+   "attack_recall_at_1pct_fpr": 0.6794435256347894,
+   "seconds": 6.773594990838319,
+   "target": "Web",
+   "target_called_benign": 0.08083088733348386,
+   "delta_macro_f1": -0.00965569865929461,
+   "delta_target_recall": -0.15692029803567392
+  },
+  {
+   "split": "iid",
+   "attack": "cs20web",
+   "aggregator": "trimmed_mean",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 2785,
+   "macro_f1": 0.5401855534550543,
+   "recall": {
+    "Benign": 0.461,
+    "DDoS": 0.7939166666666667,
+    "DoS": 0.64625,
+    "Recon": 0.6336206896551724,
+    "Web": 0.2587491533077444,
+    "BruteForce": 0.138,
+    "Spoofing": 0.6285,
+    "Mirai": 0.9923333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.6863183837597691,
+   "seconds": 6.875744762131944,
+   "target": "Web",
+   "target_called_benign": 0.1022804244750508,
+   "delta_macro_f1": -0.011210747115775743,
+   "delta_target_recall": -0.1901106344547302
+  },
+  {
+   "split": "iid",
+   "attack": "cs20mirai",
+   "aggregator": "fedavg",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 2829,
+   "macro_f1": 0.5494554199013234,
+   "recall": {
+    "Benign": 0.421,
+    "DDoS": 0.7864166666666667,
+    "DoS": 0.643,
+    "Recon": 0.588929219600726,
+    "Web": 0.46172951004741475,
+    "BruteForce": 0.081,
+    "Spoofing": 0.553,
+    "Mirai": 0.9816666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6564192366313195,
+   "seconds": 6.400526313809678,
+   "target": "Mirai",
+   "target_called_benign": 0.0016666666666666668,
+   "delta_macro_f1": -0.0050163816150717855,
+   "delta_target_recall": -0.010666666666666602
+  },
+  {
+   "split": "iid",
+   "attack": "cs20mirai",
+   "aggregator": "median",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 2829,
+   "macro_f1": 0.5535331702010027,
+   "recall": {
+    "Benign": 0.425,
+    "DDoS": 0.8526666666666667,
+    "DoS": 0.5065,
+    "Recon": 0.6036751361161524,
+    "Web": 0.4732445247234139,
+    "BruteForce": 0.087,
+    "Spoofing": 0.551,
+    "Mirai": 0.9903333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.6640723805817687,
+   "seconds": 6.7086598568130285,
+   "target": "Mirai",
+   "target_called_benign": 0.0,
+   "delta_macro_f1": -0.0037925471320232607,
+   "delta_target_recall": -0.0016666666666667052
+  },
+  {
+   "split": "iid",
+   "attack": "cs20mirai",
+   "aggregator": "trimmed_mean",
+   "n_clients": 50,
+   "malicious": [
+    2,
+    3,
+    5,
+    13,
+    20,
+    26,
+    28,
+    31,
+    35,
+    48
+   ],
+   "labels_changed": 2829,
+   "macro_f1": 0.5560405873462657,
+   "recall": {
+    "Benign": 0.457,
+    "DDoS": 0.8333333333333334,
+    "DoS": 0.54925,
+    "Recon": 0.588475499092559,
+    "Web": 0.4526981259878076,
+    "BruteForce": 0.101,
+    "Spoofing": 0.582,
+    "Mirai": 0.9833333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.6604728086389726,
+   "seconds": 6.6103062310721725,
+   "target": "Mirai",
+   "target_called_benign": 0.0,
+   "delta_macro_f1": 0.004644286775435713,
+   "delta_target_recall": -0.009666666666666712
+  },
+  {
+   "split": "sites",
+   "attack": "none",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.4300215466659454,
+   "recall": {
+    "Benign": 0.696,
+    "DDoS": 0.7681666666666667,
+    "DoS": 0.2145,
+    "Recon": 0.390426497277677,
+    "Web": 0.6622262361706932,
+    "BruteForce": 0.0,
+    "Spoofing": 0.18,
+    "Mirai": 0.9663333333333334
+   },
+   "attack_recall_at_1pct_fpr": 0.6747413821059117,
+   "seconds": 5.141707605915144
+  },
+  {
+   "split": "sites",
+   "attack": "none",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.39945609637393287,
+   "recall": {
+    "Benign": 0.601,
+    "DDoS": 0.8103333333333333,
+    "DoS": 0.14925,
+    "Recon": 0.21710526315789475,
+    "Web": 0.8263716414540528,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1265,
+    "Mirai": 0.977
+   },
+   "attack_recall_at_1pct_fpr": 0.6741900963128709,
+   "seconds": 5.072660862933844
+  },
+  {
+   "split": "sites",
+   "attack": "none",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.4225019778010115,
+   "recall": {
+    "Benign": 0.693,
+    "DDoS": 0.7936666666666666,
+    "DoS": 0.17275,
+    "Recon": 0.3659255898366606,
+    "Web": 0.6525174983066155,
+    "BruteForce": 0.0,
+    "Spoofing": 0.186,
+    "Mirai": 0.9696666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6653695236242176,
+   "seconds": 5.0419416460208595
+  },
+  {
+   "split": "sites",
+   "attack": "lf20",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    8
+   ],
+   "labels_changed": 29854,
+   "macro_f1": 0.39364644299034446,
+   "recall": {
+    "Benign": 0.649,
+    "DDoS": 0.7680833333333333,
+    "DoS": 0.238,
+    "Recon": 0.17422867513611615,
+    "Web": 0.7929555204335065,
+    "BruteForce": 0.0,
+    "Spoofing": 0.042,
+    "Mirai": 0.9866666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6647533806790544,
+   "seconds": 4.854073999915272,
+   "delta_macro_f1": -0.03637510367560093
+  },
+  {
+   "split": "sites",
+   "attack": "lf20",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    8
+   ],
+   "labels_changed": 29854,
+   "macro_f1": 0.3531777310393216,
+   "recall": {
+    "Benign": 0.606,
+    "DDoS": 0.6159166666666667,
+    "DoS": 0.28425,
+    "Recon": 0.15812159709618875,
+    "Web": 0.8141792729735832,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.9806666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6620293802899114,
+   "seconds": 4.873060951940715,
+   "delta_macro_f1": -0.04627836533461127
+  },
+  {
+   "split": "sites",
+   "attack": "lf20",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    8
+   ],
+   "labels_changed": 29854,
+   "macro_f1": 0.37208555336299,
+   "recall": {
+    "Benign": 0.602,
+    "DDoS": 0.6620833333333334,
+    "DoS": 0.3135,
+    "Recon": 0.21166061705989112,
+    "Web": 0.8060510273199368,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.9846666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6599215228459319,
+   "seconds": 4.862812866922468,
+   "delta_macro_f1": -0.05041642443802152
+  },
+  {
+   "split": "sites",
+   "attack": "cs20web",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    7
+   ],
+   "labels_changed": 4732,
+   "macro_f1": 0.3919989823682349,
+   "recall": {
+    "Benign": 0.928,
+    "DDoS": 0.79425,
+    "DoS": 0.186,
+    "Recon": 0.34460072595281305,
+    "Web": 0.23459020094829533,
+    "BruteForce": 0.0,
+    "Spoofing": 0.2155,
+    "Mirai": 0.9653333333333334
+   },
+   "attack_recall_at_1pct_fpr": 0.6688069526867075,
+   "seconds": 5.07581688486971,
+   "target": "Web",
+   "target_called_benign": 0.6879656807405735,
+   "delta_macro_f1": -0.038022564297710504,
+   "delta_target_recall": -0.4276360352223979
+  },
+  {
+   "split": "sites",
+   "attack": "cs20web",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    7
+   ],
+   "labels_changed": 4732,
+   "macro_f1": 0.39663452556559237,
+   "recall": {
+    "Benign": 0.804,
+    "DDoS": 0.64125,
+    "DoS": 0.23375,
+    "Recon": 0.301497277676951,
+    "Web": 0.5461729510047415,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1865,
+    "Mirai": 0.981
+   },
+   "attack_recall_at_1pct_fpr": 0.67046081006583,
+   "seconds": 5.143135492922738,
+   "target": "Web",
+   "target_called_benign": 0.4145405283359675,
+   "delta_macro_f1": -0.002821570808340501,
+   "delta_target_recall": -0.28019869044931134
+  },
+  {
+   "split": "sites",
+   "attack": "cs20web",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    7
+   ],
+   "labels_changed": 4732,
+   "macro_f1": 0.4053620259141715,
+   "recall": {
+    "Benign": 0.838,
+    "DDoS": 0.80775,
+    "DoS": 0.17225,
+    "Recon": 0.5605716878402904,
+    "Web": 0.23752540076766765,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1985,
+    "Mirai": 0.9703333333333334
+   },
+   "attack_recall_at_1pct_fpr": 0.6794759542108506,
+   "seconds": 5.064859031001106,
+   "target": "Web",
+   "target_called_benign": 0.49514563106796117,
+   "delta_macro_f1": -0.017139951886840032,
+   "delta_target_recall": -0.4149920975389479
+  },
+  {
+   "split": "sites",
+   "attack": "cs20mirai",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [
+    8,
+    9
+   ],
+   "labels_changed": 8333,
+   "macro_f1": 0.45772658821597334,
+   "recall": {
+    "Benign": 0.731,
+    "DDoS": 0.9195833333333333,
+    "DoS": 0.20325,
+    "Recon": 0.33280399274047184,
+    "Web": 0.6482275908783021,
+    "BruteForce": 0.0,
+    "Spoofing": 0.172,
+    "Mirai": 0.957
+   },
+   "attack_recall_at_1pct_fpr": 0.6314168044881149,
+   "seconds": 4.790168655104935,
+   "target": "Mirai",
+   "target_called_benign": 0.003,
+   "delta_macro_f1": 0.027705041550027953,
+   "delta_target_recall": -0.009333333333333416
+  },
+  {
+   "split": "sites",
+   "attack": "cs20mirai",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [
+    8,
+    9
+   ],
+   "labels_changed": 8333,
+   "macro_f1": 0.4424576944856976,
+   "recall": {
+    "Benign": 0.401,
+    "DDoS": 0.9396666666666667,
+    "DoS": 0.1935,
+    "Recon": 0.2996823956442831,
+    "Web": 0.8703996387446377,
+    "BruteForce": 0.0,
+    "Spoofing": 0.074,
+    "Mirai": 0.9766666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6673800953400136,
+   "seconds": 4.998144696932286,
+   "target": "Mirai",
+   "target_called_benign": 0.0,
+   "delta_macro_f1": 0.04300159811176474,
+   "delta_target_recall": -0.0003333333333332966
+  },
+  {
+   "split": "sites",
+   "attack": "cs20mirai",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [
+    8,
+    9
+   ],
+   "labels_changed": 8333,
+   "macro_f1": 0.4549182978900649,
+   "recall": {
+    "Benign": 0.703,
+    "DDoS": 0.8494166666666667,
+    "DoS": 0.237,
+    "Recon": 0.3407441016333938,
+    "Web": 0.720252878753669,
+    "BruteForce": 0.0,
+    "Spoofing": 0.143,
+    "Mirai": 0.955
+   },
+   "attack_recall_at_1pct_fpr": 0.6645912377987483,
+   "seconds": 4.799273811979219,
+   "target": "Mirai",
+   "target_called_benign": 0.0003333333333333333,
+   "delta_macro_f1": 0.032416320089053374,
+   "delta_target_recall": -0.014666666666666717
+  },
+  {
+   "split": "sitesfam",
+   "attack": "none",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.32541327010956456,
+   "recall": {
+    "Benign": 0.971,
+    "DDoS": 0.98975,
+    "DoS": 0.00125,
+    "Recon": 0.2801724137931034,
+    "Web": 0.0006773538044705351,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1365,
+    "Mirai": 0.9923333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.664266952038136,
+   "seconds": 5.012503555044532
+  },
+  {
+   "split": "sitesfam",
+   "attack": "none",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.285524892578837,
+   "recall": {
+    "Benign": 0.996,
+    "DDoS": 0.3095833333333333,
+    "DoS": 0.899,
+    "Recon": 0.16810344827586207,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0965,
+    "Mirai": 0.9906666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6609916658559523,
+   "seconds": 4.812298238044605
+  },
+  {
+   "split": "sitesfam",
+   "attack": "none",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [],
+   "labels_changed": 0,
+   "macro_f1": 0.3378282916868788,
+   "recall": {
+    "Benign": 0.988,
+    "DDoS": 0.46391666666666664,
+    "DoS": 0.836,
+    "Recon": 0.2220961887477314,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.179,
+    "Mirai": 0.9956666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6662126666018096,
+   "seconds": 5.068549731047824
+  },
+  {
+   "split": "sitesfam",
+   "attack": "lf20",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    8
+   ],
+   "labels_changed": 34161,
+   "macro_f1": 0.3345673636269699,
+   "recall": {
+    "Benign": 0.961,
+    "DDoS": 0.503,
+    "DoS": 0.93375,
+    "Recon": 0.018148820326678767,
+    "Web": 0.11740799277489275,
+    "BruteForce": 0.018,
+    "Spoofing": 0.049,
+    "Mirai": 0.991
+   },
+   "attack_recall_at_1pct_fpr": 0.6542465220352174,
+   "seconds": 4.894766066921875,
+   "delta_macro_f1": 0.00915409351740537
+  },
+  {
+   "split": "sitesfam",
+   "attack": "lf20",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    8
+   ],
+   "labels_changed": 34161,
+   "macro_f1": 0.18360955131063816,
+   "recall": {
+    "Benign": 0.829,
+    "DDoS": 0.0004166666666666667,
+    "DoS": 0.997,
+    "Recon": 0.0,
+    "Web": 0.0,
+    "BruteForce": 0.151,
+    "Spoofing": 0.059,
+    "Mirai": 0.9866666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6525602360800338,
+   "seconds": 4.968180221039802,
+   "delta_macro_f1": -0.10191534126819884
+  },
+  {
+   "split": "sitesfam",
+   "attack": "lf20",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [
+    6,
+    8
+   ],
+   "labels_changed": 34161,
+   "macro_f1": 0.21190791920360352,
+   "recall": {
+    "Benign": 0.787,
+    "DDoS": 0.085,
+    "DoS": 0.98375,
+    "Recon": 0.0,
+    "Web": 0.0004515692029803567,
+    "BruteForce": 0.367,
+    "Spoofing": 0.0395,
+    "Mirai": 0.9936666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6502578071796867,
+   "seconds": 4.861576459836215,
+   "delta_macro_f1": -0.12592037248327526
+  },
+  {
+   "split": "sitesfam",
+   "attack": "cs20web",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [
+    8,
+    9
+   ],
+   "labels_changed": 9310,
+   "macro_f1": 0.2986048639229401,
+   "recall": {
+    "Benign": 0.996,
+    "DDoS": 0.9926666666666667,
+    "DoS": 0.001,
+    "Recon": 0.15744101633393828,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.07,
+    "Mirai": 0.9926666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.653468236209748,
+   "seconds": 5.0121921598911285,
+   "target": "Web",
+   "target_called_benign": 0.9932264619552946,
+   "delta_macro_f1": -0.026808406186624445,
+   "delta_target_recall": -0.0006773538044705351
+  },
+  {
+   "split": "sitesfam",
+   "attack": "cs20web",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [
+    8,
+    9
+   ],
+   "labels_changed": 9310,
+   "macro_f1": 0.27484259654065657,
+   "recall": {
+    "Benign": 0.997,
+    "DDoS": 0.3446666666666667,
+    "DoS": 0.8355,
+    "Recon": 0.18715970961887476,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0245,
+    "Mirai": 0.9956666666666667
+   },
+   "attack_recall_at_1pct_fpr": 0.6677368096766871,
+   "seconds": 4.841518098022789,
+   "target": "Web",
+   "target_called_benign": 0.9961616617746669,
+   "delta_macro_f1": -0.010682296038180439,
+   "delta_target_recall": 0.0
+  },
+  {
+   "split": "sitesfam",
+   "attack": "cs20web",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [
+    8,
+    9
+   ],
+   "labels_changed": 9310,
+   "macro_f1": 0.3254256740257944,
+   "recall": {
+    "Benign": 0.991,
+    "DDoS": 0.44,
+    "DoS": 0.828,
+    "Recon": 0.2046279491833031,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.1535,
+    "Mirai": 0.992
+   },
+   "attack_recall_at_1pct_fpr": 0.6640723805817687,
+   "seconds": 4.952162135159597,
+   "target": "Web",
+   "target_called_benign": 0.9891623391284714,
+   "delta_macro_f1": -0.012402617661084359,
+   "delta_target_recall": 0.0
+  },
+  {
+   "split": "sitesfam",
+   "attack": "cs20mirai",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "malicious": [
+    5,
+    7
+   ],
+   "labels_changed": 4998,
+   "macro_f1": 0.32544921774229263,
+   "recall": {
+    "Benign": 0.973,
+    "DDoS": 0.9959166666666667,
+    "DoS": 0.01225,
+    "Recon": 0.279038112522686,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.105,
+    "Mirai": 0.9903333333333333
+   },
+   "attack_recall_at_1pct_fpr": 0.6629049518435646,
+   "seconds": 4.909881473053247,
+   "target": "Mirai",
+   "target_called_benign": 0.001,
+   "delta_macro_f1": 3.5947632728072776e-05,
+   "delta_target_recall": -0.0020000000000000018
+  },
+  {
+   "split": "sitesfam",
+   "attack": "cs20mirai",
+   "aggregator": "median",
+   "n_clients": 10,
+   "malicious": [
+    5,
+    7
+   ],
+   "labels_changed": 4998,
+   "macro_f1": 0.36975748513454965,
+   "recall": {
+    "Benign": 0.993,
+    "DDoS": 0.7446666666666667,
+    "DoS": 0.61175,
+    "Recon": 0.24387477313974593,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0675,
+    "Mirai": 0.981
+   },
+   "attack_recall_at_1pct_fpr": 0.6635859519408502,
+   "seconds": 4.9763001061510295,
+   "target": "Mirai",
+   "target_called_benign": 0.0016666666666666668,
+   "delta_macro_f1": 0.08423259255571264,
+   "delta_target_recall": -0.009666666666666712
+  },
+  {
+   "split": "sitesfam",
+   "attack": "cs20mirai",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "malicious": [
+    5,
+    7
+   ],
+   "labels_changed": 4998,
+   "macro_f1": 0.39211503853573804,
+   "recall": {
+    "Benign": 0.989,
+    "DDoS": 0.7998333333333333,
+    "DoS": 0.528,
+    "Recon": 0.20689655172413793,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.2235,
+    "Mirai": 0.989
+   },
+   "attack_recall_at_1pct_fpr": 0.663553523364789,
+   "seconds": 4.968920188955963,
+   "target": "Mirai",
+   "target_called_benign": 0.0003333333333333333,
+   "delta_macro_f1": 0.05428674684885926,
+   "delta_target_recall": -0.00666666666666671
+  }
+ ]
+}
