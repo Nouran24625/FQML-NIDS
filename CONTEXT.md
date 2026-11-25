@@ -1,6 +1,6 @@
 # FQML-NIDS — Team context (read this first)
 
-**Last updated:** Wed 25 Nov 2026 · **Status covered up to:** Wed 25 Nov 2026 (GitHub audit and branch fix, Nouran's week-2 tasks, the `Number` check, university workstation set up and checked)
+**Last updated:** Wed 25 Nov 2026 · **Status covered up to:** Wed 25 Nov 2026, evening (all Phase 1 work so far on `main`, INTERFACES 2.4.0; university workstation set up and checked; federated grid over 5 folds and 3 seeds)
 **Rule:** this file is the single source of truth for project status. Whoever finishes a work session that changes status, a decision or a deadline updates it in the same pull request (see "How to keep this file current" at the end). Details live in the files linked from each section.
 
 ---
@@ -37,7 +37,7 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 
 - **Repo:** `github.com/Nouran24625/FQML-NIDS` — **publicly readable as of 24 Nov** (anonymous clone works); change under Settings → General if it should be private. CI = GitHub Actions (Docker build, pytest, PQ smoke test).
 - **Decisions log:** `docs/DECISIONS.md` (every D-number below is explained there).
-- **Interfaces:** `docs/INTERFACES.md`: 2.3.0 after the federated PRs; Q-1's finite-shot mode becomes 2.4.0 when #21 is merged.
+- **Interfaces:** `docs/INTERFACES.md` 2.4.0 (2.2.0 and 2.3.0 federated section 3, Kareem; 2.4.0 finite-shot mode of `TorchVQC`, Q-1).
 - **Datasets list:** `docs/DATASETS.md`. **Specs:** `docs/specs/` (EVAL-1, H-10, DATA-6, EVAL-2). **Pre-registration:** `docs/PREREG_E0.md` (final, 24 Nov), `docs/PREREG_MIA.md`. **Notes:** `docs/notes/Q1b_shot_noise_vs_dp.md`. **Thesis outlines:** `docs/thesis/`. **Team notebook:** `notebooks/LEARN-1_E0_ideas.ipynb` (everyone runs it and answers its 5 questions).
 - **Cleaned data:** `data/interim/ciciot2023_v1/ciciot2023_clean_v1.parquet` (1.5 GB, not in git). Shared copy on Drive: `FQML-NIDS-data/2023 cleaned + readme/` (checksum in `data/checksums.json`, verified 20 Nov). Report: `results/data_reports/ciciot2023_clean_v1.json`.
 - **Folds:** `data/folds/ciciot2023_A.json`, `data/folds/ciciot2023_B.json`.
@@ -51,15 +51,15 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 
 **Phase 1: running Thu 19 Nov → Gate 1 Fri 18 Dec 2026** (spare days 21–24 Dec). SYNC-1 (19 Nov) accepted D8, D8a, D9, D11 part 1 and D17 (all four). Integrator and Scribe for this month: not recorded yet — whoever knows, add them here.
 
-**How the branches stand (read before merging anything).** Nothing from Phase 1 reached `main` until #19 merges: the Checkpoint 1 chain lives on `data/checkpoint1`, and later work was merged into it on purpose (#22, #24, #33, #37). Twice on 24 Nov work was stranded by merging into a branch whose own PR was already merged (#27, #28, #32, #34); it was rescued as `fed/rescue`. **Rule: before clicking Merge, check that the PR's base branch is not already merged; if it is, change the base first. Merge with "Create a merge commit", never squash or rebase.** Order to finish: `fed/rescue` and `data/no-number-check` → `data/checkpoint1`, then #19 → `main` (Ganna), then `fix_q1_after_merges.sh` updates #21 (Q-1), then delete merged branches.
+**Branches (25 Nov): everything is on `main`.** #19, #38, #39, #41 and #21 brought the Checkpoint 1 chain, the rescued federated work (#27, #28, #32, #34) and Q-1 to `main`; #43, #46, #47 and #48 followed on 25 Nov; old branches are being deleted. Open (25 Nov): #44 live federation demo, #45 PREREG_MIA amendment, #49 attacks chapter draft, #50 federated grid results (Kareem). A commit pushed to a branch whose PR was already merged does not reach `main` (it happened again on 25 Nov with #43 → #46): check `gh pr view <n> --json state` before pushing more to a branch. **Rules from the 24 Nov clean-up:** every new PR targets `main`; before clicking Merge, check that the PR's base branch is not already merged (if it is, change the base first); merge with "Create a merge commit", never squash or rebase; after a merge that changes `requirements/lock.txt`, everyone rebuilds Docker and runs the tests (H-3).
 
 **Done:**
 - Data: DATA-2 cleaner v1 (D8), DATA-3 folds A and B (D8a), DATA-5 Checkpoint 1, DATA-4 quality report + DATA-1b (Ganna, #33), the `Number` check (24 Nov).
-- Models and privacy (Nouran): Q-1 finite shots (#21) and its batch-256 re-run; Q-2; EXP-1 final pre-registration (#20); D11 part 2 with committed tuning trials (#22); DATA-6 spec and EVAL-2 spec, Q-1b note, LEARN-1 notebook (#36); Q-3 RFF model, CLS-1 model factory, PRIV-2 DP-SGD (#37); PRIV-3 checks 1–3 code (check 2 in CI; checks 1 and 3 have a real-data script); WRITE outline of the AI/QML chapter.
-- Federated and security (Kareem): H-8 scope (#26), SEC-1 + FED-2 (#24), FED-1/3/7 (#25, INTERFACES 2.2.0), FED-4, FED-5 (D12), FED-6 (INTERFACES 2.3.0) and the attack grid (in `fed/rescue`), PRIV-5 (#29), ABS-1 (#30), attacks chapter outline (#31).
+- Models and privacy (Nouran): Q-1 finite shots (#21, INTERFACES 2.4.0) and its batch-256 re-run; Q-2; EXP-1 final pre-registration (#20); D11 part 2 with committed tuning trials (#22); DATA-6 spec and EVAL-2 spec, Q-1b note, LEARN-1 notebook (#36); Q-3 RFF model, CLS-1 model factory, PRIV-2 DP-SGD (#37); PRIV-3 checks 1–3 (#39: Opacus equivalence and per-sample gradients in CI, one-run canary audit; real-data run `python -m experiments.priv3_checks`); WRITE outline of the AI/QML chapter (#40).
+- Federated and security (Kareem): H-8 scope (#26), SEC-1 + FED-2 (#24), FED-1/3/7 (#25, INTERFACES 2.2.0), FED-4, FED-5 (D12), FED-6 (INTERFACES 2.3.0) and the attack grid (rescued via #38, on `main` since #41), PRIV-5 (#29), ABS-1 (#30), attacks chapter outline (#31); H-3 passed (358 tests, PQ smoke, 25 Nov); federated runs without `Number` (#43); protocol B and every federated model from the E0 factory (#43, #46); DATA-6 switch, `--lr`, Slurm grid scripts, PRIV-5 federated canary audit (#48); university workstation set up (#47); PREREG_MIA amended to the PRIV-3 audit (#45, open); federated grid over 5 folds and 3 seeds (#50, open); live demo with RFF and 1,024-shot VQC scoring (#44, open); chapter sections 1–4 drafted (#49, open).
 - Team: CONTEXT.md and CLAUDE.md (#23); H-1, H-2.
 
-**Not started on GitHub (24 Nov):** D14 (Sheghaf, was due 23 Nov), **H-10 training loop and EVAL-1 metrics (Sheghaf, due Wed 25)**, **EXP-0 runner and EVAL-3 (Sheghaf, Fri 27)**, **DATA-6 build (Ganna, Fri 27)**, DATA-8a and IAT-DOC (Ganna, Fri 27). Everything left on Nouran's list (tuning, first pass, PRIV-4, E0 report) waits for H-10, EVAL-1, EXP-0 and DATA-6.
+**Not started on GitHub (25 Nov, evening):** D14 (Sheghaf, was due 23 Nov), **H-10 training loop and EVAL-1 metrics (Sheghaf, were due Wed 25)**, **EXP-0 runner and EVAL-3 (Sheghaf, Fri 27)**, **DATA-6 build (Ganna, Fri 27)**, DATA-8a and IAT-DOC (Ganna, Fri 27). Everything left on Nouran's list (tuning, first pass, PRIV-4, E0 report) waits for H-10, EVAL-1, EXP-0 and DATA-6.
 
 ## 5. Key results so far
 
@@ -69,6 +69,13 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 - **`Number` is the packet-window size (DATA-4) and was a shortcut.** Without it (24 Nov, `sqrt`, fold 0): protocol A barely changes (8-class 0.607 → 0.587; recall at 0.1% FPR 0.979 → 0.952), but **under protocol B unseen attacks caught at 1% FPR fall from 98.0% to 51.9%** (ROC-AUC 0.994 → 0.946). The old "unseen attacks detected as well as seen ones (98.7%)" was mostly the shortcut. Family assignment of unseen types is unchanged (60% 8-class, 98% 7-class: errors are DDoS vs DoS).
 - What fails: same-protocol floods (DDoS vs DoS vs Mirai) and low-volume families (SQL injection, brute force, Web, benign vs Recon).
 - DATA-4: identical rows with different labels cap any model at 0.955 8-class / 0.997 7-class macro-F1; 67–73% of protocol A test rows have an exact twin in training.
+
+**Federated (FED-2/4/6; 5 folds × 3 seeds, protocol A; stand-in features, `Number` excluded, validation block; `results/FED_FIRST_PASS.md` §0, #50):**
+- Robust aggregation stops Web suppression on IID sites in 15/15 runs (Web recall: FedAvg 0.12, median 0.39, trimmed mean 0.29) and fails on the sites split (0.07 / 0.10 / 0.08), where each site holds different attack types.
+- Median costs detection with no attacker on whole-family sites (lower than FedAvg in 21/30 runs), none on IID sites (0/30).
+- Protocol A: federation names the family of attack types a site never held in 5/5 folds (3,000-parameter MLP 0.53 against 0.35 alone; whole-family sites 0.38 against 0.00); detection is the same federated or alone. Protocol B (types no site held): the family gain is small and inconsistent (0.45 against 0.39, 4/5 folds).
+- The VQC collapses at the fixed lr 0.01 (protocol B, centralised: 12% of attacks caught at 1% FPR; 40% at lr 0.003): its learning rate must be tuned (D11 part 2). VQC federated runs at lr 0.003 are on the workstation.
+- The same run and seed differ by up to 0.06 macro-F1 between laptop and workstation (3,000-parameter MLP): only means over folds and seeds are claims.
 
 **Q-1 (shots, 21 and 24 Nov):** at batch 64 a shot-trained step costs the same as exact on a T4; at batch 256 (the E0 batch) about 3×. Gradient RMS error at 1,024 shots: ~16–21% for `vqc`. Shot noise vs DP noise: equal at S* = κB/(σ²C²) (κ = 1.31 `vqc`, 0.75 `vqc_lin`, 0.66 `vqc_noent`); at B = 256, C = 1, σ = 1 and 1,024 shots, DP noise dominates (shot noise adds ~15% to the noise std for `vqc`). Gradient norms are from synthetic inputs; re-measure after DATA-6.
 
@@ -82,7 +89,7 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 - **Metrics:** 8-class and 7-class (`c7m`, DDoS+DoS merged, computed from 8-class predictions) macro-F1; binary = attack recall at 0.1% and 1% FPR + ROC-AUC; per-attack-type scores averaged over types (D17).
 - **Models:** `vqc` (CNOT chain + local readout, 64 parameters, main model) · `vqc_lin` (chain + linear readout, 120) · `vqc_noent` (no CNOTs + linear readout, 120). Six pre-registered comparisons: `vqc` vs `mlp_p64` and vs RFF, `vqc_lin` vs `vqc_noent`, each on 8 and 7 classes; corrected paired t-test over folds, Holm correction (PREREG_E0). Classical: LR, MLP size ladder (64, 120, 128, 256, 512, 1k, 3k), MLP-large, XGBoost, RF, RFF. All built by name with `fqml.models.classical.build`.
 - **Shots (E5, proposed, Sheghaf to confirm):** E0 trains VQCs exactly; every VQC also scored with 1,024 shots at test time; shot-trained subset `vqc` + `vqc_lin`, protocol A, 5 folds (~5 GPU-hours).
-- **Federation:** batched FedAvg loop for experiments; Flower only for the PQC benchmark and demo. Local-only baseline and "sites" partition planned.
+- **Federation:** batched FedAvg loop for experiments (D3) with local-only (FED-7), sites and whole-family partitions (FED-3), robust aggregators and the attack hook (FED-6), inputs from DATA-6 as soon as it is on `main`; the federated grid runs on the workstation (`scripts/workstation/`). Flower only for the PQC benchmark and demo.
 - **Privacy (D13, proposed):** Phase 1 runs are centralised, so the privacy unit is one row and every ε is example-level; device or site level comes with federated DP. δ = 1e-6, Poisson sampling, B = 256, Opacus RDP accountant (+ PRV cross-check), C = 1.0 fixed, ε ∈ {∞, 8, 4, 1}. DP-SGD code: `fqml/privacy/dpsgd.py`; checks: equal to Opacus, per-sample gradients, one-run canary audit (`fqml/privacy/audit.py`).
 - **Post-quantum channel:** X25519 + ML-KEM-768 key exchange, ML-DSA-65 model signing.
 - **Claims:** no "first"; no "post-quantum secured federation" unless built and measured; no quantum advantage claim.
@@ -92,7 +99,7 @@ FQML-NIDS is an E-JUST graduation project (Sep 2026 – Jun 2027): a **leakage-a
 
 | Date | What | Owner |
 |---|---|---|
-| **Now** | **Merge `fed/rescue` and `data/no-number-check` into `data/checkpoint1`, then #19 → `main`** | Kareem / Ganna |
+| **Now** | **H-3: everyone rebuilds Docker from `main` and runs the tests** (the lock file changed; Kareem done 25 Nov); review and merge #44, #45, #49, #50; delete merged branches | All |
 | Wed 25 Nov | **H-10 training loop and EVAL-1 metrics module** (from the specs) | Sheghaf |
 | Wed 25 Nov | E5 confirmed | Sheghaf (with Nouran) |
 | Thu 26 Nov | SYNC-2: approve the D9 addition (`Number`), D11 part 2, D13, E5; record Integrator and Scribe | All |
