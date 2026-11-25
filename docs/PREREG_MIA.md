@@ -1,6 +1,7 @@
 # FQML-NIDS — Membership-inference plan, pre-registered (PRIV-5)
 
-**Owner:** Kareem (attacks and defences) · **Reviewer:** Nouran · **Status:** proposed, Phase 1 (23 Nov 2026)
+**Owner:** Kareem (attacks and defences) · **Reviewer:** Nouran · **Status:** proposed, Phase 1 (23 Nov 2026);
+amended 25 Nov 2026 before any run (§5 canaries, §3 model names; see "Amendments")
 **Runs:** after Gate 1 (the pilot is not part of Phase 1). Written before any membership-inference run, so the
 settings, metrics and decision rule below cannot be tuned to the result.
 **Depends on:** DP-SGD module and checks (PRIV-2, PRIV-3, Nouran), δ and the privacy unit (D13, Nouran), shot
@@ -27,7 +28,8 @@ is measured next.
   would be scored as a member by any attack and also by a perfect "no leak" model, which biases the AUC. Members
   and non-members are therefore drawn from **different `dup_group`s**, and the audit reports how many candidate
   rows this removes.
-- **Models:** `vqc` and MatchedMLP (same parameter count); `vqc_noent` as the entanglement control.
+- **Models:** `vqc` and `mlp_p64` (MatchedMLP, same parameter count); `vqc_noent` as the entanglement control.
+  All built with `fqml.models.classical.build` (CLS-1), the factory E0 uses.
 - **Arms per model:** exact; finite shots at 1,024 (and 128 if E5 keeps shot training); DP-SGD at ε ∈ {8, 4, 1}
   with δ and the privacy unit from D13.
 
@@ -41,8 +43,20 @@ is measured next.
    client's members.
 
 ## 5. Canary audit: empirical ε
-- m = 1,000 canaries: rows of the training distribution with a **random wrong label** (the hardest records to
-  learn, so the most exposed), each included in training independently with probability 1/2.
+- m = 1,000 canaries, each included in training independently with probability 1/2, k = m / 10 guesses on each
+  side, 95% confidence: the settings of `fqml.privacy.audit.run_audit` (PRIV-3), so the DP check and this audit
+  are one procedure and one code path.
+- **Primary canaries (decide the result):** the audit module's canaries, points drawn uniformly in [0, π]^8 with a
+  uniformly random label. Only memorising a point can fit it, so they are the most exposed records and give the
+  audit its greatest power; they are the canaries of Steinke, Nasr and Jagielski (2023).
+- **Secondary canaries (reported, do not decide):** rows of the training distribution with a **random wrong
+  label**, drawn from `dup_group`s with no other row in the training sample (so no twin carries the true label
+  into training). They measure what an IDS-realistic record leaks. They need an option in `fqml.privacy.audit`
+  (`make_canaries` drawing from given rows), asked of Nouran (PRIV-3 owner) before the pilot.
+- **Federated arms:** `run_audit` trains centrally (`dp_fit`). For the federated arms the canaries are placed on
+  one client and the model is trained with `fqml.fl.batched.run_fedavg`; the guessing and the bound
+  (`guess_and_count`, `epsilon_lower_bound`) are reused unchanged. That wrapper is Kareem's (FED side) and is
+  written with the pilot.
 - **One-run audit** (Steinke, Nasr and Jagielski, 2023): the attacker scores every canary, guesses "in" for the
   top k and "out" for the bottom k; the number of correct guesses gives a lower bound on ε at 95% confidence. One
   training run per arm, so the quantum arms stay affordable.
@@ -70,6 +84,12 @@ is measured next.
 Attribute inference; gradient inversion (reconstructing records from updates); inferring **which attack types a
 site has seen** from its updates (`docs/THREAT_MODEL.md` §4, a follow-up); site-level membership (whether a whole
 organisation took part), which needs client-level DP and is stated as such in D13.
+
+## Amendments
+- **25 Nov 2026, before any run (§5, §3).** The first version described only in-distribution wrong-label canaries;
+  the PRIV-3 audit code (`fqml/privacy/audit.py`, merged 24 Nov) uses uniform random points. Both are kept, with the
+  audit module's canaries as the primary ones, so one audit serves PRIV-3's DP check and this plan. Model names now
+  follow the E0 factory (`mlp_p64`). No membership-inference run existed when this was changed.
 
 ## References
 - S. Yeom, I. Giacomelli, M. Fredrikson, S. Jha. Privacy risk in machine learning: analyzing the connection to
