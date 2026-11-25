@@ -15,8 +15,9 @@ Scores on the validation block (thresholds and test blocks belong to the runner,
     FedAvg and centralised models on the same rows. Federation earns its place where it raises this number.
   - with fqml.eval.metrics present (EVAL-1, Sheghaf), the full EVAL-1 scores via evaluate(..., families=) (FED-1)
 
-Until DATA-6 lands, features are the stand-in used by FED-3/5/6 (top-8 by mutual information on the training sample,
-clipped and scaled to [0, pi]). Swap `fit_inputs` for fqml.data.preprocess once it exists; nothing else changes.
+Inputs: DATA-6 (fqml.data.preprocess) as soon as it is in the checkout, otherwise the stand-in used by FED-3/5/6
+(top-8 by mutual information on the training sample, clipped and scaled to [0, pi]); `--features` forces one
+(experiments.fed6_zero_attacker.prepare_inputs). The result file records which was used.
 
 Writes results/fed4/trial_<protocol>_f<fold>_r<rounds>[_<models>][_xNumber].json (_xNumber: Number excluded, the default
 since 24 Nov; files without it kept Number as a candidate input).
@@ -37,8 +38,8 @@ import torch
 from sklearn.metrics import f1_score, recall_score
 
 from experiments.fed3_partitions import GAP, REPORT, label_ranges_from_report
-from experiments.fed6_zero_attacker import (EXCLUDE, exclude_tag, fit_inputs, input_features, load_block,
-                                            make_model, parse_exclude, splits)
+from experiments.fed6_zero_attacker import (EXCLUDE, LR, exclude_tag, input_features, load_block, make_model,
+                                            parse_exclude, prepare_inputs, run_tag, splits)
 from fqml.data.folds import build_time_blocked, load_manifest, manifest_path
 from fqml.fl.batched import predict_proba, run_fedavg
 from fqml.fl.equivalence import compare_modes, passed, sqrt_class_weights
@@ -94,6 +95,8 @@ def main():
     ap.add_argument("--models", default="mlp,vqc", help="vqc, vqc_lin, vqc_noent, mlp (= mlp_p64), mlp_p<N>, rff, logreg")
     ap.add_argument("--splits", default="iid,sites,sitesfam")
     ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
+    ap.add_argument("--lr", type=float, default=LR, help="local learning rate (the VQC needs a tuned one)")
+    ap.add_argument("--features", default="auto", help="auto (DATA-6 when present, else stand-in), stand-in, data6")
     a = ap.parse_args()
     exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
@@ -109,10 +112,11 @@ def main():
     print(f"[data] protocol {a.protocol} fold {a.fold}: reading the training sample and validation block ...", flush=True)
     Ftr, native_tr, ytr = load_block(m, a.fold, "train", ranges, a.cap, feats)
     Fva, native_va, yva = load_block(m, a.fold, "val", ranges, a.val_cap, feats)
-    top, transform = fit_inputs(Ftr, ytr)                               # stand-in for DATA-6
+    names, transform, source = prepare_inputs(m, a.fold, ranges, report, feats, exclude, Ftr, ytr,
+                                              protocol=a.protocol, source=a.features)
     Xtr, Xva = transform(Ftr), transform(Fva)
     Xva_t = torch.as_tensor(Xva, dtype=torch.float32)
-    print(f"[data] train {len(ytr):,} rows, validation {len(yva):,}; features {[feats[i] for i in top]}; "
+    print(f"[data] train {len(ytr):,} rows, validation {len(yva):,}; features {names} [{source}]; "
           f"EVAL-1 metrics module {'found' if HAVE_EVAL1 else 'not yet available'} ({time.perf_counter() - t0:.0f}s)",
           flush=True)
     w = sqrt_class_weights(ytr, C).float()                              # D11 part 1
@@ -121,7 +125,8 @@ def main():
     everywhere = set(np.unique(native_tr).tolist()) - {"BenignTraffic"} if a.protocol == "B" else None
     out = {"task": "FED-4 federated trial run (pipeline check)", "protocol": a.protocol, "fold": a.fold,
            "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds, "local_steps": a.local_steps, "seed": a.seed,
-           "families": families, "exclude": sorted({"IAT", *exclude}), "features": [feats[i] for i in top], "features_source": "stand-in (DATA-6 pending)",
+           "families": families, "exclude": sorted({"IAT", *exclude}), "lr": a.lr,
+           "features": names, "features_source": source,
            "eval1": HAVE_EVAL1, "runs": []}
 
     for kind in a.models.split(","):
@@ -148,7 +153,7 @@ def main():
                           + (f"  val macro-F1 {f1:.3f}" if f1 is not None else ""), flush=True)
                 return on_round
 
-            common = dict(rounds=a.rounds, local_steps=a.local_steps, class_weights=w, seed=a.seed,
+            common = dict(rounds=a.rounds, local_steps=a.local_steps, lr=a.lr, class_weights=w, seed=a.seed,
                           X_val=Xva, y_val=yva, families=families if HAVE_EVAL1 else None)
 
             # FedAvg
@@ -207,7 +212,7 @@ def main():
                           f"local {u(run['local'], key):.3f} | central {u(run['central'], key):.3f}", flush=True)
 
     mtag = "" if a.models == "mlp,vqc" else "_" + a.models.replace(",", "-")
-    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}{mtag}{exclude_tag(exclude)}.json"
+    dest = ROOT / f"results/fed4/trial_{a.protocol}_f{a.fold}_r{a.rounds}{mtag}{exclude_tag(exclude)}{run_tag(a.lr, source)}.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(out, indent=1, default=float))
     print(f"\nwrote {dest.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")

@@ -10,3 +10,7 @@ runs/
 # post-quantum identity keys (fqml.pq.keys): secret keys must never be committed
 keys/
 *.key
+
+# federated grid on the workstation: generated task list and Slurm logs
+results/fed_tasks.txt
+results/fed_grid_logs/

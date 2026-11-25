@@ -86,6 +86,61 @@ def fit_inputs(F, y, n_features=8, seed=0):
     return top, lambda G: (np.clip(G[:, top], lo, hi) - lo) / (hi - lo) * np.pi
 
 
+LR = 0.01                       # the first runs' learning rate; the VQC needs a tuned one (results/FED_FIRST_PASS.md 1b)
+FEATURE_SOURCES = ("auto", "stand-in", "data6")
+
+
+def preprocess_path(protocol, fold):
+    return ROOT / f"results/preprocess/ciciot2023_{protocol}_f{fold}.json"
+
+
+def prepare_inputs(m, fold, ranges, report, feats, exclude, Ftr, ytr, *, protocol, source="auto"):
+    """The 8 model inputs of this fold. Returns (names, transform, source_label); transform maps a block read with
+    `feats` columns ([n, len(feats)]) to [n, 8] in [0, pi].
+
+    source "auto": DATA-6 (fqml.data.preprocess, Ganna) when it exists, else the stand-in `fit_inputs`.
+    With DATA-6 the fitted settings are read from results/preprocess/ciciot2023_<protocol>_f<fold>.json when that
+    file exists; otherwise they are fitted here exactly as the spec says (docs/specs/DATA-6_preprocessing.md §2: at
+    most 20,000 training rows per attack type, spread over time, every feature of the report, `exclude` dropped).
+    Every model of a run gets the same inputs, which is what keeps the comparison fair."""
+    import importlib.util
+    if source not in FEATURE_SOURCES:
+        raise SystemExit(f"--features must be one of {FEATURE_SOURCES}")
+    have = importlib.util.find_spec("fqml.data.preprocess") is not None
+    if source == "data6" and not have:
+        raise SystemExit("--features data6: fqml.data.preprocess (DATA-6) is not in this checkout yet")
+    if source == "stand-in" or not have:
+        top, transform = fit_inputs(Ftr, ytr)
+        return [feats[i] for i in top], transform, "stand-in (DATA-6 pending)"
+
+    import pandas as pd
+
+    from fqml.data.preprocess import Preprocessor, fit
+    all_feats = list(report["features"])
+    path = preprocess_path(protocol, fold)
+    if path.exists():
+        pre, origin = Preprocessor.from_json(path), str(path.relative_to(ROOT))
+    else:
+        rows = cap_per_label(fold_rows(m, fold, "train"), ranges, 20_000)          # the spec's fitting sample
+        df = read_rows(DATA, rows, all_feats)[all_feats]
+        y_fit = family_index(native_of(rows, ranges), "ciciot2023")
+        pre, origin = fit(df, y_fit, features=all_feats, exclude=tuple(exclude)), "fitted here from the spec"
+
+    def transform(F):
+        df = pd.DataFrame(np.asarray(F), columns=feats)
+        for c in all_feats:                    # excluded columns are never read by the preprocessor; present as 0
+            if c not in df:
+                df[c] = 0.0
+        return np.asarray(pre.transform(df[all_feats], feature_set="top8"), dtype=np.float64)
+
+    return list(pre.top8), transform, f"DATA-6 ({origin})"
+
+
+def run_tag(lr, source_label):
+    """File-name tag for settings that differ from the first runs: '_lr0.003' and '_d6' (DATA-6 inputs)."""
+    return (f"_lr{lr:g}" if lr != LR else "") + ("_d6" if source_label.startswith("DATA-6") else "")
+
+
 def splits(native, y, seed):
     _, fam_of = load_label_map("ciciot2023")
     return {"iid": iid_partition(len(y), 50, seed),
@@ -123,6 +178,8 @@ def main():
     ap.add_argument("--splits", default=",".join(SPLITS))
     ap.add_argument("--aggregators", default=",".join(AGGREGATORS))
     ap.add_argument("--exclude", default=",".join(EXCLUDE), help="features never used as inputs (IAT always)")
+    ap.add_argument("--lr", type=float, default=LR, help="local learning rate (the VQC needs a tuned one)")
+    ap.add_argument("--features", default="auto", help="auto (DATA-6 when present, else stand-in), stand-in, data6")
     a = ap.parse_args()
     exclude = parse_exclude(a.exclude)
     torch.set_num_threads(max(1, torch.get_num_threads()))
@@ -143,9 +200,10 @@ def main():
           flush=True)
     Ftr, native, ytr = load_block(m, a.fold, "train", ranges, a.cap, feats)
     Fva, _, yva = load_block(m, a.fold, "val", ranges, a.val_cap, feats)
-    top, transform = fit_inputs(Ftr, ytr)
+    names, transform, source = prepare_inputs(m, a.fold, ranges, report, feats, exclude, Ftr, ytr,
+                                              protocol=a.protocol, source=a.features)
     Xtr, Xva = transform(Ftr), transform(Fva)
-    print(f"[data] train {len(ytr):,} rows, validation {len(yva):,} rows; features {[feats[i] for i in top]} "
+    print(f"[data] train {len(ytr):,} rows, validation {len(yva):,} rows; features {names} [{source}] "
           f"({time.perf_counter() - t0:.0f}s)", flush=True)
     w = sqrt_class_weights(ytr, len(families)).float()
     parts_by = splits(native, ytr, a.seed)
@@ -164,7 +222,7 @@ def main():
                   + (f"  val macro-F1 {f1:.3f}" if f1 is not None else ""), flush=True)
 
         t1 = time.perf_counter()
-        res = run_fedavg(make_model(a.model, len(families)), Xtr, ytr, parts, rounds=a.rounds,
+        res = run_fedavg(make_model(a.model, len(families)), Xtr, ytr, parts, rounds=a.rounds, lr=a.lr,
                          clients_per_round=cpr, local_steps=a.local_steps, class_weights=w, seed=a.seed,
                          aggregator=get_aggregator(agg), X_val=Xva, y_val=yva, on_round=on_round)
         pred = predict_proba(make_model(a.model, len(families)), res.params,
@@ -193,12 +251,13 @@ def main():
               " ".join(f"{d[f]:+7.2f}" for f in families))
 
     seed_tag = f"_s{a.seed}" if a.seed else ""          # seed 0 keeps the first runs' file names
-    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}{exclude_tag(exclude)}.json"
+    out = ROOT / f"results/fed6/zero_attacker_{a.protocol}_f{a.fold}_{a.model}_r{a.rounds}{seed_tag}{exclude_tag(exclude)}{run_tag(a.lr, source)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"task": "FED-6 zero-attacker control", "protocol": a.protocol, "fold": a.fold,
                                "model": a.model, "cap": a.cap, "val_cap": a.val_cap, "rounds": a.rounds,
                                "local_steps": a.local_steps, "seed": a.seed, "families": families,
-                               "exclude": sorted({"IAT", *exclude}), "features": [feats[i] for i in top], "runs": runs}, indent=1))
+                               "exclude": sorted({"IAT", *exclude}), "lr": a.lr, "features": names,
+                               "features_source": source, "runs": runs}, indent=1))
     print(f"\nwrote {out.relative_to(ROOT)}  (total {time.perf_counter() - t0:.0f}s)")
 
 
