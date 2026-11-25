@@ -1,0 +1,914 @@
+{
+ "task": "FED-4 federated trial run (pipeline check)",
+ "protocol": "B",
+ "fold": 3,
+ "cap": 5000,
+ "val_cap": 1000,
+ "rounds": 100,
+ "local_steps": 50,
+ "seed": 0,
+ "families": [
+  "Benign",
+  "DDoS",
+  "DoS",
+  "Recon",
+  "Web",
+  "BruteForce",
+  "Spoofing",
+  "Mirai"
+ ],
+ "exclude": [
+  "IAT",
+  "Number"
+ ],
+ "features": [
+  "Header_Length",
+  "Rate",
+  "ack_flag_number",
+  "ack_count",
+  "Tot sum",
+  "Max",
+  "AVG",
+  "Tot size"
+ ],
+ "features_source": "stand-in (DATA-6 pending)",
+ "eval1": false,
+ "runs": [
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "iid",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.2663245673191474,
+    "recall": {
+     "Benign": 0.437,
+     "DDoS": 0.6145,
+     "DoS": 0.0,
+     "Recon": 0.262,
+     "Web": 0.562,
+     "BruteForce": 0.08,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4614,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5620000000000002,
+      "min": 0.562,
+      "max": 0.562
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.51325,
+      "min": 0.51325,
+      "max": 0.51325
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5620000000000002,
+      "min": 0.562,
+      "max": 0.562
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.51325,
+      "min": 0.51325,
+      "max": 0.51325
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 14.505762404063717
+   },
+   "local": {
+    "macro_f1_mean": 0.27218636940644,
+    "macro_f1_min": 0.19135050306503462,
+    "macro_f1_max": 0.3461379435942541,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.543875,
+      "min": 0.49125,
+      "max": 0.5805
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.547805,
+      "min": 0.2615,
+      "max": 0.69325
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.543875,
+      "min": 0.49125,
+      "max": 0.5805
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.547805,
+      "min": 0.2615,
+      "max": 0.69325
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 23.12251989590004
+   },
+   "central": {
+    "macro_f1": 0.28599768853582164,
+    "recall": {
+     "Benign": 0.359,
+     "DDoS": 0.64,
+     "DoS": 0.0,
+     "Recon": 0.26,
+     "Web": 0.55,
+     "BruteForce": 0.242,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4678,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.571,
+      "min": 0.571,
+      "max": 0.571
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.5225,
+      "min": 0.5225,
+      "max": 0.5225
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.571,
+      "min": 0.571,
+      "max": 0.571
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.5225,
+      "min": 0.5225,
+      "max": 0.5225
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 6.3476587841287255
+   }
+  },
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "sites",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.24414685126427196,
+    "recall": {
+     "Benign": 0.852,
+     "DDoS": 0.6005,
+     "DoS": 0.0,
+     "Recon": 0.403,
+     "Web": 0.229,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.446,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.48599999999999993,
+      "min": 0.446,
+      "max": 0.546
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.40326000000000006,
+      "min": 0.36660000000000004,
+      "max": 0.45825000000000005
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.546,
+      "min": 0.546,
+      "max": 0.546
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.45824999999999994,
+      "min": 0.45825000000000005,
+      "max": 0.45825000000000005
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 10.755177467130125
+   },
+   "local": {
+    "macro_f1_mean": 0.2297864781633263,
+    "macro_f1_min": 0.07227860739371,
+    "macro_f1_max": 0.4261381606385738,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.49299499999999996,
+      "min": 0.44300000000000006,
+      "max": 0.56475
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.332025,
+      "min": 0.0245,
+      "max": 0.7597499999999999
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5541750000000001,
+      "min": 0.5425000000000001,
+      "max": 0.56475
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.382775,
+      "min": 0.0245,
+      "max": 0.7597499999999999
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 10.041210748022422
+   },
+   "central": {
+    "macro_f1": 0.28599768853582164,
+    "recall": {
+     "Benign": 0.359,
+     "DDoS": 0.64,
+     "DoS": 0.0,
+     "Recon": 0.26,
+     "Web": 0.55,
+     "BruteForce": 0.242,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4678,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.50908,
+      "min": 0.4678,
+      "max": 0.571
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.48884,
+      "min": 0.4664,
+      "max": 0.5225
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.571,
+      "min": 0.571,
+      "max": 0.571
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.5225,
+      "min": 0.5225,
+      "max": 0.5225
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 6.260596541920677
+   }
+  },
+  {
+   "model": "mlp_p3000",
+   "params": 3000,
+   "split": "sitesfam",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 0.0,
+    "max_logit_diff": 0.0,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.17724387604264988,
+    "recall": {
+     "Benign": 0.993,
+     "DDoS": 0.9385,
+     "DoS": 0.0,
+     "Recon": 0.0,
+     "Web": 0.0,
+     "BruteForce": 0.017,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4524,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5024500000000001,
+      "min": 0.4524,
+      "max": 0.5525
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.424025,
+      "min": 0.37879999999999997,
+      "max": 0.46925
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5525,
+      "min": 0.5525,
+      "max": 0.5525
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.46925,
+      "min": 0.46925,
+      "max": 0.46925
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 10.711553547997028
+   },
+   "local": {
+    "macro_f1_mean": 0.1690774278299604,
+    "macro_f1_min": 0.0682515410665215,
+    "macro_f1_max": 0.33911899207279084,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.483535,
+      "min": 0.2748,
+      "max": 0.56525
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.277825,
+      "min": 0.0,
+      "max": 0.5878
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5296,
+      "min": 0.32625,
+      "max": 0.575
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.316375,
+      "min": 0.0,
+      "max": 0.73475
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 9.963988968869671
+   },
+   "central": {
+    "macro_f1": 0.28599768853582164,
+    "recall": {
+     "Benign": 0.359,
+     "DDoS": 0.64,
+     "DoS": 0.0,
+     "Recon": 0.26,
+     "Web": 0.55,
+     "BruteForce": 0.242,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4678,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5193999999999999,
+      "min": 0.4678,
+      "max": 0.571
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.49444999999999995,
+      "min": 0.4664,
+      "max": 0.5225
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.571,
+      "min": 0.571,
+      "max": 0.571
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.5225,
+      "min": 0.5225,
+      "max": 0.5225
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 6.259287537075579
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "iid",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 4.440892098500626e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.13841070831754812,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.3105,
+     "DoS": 0.0,
+     "Recon": 0.356,
+     "Web": 0.556,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4536,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5512499999999999,
+      "min": 0.5512499999999999,
+      "max": 0.5512499999999999
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.38325,
+      "min": 0.38325,
+      "max": 0.38325
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5512499999999999,
+      "min": 0.5512499999999999,
+      "max": 0.5512499999999999
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.38325,
+      "min": 0.38325,
+      "max": 0.38325
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 8.069248240906745
+   },
+   "local": {
+    "macro_f1_mean": 0.1795509766244679,
+    "macro_f1_min": 0.08751591328753286,
+    "macro_f1_max": 0.2527502107904663,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5346449999999999,
+      "min": 0.5052499999999999,
+      "max": 0.5615
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.5092450000000001,
+      "min": 0.27925,
+      "max": 0.7000000000000001
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5346449999999999,
+      "min": 0.5052499999999999,
+      "max": 0.5615
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.5092450000000001,
+      "min": 0.27925,
+      "max": 0.7000000000000001
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 10.480542852077633
+   },
+   "central": {
+    "macro_f1": 0.18573731471063323,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.752,
+     "DoS": 0.0,
+     "Recon": 0.47,
+     "Web": 0.419,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.454,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5572499999999999,
+      "min": 0.55725,
+      "max": 0.55725
+     },
+     "family_recall": {
+      "clients": 50,
+      "mean": 0.5982500000000001,
+      "min": 0.59825,
+      "max": 0.59825
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 50,
+      "mean": 0.5572499999999999,
+      "min": 0.55725,
+      "max": 0.55725
+     },
+     "nowhere_family_recall": {
+      "clients": 50,
+      "mean": 0.5982500000000001,
+      "min": 0.59825,
+      "max": 0.59825
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 5.962784030940384
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "sites",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 4.440892098500626e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.2709074089057393,
+    "recall": {
+     "Benign": 0.169,
+     "DDoS": 0.7825,
+     "DoS": 0.0,
+     "Recon": 0.658,
+     "Web": 0.414,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4208,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.4602799999999999,
+      "min": 0.42079999999999995,
+      "max": 0.5195
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.58014,
+      "min": 0.5274,
+      "max": 0.65925
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5195,
+      "min": 0.5195,
+      "max": 0.5195
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.65925,
+      "min": 0.65925,
+      "max": 0.65925
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 7.25328250718303
+   },
+   "local": {
+    "macro_f1_mean": 0.1692851799602294,
+    "macro_f1_min": 0.05991533431907108,
+    "macro_f1_max": 0.3285608149574254,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.4851,
+      "min": 0.43579999999999997,
+      "max": 0.56025
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.30992000000000003,
+      "min": 0.028,
+      "max": 0.74975
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.5448999999999999,
+      "min": 0.521,
+      "max": 0.56025
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.35962500000000003,
+      "min": 0.028,
+      "max": 0.74975
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 6.927032232051715
+   },
+   "central": {
+    "macro_f1": 0.18573731471063323,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.752,
+     "DoS": 0.0,
+     "Recon": 0.47,
+     "Web": 0.419,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.454,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.49529999999999996,
+      "min": 0.454,
+      "max": 0.55725
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.5264599999999999,
+      "min": 0.47859999999999997,
+      "max": 0.59825
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.55725,
+      "min": 0.55725,
+      "max": 0.55725
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.59825,
+      "min": 0.59825,
+      "max": 0.59825
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 5.898232504026964
+   }
+  },
+  {
+   "model": "mlp",
+   "params": 59,
+   "split": "sitesfam",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "equivalence": {
+    "same_clients": true,
+    "max_weight_diff": 1.1102230246251565e-16,
+    "max_logit_diff": 6.661338147750939e-16,
+    "weights_moved": true,
+    "equal": true
+   },
+   "fedavg": {
+    "macro_f1": 0.17335656926302212,
+    "recall": {
+     "Benign": 0.04,
+     "DDoS": 0.526,
+     "DoS": 0.0,
+     "Recon": 0.0,
+     "Web": 0.052,
+     "BruteForce": 0.711,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.4238,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.472525,
+      "min": 0.42379999999999995,
+      "max": 0.52125
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.31949999999999995,
+      "min": 0.276,
+      "max": 0.363
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.52125,
+      "min": 0.52125,
+      "max": 0.52125
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.27599999999999997,
+      "min": 0.276,
+      "max": 0.276
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 7.454217839054763
+   },
+   "local": {
+    "macro_f1_mean": 0.14359710147326465,
+    "macro_f1_min": 0.04431905616824827,
+    "macro_f1_max": 0.3050517980823538,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.44038000000000005,
+      "min": 0.26180000000000003,
+      "max": 0.559
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.27654999999999996,
+      "min": 0.0,
+      "max": 0.5718
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.4821250000000001,
+      "min": 0.31675,
+      "max": 0.559
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.31465,
+      "min": 0.0,
+      "max": 0.71475
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 6.8778199350927025
+   },
+   "central": {
+    "macro_f1": 0.18573731471063323,
+    "recall": {
+     "Benign": 0.0,
+     "DDoS": 0.752,
+     "DoS": 0.0,
+     "Recon": 0.47,
+     "Web": 0.419,
+     "BruteForce": 0.0,
+     "Spoofing": 0.0,
+     "Mirai": 0.0
+    },
+    "attack_recall_at_1pct_fpr": 0.454,
+    "unseen": {
+     "detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.505625,
+      "min": 0.454,
+      "max": 0.55725
+     },
+     "family_recall": {
+      "clients": 10,
+      "mean": 0.5384249999999999,
+      "min": 0.47859999999999997,
+      "max": 0.59825
+     },
+     "nowhere_detection_at_1pct_fpr": {
+      "clients": 10,
+      "mean": 0.55725,
+      "min": 0.55725,
+      "max": 0.55725
+     },
+     "nowhere_family_recall": {
+      "clients": 10,
+      "mean": 0.59825,
+      "min": 0.59825,
+      "max": 0.59825
+     },
+     "nowhere_types": [
+      "Backdoor_Malware",
+      "DDoS-ACK_Fragmentation",
+      "DDoS-SYN_Flood",
+      "Recon-PingSweep"
+     ]
+    },
+    "seconds": 5.78612844995223
+   }
+  }
+ ]
+}

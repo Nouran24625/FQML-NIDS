@@ -1,0 +1,341 @@
+{
+ "task": "FED-6 zero-attacker control",
+ "protocol": "A",
+ "fold": 0,
+ "model": "mlp",
+ "cap": 5000,
+ "val_cap": 1000,
+ "rounds": 100,
+ "local_steps": 50,
+ "seed": 0,
+ "families": [
+  "Benign",
+  "DDoS",
+  "DoS",
+  "Recon",
+  "Web",
+  "BruteForce",
+  "Spoofing",
+  "Mirai"
+ ],
+ "exclude": [
+  "IAT",
+  "Number"
+ ],
+ "features": [
+  "Header_Length",
+  "Rate",
+  "ack_flag_number",
+  "ack_count",
+  "Tot sum",
+  "Max",
+  "AVG",
+  "Tot size"
+ ],
+ "runs": [
+  {
+   "split": "iid",
+   "aggregator": "fedavg",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "macro_f1": 0.4480927165334715,
+   "recall": {
+    "Benign": 0.0,
+    "DDoS": 0.8374166666666667,
+    "DoS": 0.4265,
+    "Recon": 0.5028363966417064,
+    "Web": 0.5906525174983066,
+    "BruteForce": 0.0,
+    "Spoofing": 0.314,
+    "Mirai": 0.9716666666666667
+   },
+   "seconds": 11.153666320024058
+  },
+  {
+   "split": "iid",
+   "aggregator": "median",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "macro_f1": 0.44925555613805646,
+   "recall": {
+    "Benign": 0.0,
+    "DDoS": 0.8335833333333333,
+    "DoS": 0.4185,
+    "Recon": 0.5459496255956433,
+    "Web": 0.5393994129600361,
+    "BruteForce": 0.0,
+    "Spoofing": 0.343,
+    "Mirai": 0.9733333333333334
+   },
+   "seconds": 9.84724576305598,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.0011628396045849643,
+    "Benign": 0.0,
+    "DDoS": -0.0038333333333333552,
+    "DoS": -0.008000000000000007,
+    "Recon": 0.04311322895393688,
+    "Web": -0.05125310453827048,
+    "BruteForce": 0.0,
+    "Spoofing": 0.029000000000000026,
+    "Mirai": 0.0016666666666667052
+   }
+  },
+  {
+   "split": "iid",
+   "aggregator": "trimmed_mean",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "macro_f1": 0.4506861662455015,
+   "recall": {
+    "Benign": 0.0,
+    "DDoS": 0.8225,
+    "DoS": 0.45,
+    "Recon": 0.5262083049693669,
+    "Web": 0.5581395348837209,
+    "BruteForce": 0.0,
+    "Spoofing": 0.3415,
+    "Mirai": 0.9736666666666667
+   },
+   "seconds": 9.720247020944953,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.002593449712030016,
+    "Benign": 0.0,
+    "DDoS": -0.01491666666666669,
+    "DoS": 0.02350000000000002,
+    "Recon": 0.02337190832766045,
+    "Web": -0.032512982614585684,
+    "BruteForce": 0.0,
+    "Spoofing": 0.027500000000000024,
+    "Mirai": 0.0020000000000000018
+   }
+  },
+  {
+   "split": "dir0.5",
+   "aggregator": "fedavg",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "macro_f1": 0.34697208913735633,
+   "recall": {
+    "Benign": 0.046,
+    "DDoS": 0.9078333333333334,
+    "DoS": 0.1885,
+    "Recon": 0.9464488314045836,
+    "Web": 0.013095506886430346,
+    "BruteForce": 0.005,
+    "Spoofing": 0.0425,
+    "Mirai": 0.9823333333333333
+   },
+   "seconds": 9.73977722111158
+  },
+  {
+   "split": "dir0.5",
+   "aggregator": "median",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "macro_f1": 0.3685757391947724,
+   "recall": {
+    "Benign": 0.037,
+    "DDoS": 0.64325,
+    "DoS": 0.57475,
+    "Recon": 0.8302700249602905,
+    "Web": 0.0,
+    "BruteForce": 0.265,
+    "Spoofing": 0.044,
+    "Mirai": 0.9846666666666667
+   },
+   "seconds": 10.100201503140852,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.021603650057416046,
+    "Benign": -0.009000000000000001,
+    "DDoS": -0.2645833333333334,
+    "DoS": 0.38625,
+    "Recon": -0.11617880644429313,
+    "Web": -0.013095506886430346,
+    "BruteForce": 0.26,
+    "Spoofing": 0.0014999999999999944,
+    "Mirai": 0.0023333333333334094
+   }
+  },
+  {
+   "split": "dir0.5",
+   "aggregator": "trimmed_mean",
+   "n_clients": 50,
+   "clients_per_round": 20,
+   "macro_f1": 0.3643834802441916,
+   "recall": {
+    "Benign": 0.0,
+    "DDoS": 0.6118333333333333,
+    "DoS": 0.58975,
+    "Recon": 0.8196051735874744,
+    "Web": 0.0,
+    "BruteForce": 0.305,
+    "Spoofing": 0.071,
+    "Mirai": 0.984
+   },
+   "seconds": 10.403288165805861,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.01741139110683526,
+    "Benign": -0.046,
+    "DDoS": -0.29600000000000004,
+    "DoS": 0.40125,
+    "Recon": -0.12684365781710916,
+    "Web": -0.013095506886430346,
+    "BruteForce": 0.3,
+    "Spoofing": 0.02849999999999999,
+    "Mirai": 0.0016666666666667052
+   }
+  },
+  {
+   "split": "sites",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "macro_f1": 0.29965454740582415,
+   "recall": {
+    "Benign": 0.628,
+    "DDoS": 0.77075,
+    "DoS": 0.154,
+    "Recon": 0.6800544588155207,
+    "Web": 0.0,
+    "BruteForce": 0.0,
+    "Spoofing": 0.004,
+    "Mirai": 0.9786666666666667
+   },
+   "seconds": 8.727433545980603
+  },
+  {
+   "split": "sites",
+   "aggregator": "median",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "macro_f1": 0.30961147149955276,
+   "recall": {
+    "Benign": 0.464,
+    "DDoS": 0.7618333333333334,
+    "DoS": 0.1655,
+    "Recon": 0.8427501701837985,
+    "Web": 0.0006773538044705351,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.9746666666666667
+   },
+   "seconds": 8.853257126174867,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.009956924093728614,
+    "Benign": -0.16399999999999998,
+    "DDoS": -0.008916666666666684,
+    "DoS": 0.01150000000000001,
+    "Recon": 0.16269571136827776,
+    "Web": 0.0006773538044705351,
+    "BruteForce": 0.0,
+    "Spoofing": -0.004,
+    "Mirai": -0.0040000000000000036
+   }
+  },
+  {
+   "split": "sites",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "macro_f1": 0.30359187242506486,
+   "recall": {
+    "Benign": 0.334,
+    "DDoS": 0.81225,
+    "DoS": 0.10625,
+    "Recon": 0.8940322214658498,
+    "Web": 0.0038383382253330323,
+    "BruteForce": 0.0,
+    "Spoofing": 0.0,
+    "Mirai": 0.9686666666666667
+   },
+   "seconds": 8.906962579814717,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.003937325019240712,
+    "Benign": -0.294,
+    "DDoS": 0.04149999999999998,
+    "DoS": -0.04775,
+    "Recon": 0.21397776265032908,
+    "Web": 0.0038383382253330323,
+    "BruteForce": 0.0,
+    "Spoofing": -0.004,
+    "Mirai": -0.010000000000000009
+   }
+  },
+  {
+   "split": "sitesfam",
+   "aggregator": "fedavg",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "macro_f1": 0.25337567671585015,
+   "recall": {
+    "Benign": 0.024,
+    "DDoS": 0.8254166666666667,
+    "DoS": 0.0,
+    "Recon": 0.031994554118447927,
+    "Web": 0.0,
+    "BruteForce": 0.909,
+    "Spoofing": 0.238,
+    "Mirai": 0.969
+   },
+   "seconds": 8.528824737994
+  },
+  {
+   "split": "sitesfam",
+   "aggregator": "median",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "macro_f1": 0.13997250564571045,
+   "recall": {
+    "Benign": 0.0,
+    "DDoS": 0.27408333333333335,
+    "DoS": 0.0,
+    "Recon": 0.0,
+    "Web": 0.0,
+    "BruteForce": 0.95,
+    "Spoofing": 0.1545,
+    "Mirai": 0.988
+   },
+   "seconds": 8.626997887855396,
+   "delta_vs_fedavg": {
+    "macro_f1": -0.1134031710701397,
+    "Benign": -0.024,
+    "DDoS": -0.5513333333333333,
+    "DoS": 0.0,
+    "Recon": -0.031994554118447927,
+    "Web": 0.0,
+    "BruteForce": 0.040999999999999925,
+    "Spoofing": -0.08349999999999999,
+    "Mirai": 0.019000000000000017
+   }
+  },
+  {
+   "split": "sitesfam",
+   "aggregator": "trimmed_mean",
+   "n_clients": 10,
+   "clients_per_round": 10,
+   "macro_f1": 0.28123683951790557,
+   "recall": {
+    "Benign": 0.552,
+    "DDoS": 0.9248333333333333,
+    "DoS": 0.02325,
+    "Recon": 0.0,
+    "Web": 0.23188078573041318,
+    "BruteForce": 0.0,
+    "Spoofing": 0.115,
+    "Mirai": 0.9546666666666667
+   },
+   "seconds": 8.74032062292099,
+   "delta_vs_fedavg": {
+    "macro_f1": 0.027861162802055417,
+    "Benign": 0.528,
+    "DDoS": 0.0994166666666666,
+    "DoS": 0.02325,
+    "Recon": -0.031994554118447927,
+    "Web": 0.23188078573041318,
+    "BruteForce": -0.909,
+    "Spoofing": -0.12299999999999998,
+    "Mirai": -0.014333333333333309
+   }
+  }
+ ]
+}

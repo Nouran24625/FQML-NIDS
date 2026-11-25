@@ -16,6 +16,54 @@ DATA-6's redundancy rule (Spearman |rho| >= 0.95) removes that.
 **Summary: every conclusion below survives without `Number`.** Macro-F1 moved by -0.06 to +0.07 per run, about as
 much as changing the seed. The VQC lost the most (sites split, FedAvg 0.429 -> 0.368; centralised 0.435 -> 0.413).
 
+## 0. Over 5 folds and 3 seeds (workstation, 25 Nov; `results/fedgrid_25nov/`)
+
+The fold-0 findings below were re-run on all 5 folds (protocol A) and 3 seeds: 55 runs, `Number` excluded, stand-in
+features, validation block. Summary script: `python -m experiments.fed_grid_summary`. Values are mean ± standard
+deviation over runs; "in k/n" counts the runs where the difference exceeds 0.01 (macro-F1) or 0.02 (recall).
+
+**Attacks** (FED-2, 3,000-parameter MLP, 20% malicious, 15 runs):
+
+| Split | Web recall, no attack | Web recall under Web suppression: FedAvg / median / trimmed mean | Label flip, macro-F1 change: FedAvg / median / trimmed mean |
+|---|---|---|---|
+| IID | 0.51 ± 0.07 | **0.12 ± 0.06 / 0.39 ± 0.09 / 0.29 ± 0.11** (median better in 15/15, trimmed mean in 15/15) | −0.07 ± 0.03 / 0.00 ± 0.01 / −0.02 ± 0.02 |
+| Sites | 0.44 ± 0.18 | 0.07 ± 0.08 / 0.10 ± 0.17 / 0.08 ± 0.11 (median better in 5/15, worse in 4/15) | −0.02 / −0.03 / −0.03 |
+| Whole-family sites | 0.00 | 0.00 / 0.00 / 0.00 (Web is not learned on this split even without attack) | −0.03 / −0.08 / −0.10 |
+
+**Cost of a robust aggregator with no attacker** (FED-6, macro-F1 against FedAvg, 15 runs per model):
+
+| Split | 59-parameter MLP: median / trimmed mean | 3,000-parameter MLP: median / trimmed mean |
+|---|---|---|
+| IID | +0.01 / +0.01 (lower in 0/15) | 0.00 / 0.00 (lower in 0/15) |
+| Dirichlet 0.5 | +0.02 / +0.02 (higher in 10/15) | +0.02 / +0.02 (higher in 9–10/15) |
+| Sites | +0.01 / 0.00 (lower in 6/15, 3/15) | −0.01 / 0.00 (lower in 9/15, 7/15) |
+| Whole-family sites | **−0.06 ± 0.10** / −0.01 (lower in **10/15**, 7/15) | **−0.03 ± 0.06** / −0.02 (lower in **11/15**, 8/15) |
+
+**Federation against a site alone** (FED-4, protocol A, 5 folds, seed 0): right family for attack types a site never
+held, FedAvg / local-only / centralised:
+- 3,000-parameter MLP: 0.53 / 0.35 / 0.65 on sites, 0.38 / 0.00 / 0.61 on whole-family sites (FedAvg higher in 5/5 folds each).
+- 59-parameter MLP: 0.51 / 0.33 / 0.62 on sites, 0.37 / 0.00 / 0.56 on whole-family sites (5/5 each).
+- Detection of those types at 1% false alarms is the same federated or alone (0.55–0.63).
+
+**Protocol B** (5 folds, seed 0), right family for types no site held, FedAvg / local-only:
+- 3,000-parameter MLP: 0.45 ± 0.11 / 0.39 ± 0.06 on sites (FedAvg higher in 4/5 folds); 0.37 / 0.32 on whole-family
+  sites (3/5).
+- 59-parameter MLP: 0.43 / 0.37 on sites (3/5); 0.29 / 0.31 on whole-family sites (local higher in 4/5).
+- Detection 0.57–0.65 in every setting, federated or not.
+
+**What holds and what changes:**
+1. **Holds, stronger:** robust aggregation stops Web suppression on IID sites in every run (median: 0.12 → 0.39) and
+   fails on the sites split (no aggregator reliably better than FedAvg).
+2. **Holds:** median costs detection with no attacker on whole-family sites (lower than FedAvg in 21 of 30 runs);
+   no cost on IID sites (0 of 30).
+3. **Holds, every fold:** under protocol A, federation names the family of types a site never held (5/5 folds,
+   both model sizes); detection is the same either way.
+4. **Weaker than fold 0 suggested:** under protocol B the family gain is small and not consistent (fold 0's 0.58 vs
+   0.45 was a favourable fold); with the 59-parameter model it is absent.
+5. **Reproducibility:** the same run (same seed) on the laptop and the workstation differs by up to 0.06 macro-F1
+   for the 3,000-parameter MLP (0.002 for the 59-parameter one): floating-point differences between CPUs grow over
+   100 rounds. Single runs are not claims; every reported number is a mean over seeds and folds.
+
 ## 1. FED-4 trial run: does federation help a site? (`results/fed4/trial_A_f0_r100_xNumber.json`)
 
 VQC (64 parameters) and MatchedMLP (59), 100 rounds x 50 local steps, seed 0.
@@ -58,9 +106,9 @@ Variance`.
 
 - **Detection of a never-seen type does not depend on federation**: about two thirds are flagged federated, alone
   or pooled. "Not benign" is learnable from any attack type.
-- **Naming its family does, with enough capacity**: with the 3,000-parameter MLP, FedAvg names the family of types
-  no site held better than a site alone (0.58 against 0.45 on the sites split, 0.39 against 0.30 on whole-family
-  sites), most likely from related types of the same family held elsewhere. At the VQC's size (59 parameters) the
+- **Naming its family: a small gain on fold 0, not consistent over folds** (section 0): with the 3,000-parameter
+  MLP, FedAvg names the family of types no site held better than a site alone on fold 0 (0.58 against 0.45 on the
+  sites split, 0.39 against 0.30 on whole-family sites); over 5 folds it is 0.45 against 0.39, higher in 4 of 5. At the VQC's size (59 parameters) the
   gain mostly disappears (0.42 against 0.40; 0.27 against 0.30 on whole-family sites).
 - The same pattern as protocol A: what a site gains from federation is naming families, not detecting attacks.
 - Not comparable with Checkpoint 1's 52% (XGBoost, counted over rows, test types).

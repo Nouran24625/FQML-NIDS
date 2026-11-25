@@ -4,7 +4,8 @@
 #
 #   bash scripts/workstation/make_fed_tasks.sh                           # everything below, defaults
 #   PROTOCOLS="B" FOLDS="0 1" bash scripts/workstation/make_fed_tasks.sh
-#   LR=0.003 MODELS_FED4="vqc" bash scripts/workstation/make_fed_tasks.sh   # VQC with a tuned learning rate
+#   LR=0.003 MODELS_FED2="" MODELS_FED6="" MODELS_FED4="mlp,vqc" bash scripts/workstation/make_fed_tasks.sh
+#                                   # FED-4 only, VQC with a tuned learning rate (an empty list means: none)
 #
 # Run from the repository root. Inputs come from experiments.fed6_zero_attacker.prepare_inputs: DATA-6 when
 # fqml/data/preprocess.py is in the checkout, the stand-in otherwise (file names get "_d6" with DATA-6).
@@ -13,9 +14,9 @@ set -euo pipefail
 PROTOCOLS=${PROTOCOLS:-"A B"}
 FOLDS=${FOLDS:-"0 1 2 3 4"}
 SEEDS=${SEEDS:-"0 1 2"}
-MODELS_FED2=${MODELS_FED2:-"mlp_p3000"}          # attack grid: models that learn the rare families
-MODELS_FED6=${MODELS_FED6:-"mlp mlp_p3000"}      # zero-attacker control
-MODELS_FED4=${MODELS_FED4:-"mlp_p3000,mlp"}      # federated vs local vs centralised (comma list: one job)
+MODELS_FED2=${MODELS_FED2-"mlp_p3000"}          # attack grid: models that learn the rare families
+MODELS_FED6=${MODELS_FED6-"mlp mlp_p3000"}      # zero-attacker control
+MODELS_FED4=${MODELS_FED4-"mlp_p3000,mlp"}      # federated vs local vs centralised (comma list: one job)
 LR=${LR:-0.01}
 OUT=${OUT:-results/fed_tasks.txt}
 
@@ -38,6 +39,7 @@ for p in $PROTOCOLS; do
             "python -m experiments.fed6_zero_attacker --protocol $p --fold $f --seed $s --model $m --rounds 100 --lr $LR"
       done
     done
+    [ -z "$MODELS_FED4" ] && continue
     mt=$([ "$MODELS_FED4" = "mlp,vqc" ] && echo "" || echo "_${MODELS_FED4//,/-}")
     add "results/fed4/trial_${p}_f${f}_r100${mt}${tag}.json" \
         "python -m experiments.fed4_trial --protocol $p --fold $f --rounds 100 --models $MODELS_FED4 --lr $LR"
